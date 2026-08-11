@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceType { API FEED JSON XML CSV YML SITEMAP HTML BROWSER }
+enum StockStatus { IN_STOCK LOW_STOCK OUT_OF_STOCK PREORDER UNKNOWN }
+enum CheckoutType { EXTERNAL PLATFORM }
+enum MatchMethod { EAN MPN SKU BRAND_MODEL NORMALIZED_TITLE FUZZY MANUAL }
+
+model Store {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  domain      String          @unique
+  description String?
+  logoUrl     String?
+  active      Boolean         @default(true)
+  verified    Boolean         @default(false)
+  sources     StoreSource[]
+  locations   StoreLocation[]
+  offers      Offer[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model StoreLocation {
+  id           String   @id @default(cuid())
+  storeId      String
+  name         String
+  address      String
+  city         String
+  latitude     Float
+  longitude    Float
+  phone        String?
+  openingHours Json?
+  active       Boolean  @default(true)
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  offers       Offer[]
+  @@index([storeId, city])
+}
+
+model StoreSource {
+  id             String     @id @default(cuid())
+  storeId        String
+  type           SourceType
+  url            String
+  enabled        Boolean    @default(true)
+  crawlFrequency Int        @default(360)
+  lastCrawl      DateTime?
+  lastSuccess    DateTime?
+  lastError      String?
+  store          Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  @@index([storeId, enabled])
+}
+
+model Category {
+  id       String     @id @default(cuid())
+  nameRo   String
+  nameRu   String
+  slug     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  normalizedTitle String
+  description     String?
+  brandId         String?
+  categoryId      String?
+  ean             String?
+  mpn             String?
+  sku             String?
+  imageUrl        String?
+  attributes      Json?
+  dataQuality     Float     @default(0)
+  brand           Brand?    @relation(fields: [brandId], references: [id])
+  category        Category? @relation(fields: [categoryId], references: [id])
+  offers          Offer[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  @@index([normalizedTitle])
+  @@index([ean])
+  @@index([mpn])
+}
+
+model Offer {
+  id              String       @id @default(cuid())
+  productId       String
+  storeId         String
+  locationId      String?
+  externalId      String?
+  title           String
+  price           Decimal      @db.Decimal(14,2)
+  oldPrice        Decimal?     @db.Decimal(14,2)
+  currency        String       @default("MDL")
+  stockStatus     StockStatus  @default(UNKNOWN)
+  quantity        Int?
+  externalUrl     String
+  checkoutType    CheckoutType @default(EXTERNAL)
+  imageUrl        String?
+  lastSeenAt      DateTime     @default(now())
+  lastPriceUpdate DateTime     @default(now())
+  lastStockUpdate DateTime     @default(now())
+  product         Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store           Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  location        StoreLocation? @relation(fields: [locationId], references: [id])
+  priceHistory    PriceHistory[]
+  @@unique([storeId, externalId])
+  @@index([productId, price])
+  @@index([storeId, stockStatus])
+}
+
+model PriceHistory {
+  id         String   @id @default(cuid())
+  offerId    String
+  price      Decimal  @db.Decimal(14,2)
+  recordedAt DateTime @default(now())
+  offer      Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  @@index([offerId, recordedAt])
+}
+
+model ProductMatch {
+  id              String      @id @default(cuid())
+  sourceKey       String
+  targetProductId String
+  confidence      Float
+  method          MatchMethod
+  status          String      @default("PENDING")
+  reviewedAt      DateTime?
+  @@index([status, confidence])
+}
