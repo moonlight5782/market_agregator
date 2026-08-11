@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { basename } from "node:path";
 import { createInterface } from "node:readline";
-import { PrismaClient, StockStatus } from "@prisma/client";
+import { Prisma, PrismaClient, StockStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +23,7 @@ type RawLine = {
   quantity?: number | null;
   url: string;
   image_url?: string | null;
-  attributes?: Record<string, unknown>;
+  attributes?: Prisma.InputJsonObject;
   data_quality?: number;
 };
 
@@ -86,7 +86,7 @@ async function importItem(item: RawLine) {
         mpn: item.mpn || null,
         sku: item.sku || null,
         imageUrl: item.image_url || null,
-        attributes: item.attributes || {},
+        attributes: item.attributes ?? {},
         dataQuality: item.data_quality ?? 0,
       },
     });
