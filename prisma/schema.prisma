@@ -7,10 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum SourceType { API FEED JSON XML CSV YML SITEMAP HTML BROWSER }
-enum StockStatus { IN_STOCK LOW_STOCK OUT_OF_STOCK PREORDER UNKNOWN }
-enum CheckoutType { EXTERNAL PLATFORM }
-enum MatchMethod { EAN MPN SKU BRAND_MODEL NORMALIZED_TITLE FUZZY MANUAL }
+enum SourceType {
+  API
+  FEED
+  JSON
+  XML
+  CSV
+  YML
+  SITEMAP
+  HTML
+  BROWSER
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  PREORDER
+  UNKNOWN
+}
+
+enum CheckoutType {
+  EXTERNAL
+  PLATFORM
+}
+
+enum MatchMethod {
+  EAN
+  MPN
+  SKU
+  BRAND_MODEL
+  NORMALIZED_TITLE
+  FUZZY
+  MANUAL
+}
 
 model Store {
   id          String          @id @default(cuid())
