@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+.venv/
+__pycache__/
+*.pyc
+data/raw/*.ndjson
+coverage/
+.DS_Store
