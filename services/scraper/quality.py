@@ -16,6 +16,17 @@ def compute_quality(payloads: list[dict[str, Any]], limit: int) -> dict[str, Any
 
     with_branch_availability = sum(1 for item in payloads if item.get("availabilities"))
     branch_rows = sum(len(item.get("availabilities") or []) for item in payloads)
+    network_observed = 0
+    network_matched = 0
+    network_response_total = 0
+    for item in payloads:
+        attributes = item.get("attributes") or {}
+        responses = int(attributes.get("network_json_responses") or 0)
+        if responses > 0:
+            network_observed += 1
+            network_response_total += responses
+        if attributes.get("network_json_product_match") is True:
+            network_matched += 1
 
     return {
         "unique_products": total,
@@ -29,6 +40,9 @@ def compute_quality(payloads: list[dict[str, Any]], limit: int) -> dict[str, Any
         "identity_complete_pct": pct(sum(1 for item in payloads if item.get("ean") or item.get("mpn") or item.get("sku")), total),
         "branch_availability_product_pct": pct(with_branch_availability, total),
         "branch_availability_rows": branch_rows,
+        "network_json_observed_product_pct": pct(network_observed, total),
+        "network_json_matched_product_pct": pct(network_matched, total),
+        "network_json_response_count": network_response_total,
     }
 
 

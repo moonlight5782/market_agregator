@@ -67,35 +67,64 @@ class GenericJsonApiConnector(StoreConnector):
         item = self._items.get(url)
         if not item:
             return None
+        return self.product_from_item(item, url)
+
+    def product_from_item(self, item: dict[str, Any], fallback_url: str) -> RawProduct | None:
+        """Normalize one generic product-like JSON object.
+
+        This method is intentionally reusable by browser network observation so an
+        XHR/fetch response does not need a store-specific connector to become a
+        RawProduct.
+        """
         title = self._pick(item, "name", "title", "productName", "product_name")
         price_value = self._pick(item, "price", "salePrice", "sale_price", "currentPrice", "current_price")
+        if isinstance(price_value, dict):
+            price_value = self._pick(price_value, "value", "amount", "current", "price")
         price = self._decimal(price_value)
         if not title or price is None:
             return None
 
-        old_price = self._decimal(self._pick(item, "oldPrice", "old_price", "regularPrice", "regular_price", "compareAtPrice"))
+        old_price_value = self._pick(item, "oldPrice", "old_price", "regularPrice", "regular_price", "compareAtPrice")
+        if isinstance(old_price_value, dict):
+            old_price_value = self._pick(old_price_value, "value", "amount", "old", "price")
+        old_price = self._decimal(old_price_value)
+
         brand = self._pick(item, "brand", "manufacturer", "vendor")
         if isinstance(brand, dict):
             brand = self._pick(brand, "name", "title")
 
-        image = self._pick(item, "image", "imageUrl", "image_url", "thumbnail", "picture")
+        image = self._pick(item, "image", "imageUrl", "image_url", "thumbnail", "picture", "images")
         if isinstance(image, dict):
-            image = self._pick(image, "url", "src")
+            image = self._pick(image, "url", "src", "path")
         if isinstance(image, list):
             image = image[0] if image else None
             if isinstance(image, dict):
-                image = self._pick(image, "url", "src")
+                image = self._pick(image, "url", "src", "path")
 
+        quantity = self._int(self._pick(item, "quantity", "qty", "stock", "stockQuantity", "stock_quantity", "availableQuantity"))
         stock_status = self._stock(item)
-        quantity = self._int(self._pick(item, "quantity", "qty", "stock", "stockQuantity", "stock_quantity"))
-        external_id = self._pick(item, "id", "sku", "code", "ean", "gtin")
+        if stock_status == StockStatus.UNKNOWN and quantity is not None:
+            if quantity <= 0:
+                stock_status = StockStatus.OUT_OF_STOCK
+            elif quantity <= 10:
+                stock_status = StockStatus.LOW_STOCK
+            else:
+                stock_status = StockStatus.IN_STOCK
+
+        external_id = self._pick(item, "id", "sku", "code", "ean", "gtin", "productId", "product_id")
         category = self._pick(item, "category", "categoryName", "category_name")
         if isinstance(category, dict):
             category = self._pick(category, "name", "title")
 
+        currency = self._pick(item, "currency", "priceCurrency", "currencyCode")
+        if not currency:
+            price_container = self._pick(item, "price")
+            if isinstance(price_container, dict):
+                currency = self._pick(price_container, "currency", "currencyCode", "priceCurrency")
+
         return RawProduct(
             store_slug=self.context.store_slug,
-            external_id=str(external_id) if external_id is not None else url[-160:],
+            external_id=str(external_id) if external_id is not None else self._item_url(item, fallback_url)[-160:],
             title=str(title).strip(),
             description=str(self._pick(item, "description", "shortDescription", "short_description") or "").strip() or None,
             brand=str(brand).strip() if brand else None,
@@ -104,10 +133,10 @@ class GenericJsonApiConnector(StoreConnector):
             category_path=[str(category)] if category else [],
             price=price,
             old_price=old_price,
-            currency=str(self._pick(item, "currency", "priceCurrency", "currencyCode") or "MDL").upper(),
+            currency=str(currency or "MDL").upper(),
             stock_status=stock_status,
             quantity=quantity,
-            url=self._item_url(item, self.context.base_url),
+            url=self._item_url(item, fallback_url),
             image_url=urljoin(self.context.base_url, str(image)) if image else None,
             attributes={"source": "generic-json-api"},
         )
@@ -116,7 +145,7 @@ class GenericJsonApiConnector(StoreConnector):
         value = self._pick(item, "url", "link", "productUrl", "product_url", "slug")
         if value:
             return urljoin(self.context.base_url, str(value))
-        identifier = self._pick(item, "id", "sku", "code", "ean")
+        identifier = self._pick(item, "id", "sku", "code", "ean", "productId", "product_id")
         return f"{fallback}#product-{identifier}" if identifier is not None else fallback
 
     @classmethod
@@ -159,8 +188,10 @@ class GenericJsonApiConnector(StoreConnector):
     @classmethod
     def _looks_like_product(cls, item: dict[str, Any]) -> bool:
         has_title = cls._pick(item, "name", "title", "productName", "product_name") is not None
-        has_price = cls._pick(item, "price", "salePrice", "sale_price", "currentPrice", "current_price") is not None
-        return has_title and has_price
+        price = cls._pick(item, "price", "salePrice", "sale_price", "currentPrice", "current_price")
+        if isinstance(price, dict):
+            price = cls._pick(price, "value", "amount", "current", "price")
+        return has_title and price is not None
 
     @staticmethod
     def _decimal(value) -> Decimal | None:
@@ -181,6 +212,8 @@ class GenericJsonApiConnector(StoreConnector):
     @classmethod
     def _stock(cls, item: dict[str, Any]) -> StockStatus:
         value = cls._pick(item, "availability", "stockStatus", "stock_status", "available", "inStock", "in_stock")
+        if isinstance(value, dict):
+            value = cls._pick(value, "status", "value", "available", "inStock", "in_stock")
         if isinstance(value, bool):
             return StockStatus.IN_STOCK if value else StockStatus.OUT_OF_STOCK
         text = str(value or "").lower()
