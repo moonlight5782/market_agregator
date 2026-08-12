@@ -248,6 +248,7 @@ async function main() {
     }
   }
   console.log(`Done: ${imported} imported, ${failed} failed.`);
+  if (failed > 0) process.exitCode = 2;
 }
 
 main().finally(() => prisma.$disconnect());
