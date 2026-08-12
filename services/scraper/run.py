@@ -31,7 +31,7 @@ def pct(part: int, total: int) -> float:
     return round((part / total) * 100, 2) if total else 0.0
 
 
-async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> None:
+async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> int:
     started_at = datetime.now(timezone.utc)
     started = perf_counter()
     store = load_store(store_slug)
@@ -148,6 +148,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
                 break
 
     duration = round(perf_counter() - started, 3)
+    outcome = "OK" if products_written > 0 else ("BLOCKED_BY_ORIGIN" if profile.blocked else "NO_PRODUCTS")
     report = {
         "store_slug": store_slug,
         "store_name": store.get("name"),
@@ -155,6 +156,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
         "started_at": started_at.isoformat(),
         "duration_seconds": duration,
         "limit": limit,
+        "outcome": outcome,
         "browser_fallback": {
             "threshold_ratio": browser_threshold,
             "trigger_below_products": browser_trigger_count,
@@ -186,7 +188,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     stats = ", ".join(f"{s['connector']}:{s['accepted']}/{s['urls_checked']}" for s in strategy_stats)
-    print(f"Done. Wrote {products_written} unique products to {output}. Strategies: {stats}")
+    print(f"Done. outcome={outcome}. Wrote {products_written} unique products to {output}. Strategies: {stats}")
     print(
         f"Quality: target={report['quality']['target_fill_pct']}%, price={report['quality']['price_complete_pct']}%, "
         f"stock={report['quality']['known_stock_pct']}%, image={report['quality']['image_complete_pct']}%, "
@@ -194,6 +196,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
         f"branch_stock={report['quality']['branch_availability_product_pct']}%."
     )
     print(f"Report: {report_path}")
+    return products_written
 
 
 def main() -> None:
@@ -208,7 +211,9 @@ def main() -> None:
     )
     args = parser.parse_args()
     threshold = min(1.0, max(0.0, args.browser_threshold))
-    asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
+    products = asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
+    if products == 0:
+        raise SystemExit(4)
 
 
 if __name__ == "__main__":

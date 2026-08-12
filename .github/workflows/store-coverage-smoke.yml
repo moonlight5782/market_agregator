@@ -32,7 +32,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       - name: Install scraper dependencies
-        run: pip install -r services/scraper/requirements.txt
+        run: |
+          pip install -r services/scraper/requirements.txt
+          python -m playwright install --with-deps chromium
       - name: Crawl ${{ matrix.store }} with bounded smoke timeout
         shell: bash
         run: |
@@ -46,6 +48,8 @@ jobs:
           crawl_code=$?
           if [ $crawl_code -eq 124 ]; then
             echo "${{ matrix.store }} smoke crawl exceeded 300 seconds"
+          elif [ $crawl_code -eq 4 ]; then
+            echo "${{ matrix.store }} returned zero products; report is retained for diagnosis"
           fi
           if [ -f "data/reports/${{ matrix.store }}.json" ]; then
             python -m services.scraper.coverage_audit \
