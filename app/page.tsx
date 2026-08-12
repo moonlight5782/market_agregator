@@ -1,13 +1,5 @@
+import { ProductCard } from "../components/ProductCard";
 import { getHomeData } from "../lib/catalog-data";
-import { getBestOffer } from "../lib/demo-data";
-
-const cardStyle: React.CSSProperties = {
-  border: "1px solid #e8e8e8",
-  borderRadius: 18,
-  overflow: "hidden",
-  background: "#fff",
-  boxShadow: "0 8px 24px rgba(0,0,0,.05)",
-};
 
 export default async function Home() {
   const data = await getHomeData();
@@ -40,24 +32,7 @@ export default async function Home() {
       <section>
         <div><h2 style={{ fontSize: 28, marginBottom: 4 }}>Популярные предложения</h2><p style={{ marginTop: 0, color: "#666" }}>Одна карточка товара — предложения из нескольких магазинов.</p></div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(255px,1fr))", gap: 18 }}>
-          {data.latestProducts.map((product: any) => {
-            const best = data.mode === "demo" ? getBestOffer(product) : product.offers[0];
-            const category = data.mode === "demo" ? product.categoryName : product.category?.nameRu;
-            const brand = data.mode === "demo" ? product.brand : product.brand?.name;
-            return (
-              <article key={product.id} style={cardStyle}>
-                <a href={`/product/${product.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
-                  <div style={{ height: 190, background: "#f5f5f5" }}>{product.imageUrl && <img src={product.imageUrl} alt={product.title} style={{ width: "100%", height: "100%", objectFit: data.mode === "demo" ? "cover" : "contain" }} />}</div>
-                  <div style={{ padding: 18 }}>
-                    <div style={{ fontSize: 13, color: "#777" }}>{category ?? "Без категории"} {brand ? `• ${brand}` : ""}</div>
-                    <h3 style={{ minHeight: 48, margin: "8px 0 12px" }}>{product.title}</h3>
-                    {best && <><div style={{ fontWeight: 900, fontSize: 24 }}>от {Number(best.price).toLocaleString("ru-RU")} {best.currency}</div><div style={{ color: "#666", marginTop: 6 }}>лучшее: {best.store.name} · {product.offers.length} предлож.</div></>}
-                  </div>
-                </a>
-                <div style={{ padding: "0 18px 18px" }}><a href={`/product/${product.slug}`} style={{ display: "block", textAlign: "center", padding: 11, borderRadius: 11, background: "#111", color: "white", textDecoration: "none", fontWeight: 750 }}>Сравнить предложения</a></div>
-              </article>
-            );
-          })}
+          {data.latestProducts.map((product: any) => <ProductCard key={product.id} product={product} mode={data.mode} />)}
         </div>
       </section>
     </main>
