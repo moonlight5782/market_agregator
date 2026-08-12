@@ -45,11 +45,14 @@ jobs:
               failed=1
             fi
           done
+          python -m services.scraper.coverage_audit --stores darwin maximum cactus supraten --output data/reports/_coverage-audit.json
           python - <<'PY'
           import json
           from pathlib import Path
           summary = {}
           for path in Path('data/reports').glob('*.json'):
+              if path.name.startswith('_'):
+                  continue
               try:
                   report = json.loads(path.read_text(encoding='utf-8'))
               except Exception as exc:
