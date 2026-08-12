@@ -42,6 +42,13 @@ enum MatchMethod {
   MANUAL
 }
 
+enum ScraperRunStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
 model Store {
   id          String          @id @default(cuid())
   name        String
@@ -54,6 +61,7 @@ model Store {
   sources     StoreSource[]
   locations   StoreLocation[]
   offers      Offer[]
+  scraperRuns ScraperRun[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 }
@@ -90,6 +98,23 @@ model StoreSource {
   lastError      String?
   store          Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
   @@index([storeId, enabled])
+}
+
+model ScraperRun {
+  id              String           @id @default(cuid())
+  storeId         String
+  status          ScraperRunStatus @default(RUNNING)
+  startedAt       DateTime         @default(now())
+  finishedAt      DateTime?
+  productsFound   Int              @default(0)
+  productsImported Int             @default(0)
+  errors          Int              @default(0)
+  reportPath      String?
+  errorMessage    String?
+  metrics         Json?
+  store           Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  @@index([storeId, startedAt])
+  @@index([status, startedAt])
 }
 
 model Category {
