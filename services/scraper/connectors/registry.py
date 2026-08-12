@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from .base import ConnectorContext, StoreConnector
 from .browser_generic import BrowserRenderedConnector
+from .darwin import DarwinConnector
 from .feed_generic import GenericFeedConnector
 from .html_generic import GenericHtmlConnector
 from .json_api import GenericJsonApiConnector
@@ -27,6 +28,16 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
     fallbacks and can contribute products missed by earlier sources.
     """
     plan: list[ConnectorChoice] = []
+
+    if context.store_slug == "darwin":
+        plan.append(
+            ConnectorChoice(
+                name="darwin-catalog",
+                connector=DarwinConnector(context),
+                reason="store-specific paginated public catalog discovery",
+                priority=5,
+            )
+        )
 
     if profile.api_hints:
         plan.append(
