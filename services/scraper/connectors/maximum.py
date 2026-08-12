@@ -12,11 +12,11 @@ from .html_generic import GenericHtmlConnector
 
 
 class MaximumConnector(GenericHtmlConnector):
-    """MAXIMUM-specific catalog discovery with generic product parsing.
+    """MAXIMUM-specific catalog discovery with shared product parsing.
 
     Product pages use stable numeric URLs (/ru/<id>/). Category pages use named
-    slugs, so we can crawl catalog/category navigation without confusing it with
-    product identity.
+    slugs. Only discovery and merchant-specific field fallbacks live here; the
+    normalized RawProduct contract remains shared with every connector.
     """
 
     product_path = re.compile(r"^/(?:ru|ro)/(\d+)/?$")
@@ -75,3 +75,44 @@ class MaximumConnector(GenericHtmlConnector):
                         queue.append(clean)
 
                 await asyncio.sleep(delay)
+
+    @staticmethod
+    def _sku_from_text(text: str) -> str | None:
+        match = re.search(r"(?:Код товара|Cod produs)\s*:?\s*([A-Za-z0-9._/-]{2,64})", text, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return GenericHtmlConnector._sku_from_text(text)
+
+    def _first_text(self, soup: BeautifulSoup, selectors: list[str]) -> str | None:
+        value = GenericHtmlConnector._first_text(soup, selectors)
+        if value:
+            return value
+        if ".product-brand" in selectors:
+            text = soup.get_text(" ", strip=True)
+            match = re.search(r"(?:Производитель|Producător)\s*:?\s*([\w.+&' -]{2,80}?)(?=\s+(?:Видео|Основные|Электропитание|Управление|Характеристики|$))", text, flags=re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return None
+
+    async def fetch_product(self, url: str):
+        item = await super().fetch_product(url)
+        if item is None or item.image_url:
+            return item
+
+        # MAXIMUM commonly exposes the primary product image via OpenGraph/link
+        # metadata rather than the generic product-image selectors.
+        async with self.client() as client:
+            response = await client.get(url)
+            if not response.is_success:
+                return item
+        soup = BeautifulSoup(response.text, "lxml")
+        meta = (
+            soup.find("meta", attrs={"property": "og:image"})
+            or soup.find("meta", attrs={"name": "twitter:image"})
+            or soup.find("link", attrs={"rel": "image_src"})
+        )
+        if meta:
+            image = meta.get("content") or meta.get("href")
+            if image:
+                item.image_url = urljoin(str(response.url), str(image))
+        return item
