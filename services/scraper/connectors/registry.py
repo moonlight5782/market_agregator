@@ -9,6 +9,7 @@ from .feed_generic import GenericFeedConnector
 from .html_generic import GenericHtmlConnector
 from .json_api import GenericJsonApiConnector
 from .jsonld import SitemapJsonLdConnector
+from .maximum import MaximumConnector
 from ..source_discovery import SourceProfile
 
 
@@ -53,6 +54,14 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             name="darwin-catalog",
             connector=DarwinConnector(context),
             reason="store-specific paginated public HTML catalog discovery",
+            priority=35,
+        ))
+
+    if context.store_slug == "maximum":
+        plan.append(ConnectorChoice(
+            name="maximum-catalog",
+            connector=MaximumConnector(context),
+            reason="store-specific category traversal with stable numeric product URLs",
             priority=35,
         ))
 
