@@ -16,6 +16,7 @@ const registry = JSON.parse(readFileSync("data/store-registry.json", "utf8"));
 const stores = registry.filter((store) => store.status === "VERIFIED");
 
 const successes = [];
+const partials = [];
 const failures = [];
 
 for (const store of stores) {
@@ -26,11 +27,14 @@ for (const store of stores) {
     { stdio: "inherit", env: process.env }
   );
   if (result.status === 0) successes.push(store.slug);
+  else if (result.status === 2) partials.push(store.slug);
   else failures.push({ store: store.slug, exitCode: result.status ?? 1 });
 }
 
 console.log("\n===== VERIFIED STORE SYNC SUMMARY =====");
 console.log(`Successful (${successes.length}): ${successes.join(", ") || "none"}`);
+console.log(`Partial (${partials.length}): ${partials.join(", ") || "none"}`);
 console.log(`Failed (${failures.length}): ${failures.map((item) => `${item.store}:${item.exitCode}`).join(", ") || "none"}`);
 
 if (failures.length) process.exitCode = 1;
+else if (partials.length) process.exitCode = 2;
