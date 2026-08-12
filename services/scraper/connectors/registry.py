@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .base import ConnectorContext, StoreConnector
+from .browser_generic import BrowserRenderedConnector
 from .feed_generic import GenericFeedConnector
 from .html_generic import GenericHtmlConnector
 from .json_api import GenericJsonApiConnector
@@ -61,8 +62,17 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         ConnectorChoice(
             name="html-generic",
             connector=GenericHtmlConnector(context),
-            reason="generic HTML parser fallback",
+            reason="generic HTTP/HTML parser fallback",
             priority=40,
+        )
+    )
+
+    plan.append(
+        ConnectorChoice(
+            name="browser-rendered",
+            connector=BrowserRenderedConnector(context),
+            reason="last-resort JavaScript-rendered storefront fallback",
+            priority=50,
         )
     )
 
