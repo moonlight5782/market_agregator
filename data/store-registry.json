@@ -1,8 +1,8 @@
 [
-  {"slug":"darwin","name":"Darwin","domain":"https://darwin.md","categories":["electronics","smartphones","laptops","home-appliances","sport","auto"],"status":"VERIFIED","source":"official"},
-  {"slug":"cactus","name":"Cactus","domain":"https://www.cactus.md","categories":["electronics","home-appliances"],"status":"VERIFIED","source":"official"},
-  {"slug":"maximum","name":"MAXIMUM","domain":"https://maximum.md","categories":["electronics","home-appliances","home","kids","auto"],"status":"VERIFIED","source":"official"},
-  {"slug":"supraten","name":"SUPRATEN","domain":"https://supraten.md","categories":["construction","building-materials","tools","electrical","plumbing","garden","home-appliances"],"status":"VERIFIED","source":"official"},
+  {"slug":"darwin","name":"Darwin","domain":"https://darwin.md","categories":["electronics","smartphones","laptops","home-appliances","sport","auto"],"status":"BLOCKED","statusReason":"HTTP 403 on the GitHub-hosted runner; target deployment coverage is not verified","source":"official"},
+  {"slug":"cactus","name":"Cactus","domain":"https://www.cactus.md","categories":["electronics","home-appliances"],"status":"UNVERIFIED","statusReason":"No published representative coverage report yet","source":"official"},
+  {"slug":"maximum","name":"MAXIMUM","domain":"https://maximum.md","categories":["electronics","home-appliances","home","kids","auto"],"status":"PARTIAL","statusReason":"Only a bounded sample has been validated; full catalog coverage is not verified","source":"official"},
+  {"slug":"supraten","name":"SUPRATEN","domain":"https://supraten.md","categories":["construction","building-materials","tools","electrical","plumbing","garden","home-appliances"],"status":"BLOCKED","statusReason":"HTTP 403 on the GitHub-hosted runner; target deployment coverage is not verified","source":"official"},
   {"slug":"bigshop","name":"Bigshop","domain":"https://bigshop.md","categories":["electronics","home","furniture","kids","sport","construction","auto","fashion"],"status":"DISCOVERED","source":"point.md"},
   {"slug":"smart","name":"Smart","domain":"https://smart.md","categories":["electronics","smartphones","laptops"],"status":"DISCOVERED","source":"point.md"},
   {"slug":"vic","name":"VIC","domain":"https://vic.md","categories":["electronics","smartphones","laptops"],"status":"DISCOVERED","source":"point.md"},
