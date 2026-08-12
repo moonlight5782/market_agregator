@@ -2,8 +2,11 @@ import { notFound } from "next/navigation";
 import { getProductBySlug } from "../../../lib/product-data";
 
 function stockLabel(status: string, quantity?: number | null) {
-  const base = status === "IN_STOCK" ? "В наличии" : status === "LOW_STOCK" ? "Мало" : status === "OUT_OF_STOCK" ? "Нет в наличии" : status === "PREORDER" ? "Предзаказ" : "Наличие уточняется";
-  return quantity != null ? `${base} · ${quantity} шт.` : base;
+  if (status === "OUT_OF_STOCK" || quantity === 0) return "Нет в наличии";
+  if (status === "PREORDER") return "Предзаказ";
+  if (quantity != null && quantity > 0 && quantity <= 10) return `В наличии · ${quantity} шт.`;
+  if (status === "IN_STOCK" || status === "LOW_STOCK" || (quantity != null && quantity > 10)) return "В наличии";
+  return "Наличие уточняется";
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -32,7 +35,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div style={{ border: "1px solid #e5e5e5", borderRadius: 18, padding: 20, marginBottom: 22 }}>
               <div style={{ color: "#666", fontSize: 14 }}>Лучшая цена</div>
               <div style={{ fontSize: "clamp(28px,8vw,34px)", fontWeight: 900, marginTop: 3 }}>от {Number(best.price).toLocaleString("ru-RU")} {best.currency}</div>
-              <div style={{ color: "#666", marginTop: 7 }}>{offers.length} предлож. · {offers.filter((o: any) => o.stockStatus === "IN_STOCK").length} в наличии</div>
+              <div style={{ color: "#666", marginTop: 7 }}>{offers.length} предлож. · {offers.filter((o: any) => o.stockStatus === "IN_STOCK" || o.stockStatus === "LOW_STOCK").length} в наличии</div>
             </div>
           )}
           {result.mode === "db" && product.description && <p style={{ color: "#555", lineHeight: 1.6 }}>{product.description}</p>}
@@ -51,7 +54,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <h2 style={{ fontSize: 28, marginBottom: 6 }}>Предложения магазинов</h2>
         <p style={{ marginTop: 0, color: "#666" }}>Цена, наличие и ссылка берутся из конкретного магазина.</p>
         <div className="offer-list">
-          {offers.map((offer: any, index: number) => (
+          {offers.map((offer: any) => (
             <div key={offer.id} className="offer-row">
               <div><b style={{ fontSize: 17 }}>{offer.store.name}</b>{offer.location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{offer.location.city}{offer.location.address ? ` · ${offer.location.address}` : ""}</div>}</div>
               <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString("ru-RU")} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString("ru-RU")} {offer.currency}</div></div>
