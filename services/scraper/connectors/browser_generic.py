@@ -64,12 +64,9 @@ class BrowserRenderedConnector(StoreConnector):
                     seen.add(url)
                     yield url
 
-    async def fetch_product(self, url: str) -> RawProduct | None:
-        rendered = await self._render(url)
-        if not rendered:
-            return None
-        final_url, html = rendered
+    def _parse_rendered_product(self, final_url: str, html: str) -> RawProduct | None:
         soup = BeautifulSoup(html, "lxml")
+        page_text = soup.get_text(" ", strip=True)
 
         title = GenericHtmlConnector._first_text(soup, ["h1", '[itemprop="name"]', '.product-title', '.product__title'])
         if not title:
@@ -89,11 +86,8 @@ class BrowserRenderedConnector(StoreConnector):
         old_price = GenericHtmlConnector._decimal(
             GenericHtmlConnector._first_text(soup, ['.old-price', '.price-old', '.regular-price', 'del'])
         )
-        image = None
-        image_node = soup.select_one('[itemprop="image"], .product-image img, .gallery img, main img')
-        if image_node:
-            raw_image = image_node.get("src") or image_node.get("data-src")
-            image = urljoin(final_url, str(raw_image)) if raw_image else None
+        image = GenericHtmlConnector._extract_product_image(soup, final_url)
+        quantity = GenericHtmlConnector._quantity_from_text(page_text)
 
         availability_text = " ".join(
             filter(
@@ -104,8 +98,12 @@ class BrowserRenderedConnector(StoreConnector):
                 ],
             )
         ).lower()
-        if any(x in availability_text for x in ("out of stock", "indisponibil", "stoc epuizat", "нет в наличии")):
+        if quantity == 0 or any(x in availability_text for x in ("out of stock", "indisponibil", "stoc epuizat", "нет в наличии")):
             status = StockStatus.OUT_OF_STOCK
+        elif quantity is not None and quantity <= 10:
+            status = StockStatus.LOW_STOCK
+        elif quantity is not None and quantity > 10:
+            status = StockStatus.IN_STOCK
         elif any(x in availability_text for x in ("low stock", "stoc limitat", "ultimele", "мало")):
             status = StockStatus.LOW_STOCK
         elif any(x in availability_text for x in ("in stock", "in stoc", "disponibil", "в наличии")):
@@ -115,9 +113,13 @@ class BrowserRenderedConnector(StoreConnector):
 
         sku_node = soup.find(attrs={"itemprop": "sku"})
         sku = sku_node.get("content") if sku_node and sku_node.has_attr("content") else (sku_node.get_text(" ", strip=True) if sku_node else None)
+        if not sku:
+            sku = GenericHtmlConnector._sku_from_text(page_text)
         brand = GenericHtmlConnector._first_text(soup, ['[itemprop="brand"]', '.brand', '.product-brand'])
         category_path = [x.get_text(" ", strip=True) for x in soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')][1:]
-        description = GenericHtmlConnector._first_text(soup, ['[itemprop="description"]', '.product-description', '#description'])
+        if not category_path:
+            category_path = GenericHtmlConnector._category_path_from_url(final_url)
+        description = GenericHtmlConnector._first_text(soup, ['[itemprop="description"]', '.product-description', '#description', '.description'])
 
         return RawProduct(
             store_slug=self.context.store_slug,
@@ -131,7 +133,15 @@ class BrowserRenderedConnector(StoreConnector):
             old_price=old_price,
             currency=GenericHtmlConnector._currency(soup),
             stock_status=status,
+            quantity=quantity,
             url=final_url,
             image_url=image,
             attributes={"source": "browser-rendered"},
         )
+
+    async def fetch_product(self, url: str) -> RawProduct | None:
+        rendered = await self._render(url)
+        if not rendered:
+            return None
+        final_url, html = rendered
+        return self._parse_rendered_product(final_url, html)
