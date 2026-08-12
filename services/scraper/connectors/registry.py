@@ -29,16 +29,6 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
     """
     plan: list[ConnectorChoice] = []
 
-    if context.store_slug == "darwin":
-        plan.append(
-            ConnectorChoice(
-                name="darwin-catalog",
-                connector=DarwinConnector(context),
-                reason="store-specific paginated public catalog discovery",
-                priority=5,
-            )
-        )
-
     if profile.api_hints:
         plan.append(
             ConnectorChoice(
@@ -69,6 +59,16 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             )
         )
 
+    if context.store_slug == "darwin":
+        plan.append(
+            ConnectorChoice(
+                name="darwin-catalog",
+                connector=DarwinConnector(context),
+                reason="store-specific paginated public HTML catalog discovery",
+                priority=35,
+            )
+        )
+
     plan.append(
         ConnectorChoice(
             name="html-generic",
@@ -87,7 +87,7 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         )
     )
 
-    return plan
+    return sorted(plan, key=lambda item: item.priority)
 
 
 def choose_connector(context: ConnectorContext, profile: SourceProfile) -> ConnectorChoice:
