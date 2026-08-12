@@ -222,10 +222,20 @@ class BrowserRenderedConnector(StoreConnector):
         return best[1] if best else None
 
     @staticmethod
-    def _merge_network_product(dom: RawProduct, network: RawProduct | None) -> RawProduct:
-        if network is None:
-            return dom
+    def _merge_network_product(
+        dom: RawProduct,
+        network: RawProduct | None,
+        *,
+        observed_json_responses: int = 0,
+    ) -> RawProduct:
         data = dom.model_dump()
+        data["attributes"] = {
+            **(dom.attributes or {}),
+            "network_json_responses": observed_json_responses,
+            "network_json_product_match": network is not None,
+        }
+        if network is None:
+            return RawProduct.model_validate(data)
         if dom.stock_status == StockStatus.UNKNOWN and network.stock_status != StockStatus.UNKNOWN:
             data["stock_status"] = network.stock_status
         if dom.quantity is None and network.quantity is not None:
@@ -243,7 +253,7 @@ class BrowserRenderedConnector(StoreConnector):
         if not dom.category_path and network.category_path:
             data["category_path"] = network.category_path
         data["attributes"] = {
-            **(dom.attributes or {}),
+            **data["attributes"],
             "network_json_enriched": True,
             "network_source": str((network.attributes or {}).get("source") or "generic-json-api"),
         }
@@ -258,4 +268,8 @@ class BrowserRenderedConnector(StoreConnector):
         if dom_product is None:
             return None
         network_product = self._network_product(final_url, dom_product, network_json)
-        return self._merge_network_product(dom_product, network_product)
+        return self._merge_network_product(
+            dom_product,
+            network_product,
+            observed_json_responses=len(network_json),
+        )
