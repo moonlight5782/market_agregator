@@ -4,6 +4,7 @@ from services.scraper.connectors.base import ConnectorContext
 from services.scraper.connectors.browser_generic import BrowserRenderedConnector
 from services.scraper.connectors.json_api import GenericJsonApiConnector
 from services.scraper.models import RawProduct, StockStatus
+from services.scraper.quality import compute_quality
 
 
 class GenericJsonProductParserTests(unittest.TestCase):
@@ -76,21 +77,32 @@ class BrowserNetworkEnrichmentTests(unittest.TestCase):
         network = self.connector._network_product(str(self.dom.url), self.dom, payloads)
         self.assertIsNotNone(network)
         assert network is not None
-        merged = self.connector._merge_network_product(self.dom, network)
+        merged = self.connector._merge_network_product(self.dom, network, observed_json_responses=3)
 
         self.assertEqual(merged.quantity, 4)
         self.assertEqual(merged.stock_status, StockStatus.LOW_STOCK)
         self.assertEqual(str(merged.image_url), "https://shop.example/media/cosmeplant.webp")
         self.assertTrue(merged.attributes["network_json_enriched"])
+        self.assertEqual(merged.attributes["network_json_responses"], 3)
+        self.assertTrue(merged.attributes["network_json_product_match"])
 
-    def test_rejects_unrelated_network_products(self) -> None:
+        quality = compute_quality([merged.model_dump(mode="json")], limit=1)
+        self.assertEqual(quality["network_json_observed_product_pct"], 100.0)
+        self.assertEqual(quality["network_json_matched_product_pct"], 100.0)
+        self.assertEqual(quality["network_json_response_count"], 3)
+
+    def test_rejects_unrelated_network_products_but_records_observation(self) -> None:
         payloads = [
             (
                 "https://shop.example/api/recommendations",
                 {"products": [{"id": "999", "name": "Complet diferit", "price": 10, "stock": 3}]},
             )
         ]
-        self.assertIsNone(self.connector._network_product(str(self.dom.url), self.dom, payloads))
+        network = self.connector._network_product(str(self.dom.url), self.dom, payloads)
+        self.assertIsNone(network)
+        merged = self.connector._merge_network_product(self.dom, network, observed_json_responses=1)
+        self.assertEqual(merged.attributes["network_json_responses"], 1)
+        self.assertFalse(merged.attributes["network_json_product_match"])
 
 
 if __name__ == "__main__":
