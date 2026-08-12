@@ -1,8 +1,11 @@
 import { searchCatalog } from "../../lib/catalog-data";
 
 function stockLabel(status: string, quantity?: number | null) {
-  const base = status === "IN_STOCK" ? "В наличии" : status === "LOW_STOCK" ? "Мало" : status === "OUT_OF_STOCK" ? "Нет в наличии" : "Наличие уточняется";
-  return quantity != null ? `${base} · ${quantity} шт.` : base;
+  if (status === "OUT_OF_STOCK" || quantity === 0) return "Нет в наличии";
+  if (status === "PREORDER") return "Предзаказ";
+  if (quantity != null && quantity > 0 && quantity <= 10) return `В наличии · ${quantity} шт.`;
+  if (status === "IN_STOCK" || status === "LOW_STOCK" || (quantity != null && quantity > 10)) return "В наличии";
+  return "Наличие уточняется";
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; sort?: string }> }) {
