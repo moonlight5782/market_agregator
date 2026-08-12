@@ -14,18 +14,20 @@ from ..models import RawProduct, StockStatus
 
 
 class SitemapJsonLdConnector(StoreConnector):
-    """Reusable connector for stores exposing sitemaps and schema.org Product JSON-LD.
-
-    This is intentionally store-agnostic. Store-specific behavior belongs in config or a
-    small subclass only when the merchant deviates from common web standards.
-    """
+    """Reusable connector for stores exposing sitemaps and schema.org Product JSON-LD."""
 
     sitemap_paths = ("/sitemap.xml", "/sitemap_index.xml", "/sitemap-index.xml")
 
+    def __init__(self, context, sitemap_urls: list[str] | None = None) -> None:
+        super().__init__(context)
+        self.sitemap_urls = sitemap_urls or []
+
     async def discover_product_urls(self) -> AsyncIterator[str]:
         async with self.client() as client:
-            candidates: list[str] = [urljoin(self.context.base_url, path) for path in self.sitemap_paths]
+            candidates: list[str] = list(self.sitemap_urls)
+            candidates.extend(urljoin(self.context.base_url, path) for path in self.sitemap_paths)
 
+            # Fallback discovery in case this connector is used without SourceProfile.
             robots_url = urljoin(self.context.base_url, "/robots.txt")
             try:
                 robots = await client.get(robots_url)
@@ -128,10 +130,8 @@ class SitemapJsonLdConnector(StoreConnector):
         sku = product.get("sku")
         gtin = product.get("gtin13") or product.get("gtin14") or product.get("gtin12") or product.get("gtin")
         mpn = product.get("mpn")
-
         category = product.get("category")
         category_path = [str(category)] if category else []
-
         external_id = str(sku or gtin or mpn or self._url_key(url))
         currency = str(offers.get("priceCurrency") or "MDL").upper()
 
