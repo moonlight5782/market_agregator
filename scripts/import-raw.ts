@@ -5,6 +5,15 @@ import { Prisma, PrismaClient, StockStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+type RawAvailability = {
+  location_external_id?: string | null;
+  location_name?: string | null;
+  city: string;
+  address?: string | null;
+  stock_status?: string;
+  quantity?: number | null;
+};
+
 type RawLine = {
   store_slug: string;
   external_id?: string | null;
@@ -25,6 +34,8 @@ type RawLine = {
   image_url?: string | null;
   attributes?: Prisma.InputJsonObject;
   data_quality?: number;
+  location_external_id?: string | null;
+  availabilities?: RawAvailability[];
 };
 
 function slugify(value: string) {
@@ -34,6 +45,12 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 120) || "product";
+}
+
+function toStockStatus(value?: string): StockStatus {
+  return Object.values(StockStatus).includes(value as StockStatus)
+    ? (value as StockStatus)
+    : StockStatus.UNKNOWN;
 }
 
 async function findMatchingProduct(item: RawLine, brandId?: string) {
@@ -55,6 +72,61 @@ async function findMatchingProduct(item: RawLine, brandId?: string) {
       ...(brandId ? { brandId } : {}),
     },
   });
+}
+
+async function resolveLocation(storeId: string, availability: RawAvailability) {
+  const externalId = availability.location_external_id?.trim() || null;
+  const city = availability.city.trim();
+  const name = availability.location_name?.trim() || availability.address?.trim() || city;
+  const address = availability.address?.trim() || null;
+
+  if (externalId) {
+    return prisma.storeLocation.upsert({
+      where: { storeId_externalId: { storeId, externalId } },
+      update: { name, address, city, active: true },
+      create: { storeId, externalId, name, address, city, active: true },
+    });
+  }
+
+  const existing = await prisma.storeLocation.findFirst({
+    where: { storeId, city, name, address },
+  });
+  if (existing) return existing;
+
+  return prisma.storeLocation.create({
+    data: { storeId, name, address, city, active: true },
+  });
+}
+
+async function importAvailabilities(offerId: string, storeId: string, availabilities: RawAvailability[]) {
+  for (const availability of availabilities) {
+    if (!availability.city?.trim()) continue;
+    const location = await resolveLocation(storeId, availability);
+    const stockStatus = toStockStatus(availability.stock_status);
+    const quantity = availability.quantity ?? null;
+    const previous = await prisma.offerAvailability.findUnique({
+      where: { offerId_locationId: { offerId, locationId: location.id } },
+    });
+
+    await prisma.offerAvailability.upsert({
+      where: { offerId_locationId: { offerId, locationId: location.id } },
+      update: {
+        stockStatus,
+        quantity,
+        lastSeenAt: new Date(),
+        lastStockUpdate:
+          previous && previous.stockStatus === stockStatus && previous.quantity === quantity
+            ? previous.lastStockUpdate
+            : new Date(),
+      },
+      create: {
+        offerId,
+        locationId: location.id,
+        stockStatus,
+        quantity,
+      },
+    });
+  }
 }
 
 async function importItem(item: RawLine) {
@@ -110,10 +182,7 @@ async function importItem(item: RawLine) {
     where: { storeId_externalId: { storeId: store.id, externalId } },
   });
 
-  const stockStatus = Object.values(StockStatus).includes(item.stock_status as StockStatus)
-    ? (item.stock_status as StockStatus)
-    : StockStatus.UNKNOWN;
-
+  const stockStatus = toStockStatus(item.stock_status);
   const offer = await prisma.offer.upsert({
     where: { storeId_externalId: { storeId: store.id, externalId } },
     update: {
@@ -147,6 +216,10 @@ async function importItem(item: RawLine) {
       imageUrl: item.image_url || null,
     },
   });
+
+  if (item.availabilities?.length) {
+    await importAvailabilities(offer.id, store.id, item.availabilities);
+  }
 
   if (!previous || previous.price.toString() !== String(item.price)) {
     await prisma.priceHistory.create({ data: { offerId: offer.id, price: item.price } });

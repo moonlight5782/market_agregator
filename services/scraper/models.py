@@ -15,6 +15,15 @@ class StockStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class RawAvailability(BaseModel):
+    location_external_id: str | None = None
+    location_name: str | None = None
+    city: str
+    address: str | None = None
+    stock_status: StockStatus = StockStatus.UNKNOWN
+    quantity: int | None = None
+
+
 class RawProduct(BaseModel):
     store_slug: str
     external_id: str | None = None
@@ -34,6 +43,7 @@ class RawProduct(BaseModel):
     image_url: HttpUrl | None = None
     attributes: dict[str, Any] = Field(default_factory=dict)
     location_external_id: str | None = None
+    availabilities: list[RawAvailability] = Field(default_factory=list)
     fetched_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

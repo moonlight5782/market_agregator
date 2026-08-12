@@ -59,6 +59,8 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
     with_image = 0
     with_category = 0
     with_identity = 0
+    with_branch_availability = 0
+    branch_availability_rows = 0
     errors = 0
     strategy_stats: list[dict] = []
 
@@ -121,6 +123,9 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
                     with_image += int(item.image_url is not None)
                     with_category += int(item.category_slug is not None)
                     with_identity += int(bool(item.ean or item.mpn or item.sku))
+                    if item.availabilities:
+                        with_branch_availability += 1
+                        branch_availability_rows += len(item.availabilities)
                     print(f"[{products_written}] {item.title} — {item.price} {item.currency} — {category_slug or 'unmapped'} [{choice.name}]")
             except Exception as exc:
                 errors += 1
@@ -172,6 +177,8 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
             "image_complete_pct": pct(with_image, products_written),
             "category_complete_pct": pct(with_category, products_written),
             "identity_complete_pct": pct(with_identity, products_written),
+            "branch_availability_product_pct": pct(with_branch_availability, products_written),
+            "branch_availability_rows": branch_availability_rows,
             "errors": errors,
         },
         "output": str(output.relative_to(ROOT)),
@@ -183,7 +190,8 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
     print(
         f"Quality: target={report['quality']['target_fill_pct']}%, price={report['quality']['price_complete_pct']}%, "
         f"stock={report['quality']['known_stock_pct']}%, image={report['quality']['image_complete_pct']}%, "
-        f"category={report['quality']['category_complete_pct']}%, identity={report['quality']['identity_complete_pct']}%."
+        f"category={report['quality']['category_complete_pct']}%, identity={report['quality']['identity_complete_pct']}%, "
+        f"branch_stock={report['quality']['branch_availability_product_pct']}%."
     )
     print(f"Report: {report_path}")
 

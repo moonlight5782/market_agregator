@@ -13,6 +13,7 @@ def normalize_text(value: str) -> str:
 
 
 def quality_score(item: RawProduct) -> float:
+    has_branch_quantity = any(availability.quantity is not None for availability in item.availabilities)
     weighted = {
         "title": (bool(item.title), 0.15),
         "price": (item.price >= 0, 0.15),
@@ -22,8 +23,8 @@ def quality_score(item: RawProduct) -> float:
         "category": (bool(item.category_path), 0.10),
         "image": (bool(item.image_url), 0.05),
         "stock": (item.stock_status.value != "UNKNOWN", 0.10),
-        "quantity": (item.quantity is not None, 0.05),
-        "location": (item.location_external_id is not None, 0.05),
+        "quantity": (item.quantity is not None or has_branch_quantity, 0.05),
+        "location": (item.location_external_id is not None or bool(item.availabilities), 0.05),
     }
     return round(sum(weight for ok, weight in weighted.values() if ok), 2)
 

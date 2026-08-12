@@ -8,7 +8,7 @@
     "start": "next start",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts",
     "data:crawl": "python -m services.scraper.run",
     "data:import": "tsx scripts/import-raw.ts",
     "data:sync": "node scripts/sync-store.mjs",
@@ -27,5 +27,5 @@
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
   },
-  "prisma": {"seed": "tsx prisma/seed.ts"}
+  "prisma": {"seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts"}
 }
