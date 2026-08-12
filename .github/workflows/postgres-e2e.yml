@@ -1,0 +1,56 @@
+name: PostgreSQL E2E
+
+on:
+  pull_request:
+    paths:
+      - "prisma/**"
+      - "scripts/import-raw.ts"
+      - "scripts/verify-postgres-e2e.ts"
+      - "data/fixtures/postgres-e2e.ndjson"
+      - ".github/workflows/postgres-e2e.yml"
+  push:
+    branches: [main]
+    paths:
+      - "prisma/**"
+      - "scripts/import-raw.ts"
+      - "scripts/verify-postgres-e2e.ts"
+      - "data/fixtures/postgres-e2e.ndjson"
+      - ".github/workflows/postgres-e2e.yml"
+
+jobs:
+  postgres-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: moldova_commerce
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d moldova_commerce"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moldova_commerce
+      SEED_SAMPLE_PRODUCTS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install
+      - run: npm run db:generate
+      - name: Apply schema to real PostgreSQL
+        run: npm run db:push
+      - name: Seed canonical categories, stores and locations
+        run: npm run db:seed
+      - name: Import normalized fixture through production importer
+        run: npm run data:import -- data/fixtures/postgres-e2e.ndjson
+      - name: Verify Product/Offer matching, history and branch stock
+        run: npx tsx scripts/verify-postgres-e2e.ts
