@@ -1,0 +1,35 @@
+[
+  {"store_slug":"darwin","external_id":"city-chisinau","name":"Darwin Chișinău","city":"Chișinău"},
+  {"store_slug":"darwin","external_id":"city-balti","name":"Darwin Bălți","city":"Bălți"},
+  {"store_slug":"darwin","external_id":"city-edinet","name":"Darwin Edineț","city":"Edineț"},
+  {"store_slug":"darwin","external_id":"city-donduseni","name":"Darwin Dondușeni","city":"Dondușeni"},
+  {"store_slug":"darwin","external_id":"city-ungheni","name":"Darwin Ungheni","city":"Ungheni"},
+  {"store_slug":"darwin","external_id":"city-orhei","name":"Darwin Orhei","city":"Orhei"},
+  {"store_slug":"darwin","external_id":"city-calarasi","name":"Darwin Călărași","city":"Călărași"},
+  {"store_slug":"darwin","external_id":"city-hincesti","name":"Darwin Hîncești","city":"Hîncești"},
+  {"store_slug":"darwin","external_id":"city-comrat","name":"Darwin Comrat","city":"Comrat"},
+  {"store_slug":"darwin","external_id":"city-ceadir-lunga","name":"Darwin Ceadîr-Lunga","city":"Ceadîr-Lunga"},
+  {"store_slug":"darwin","external_id":"city-rezina","name":"Darwin Rezina","city":"Rezina"},
+  {"store_slug":"darwin","external_id":"city-straseni","name":"Darwin Strășeni","city":"Strășeni"},
+  {"store_slug":"darwin","external_id":"city-cimislia","name":"Darwin Cimișlia","city":"Cimișlia"},
+  {"store_slug":"darwin","external_id":"city-drochia","name":"Darwin Drochia","city":"Drochia"},
+  {"store_slug":"darwin","external_id":"city-soroca","name":"Darwin Soroca","city":"Soroca"},
+  {"store_slug":"darwin","external_id":"city-glodeni","name":"Darwin Glodeni","city":"Glodeni"},
+  {"store_slug":"darwin","external_id":"city-cahul","name":"Darwin Cahul","city":"Cahul"},
+  {"store_slug":"darwin","external_id":"city-nisporeni","name":"Darwin Nisporeni","city":"Nisporeni"},
+  {"store_slug":"darwin","external_id":"city-causeni","name":"Darwin Căușeni","city":"Căușeni"},
+  {"store_slug":"darwin","external_id":"city-singerei","name":"Darwin Sîngerei","city":"Sîngerei"},
+  {"store_slug":"darwin","external_id":"city-telenesti","name":"Darwin Telenești","city":"Telenești"},
+
+  {"store_slug":"maximum","external_id":"city-chisinau","name":"MAXIMUM Chișinău","city":"Chișinău"},
+  {"store_slug":"maximum","external_id":"city-balti","name":"MAXIMUM Bălți","city":"Bălți"},
+  {"store_slug":"maximum","external_id":"city-orhei","name":"MAXIMUM Orhei","city":"Orhei"},
+  {"store_slug":"maximum","external_id":"city-comrat","name":"MAXIMUM Comrat","city":"Comrat"},
+  {"store_slug":"maximum","external_id":"city-taraclia","name":"MAXIMUM Taraclia","city":"Taraclia"},
+  {"store_slug":"maximum","external_id":"city-cahul","name":"MAXIMUM Cahul","city":"Cahul"},
+
+  {"store_slug":"cactus","external_id":"chisinau-atrium","name":"CACTUS Chișinău — ATRIUM","city":"Chișinău","address":"Strada Albișoara 4, ATRIUM, etaj 1","phone":"076881120"},
+  {"store_slug":"cactus","external_id":"balti-stefan-cel-mare-76","name":"CACTUS Bălți","city":"Bălți","address":"Strada Ștefan cel Mare și Sfînt 76","phone":"078606120"},
+
+  {"store_slug":"supraten","external_id":"chisinau-petricani-84","name":"SUPRATEN Petricani","city":"Chișinău","address":"str. Petricani 84","phone":"+37322268000"}
+]
