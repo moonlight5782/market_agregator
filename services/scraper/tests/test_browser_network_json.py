@@ -104,6 +104,21 @@ class BrowserNetworkEnrichmentTests(unittest.TestCase):
         self.assertEqual(merged.attributes["network_json_responses"], 1)
         self.assertFalse(merged.attributes["network_json_product_match"])
 
+    def test_network_shapes_strip_query_and_expose_only_schema_summary(self) -> None:
+        shapes = self.connector._network_shapes([
+            (
+                "https://shop.example/api/availability?token=secret&product=2010156",
+                {"result": {"productId": "2010156", "quantity": 4}, "ok": True},
+            )
+        ])
+
+        self.assertEqual(len(shapes), 1)
+        self.assertEqual(shapes[0]["path"], "/api/availability")
+        self.assertEqual(shapes[0]["top_keys"], ["ok", "result"])
+        self.assertEqual(shapes[0]["id_like_count"], 1)
+        self.assertEqual(shapes[0]["stock_like_count"], 1)
+        self.assertNotIn("secret", str(shapes[0]))
+
 
 if __name__ == "__main__":
     unittest.main()
