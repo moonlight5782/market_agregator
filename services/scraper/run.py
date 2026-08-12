@@ -13,6 +13,7 @@ from .category_mapper import map_category
 from .connectors.base import ConnectorContext
 from .connectors.registry import build_connector_plan
 from .normalizer import normalize
+from .quality import browser_enrichment_reasons, compute_quality, merge_product_payload
 from .source_discovery import discover_sources
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,11 +45,13 @@ def store_from_url(url: str, slug: str | None = None) -> dict:
     }
 
 
-def pct(part: int, total: int) -> float:
-    return round((part / total) * 100, 2) if total else 0.0
-
-
-async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, store_url: str | None = None) -> int:
+async def crawl(
+    store_slug: str,
+    limit: int,
+    browser_threshold: float = 0.8,
+    browser_enrichment_limit: int = 5,
+    store_url: str | None = None,
+) -> int:
     started_at = datetime.now(timezone.utc)
     started = perf_counter()
     store = store_from_url(store_url, store_slug) if store_url else load_store(store_slug)
@@ -57,6 +60,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
     profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
     plan = build_connector_plan(context, profile)
     browser_trigger_count = max(1, min(limit, int(limit * browser_threshold)))
+    browser_enrichment_limit = max(0, browser_enrichment_limit)
 
     print(
         f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
@@ -72,13 +76,6 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
 
     seen_products: set[str] = set()
     products_written = 0
-    with_price = 0
-    with_known_stock = 0
-    with_image = 0
-    with_category = 0
-    with_identity = 0
-    with_branch_availability = 0
-    branch_availability_rows = 0
     errors = 0
     strategy_stats: list[dict] = []
 
@@ -136,14 +133,6 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
 
                     products_written += 1
                     accepted += 1
-                    with_price += int(item.price is not None and item.price >= 0)
-                    with_known_stock += int(str(item.stock_status.value) != "UNKNOWN")
-                    with_image += int(item.image_url is not None)
-                    with_category += int(item.category_slug is not None)
-                    with_identity += int(bool(item.ean or item.mpn or item.sku))
-                    if item.availabilities:
-                        with_branch_availability += 1
-                        branch_availability_rows += len(item.availabilities)
                     print(f"[{products_written}] {item.title} — {item.price} {item.currency} — {category_slug or 'unmapped'} [{choice.name}]")
             except Exception as exc:
                 errors += 1
@@ -165,6 +154,87 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
             if products_written >= limit:
                 break
 
+    payloads = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines() if line.strip()]
+    initial_quality = compute_quality(payloads, limit)
+    enrichment_reasons = browser_enrichment_reasons(initial_quality)
+    browser_choice = next((choice for choice in plan if choice.name == "browser-rendered"), None)
+    browser_already_ran = any(
+        stat.get("connector") == "browser-rendered" and not stat.get("skipped", False)
+        for stat in strategy_stats
+    )
+    enrichment_attempted = False
+    enriched_products = 0
+
+    if (
+        browser_choice is not None
+        and payloads
+        and enrichment_reasons
+        and not browser_already_ran
+        and browser_enrichment_limit > 0
+    ):
+        enrichment_attempted = True
+        enrichment_checked = 0
+        enrichment_errors = 0
+        suspicious_image_reuse = float(initial_quality.get("max_image_reuse_pct", 0.0)) >= 80.0
+        print(
+            f"[QUALITY] browser enrichment triggered: {', '.join(enrichment_reasons)}; "
+            f"checking up to {min(browser_enrichment_limit, len(payloads))} existing product pages"
+        )
+
+        for index, existing in enumerate(payloads[:browser_enrichment_limit]):
+            enrichment_checked += 1
+            try:
+                raw = await browser_choice.connector.fetch_product(str(existing["url"]))
+            except Exception as exc:
+                errors += 1
+                enrichment_errors += 1
+                print(f"[WARN:browser-enrichment] {existing.get('url')}: {exc}")
+                continue
+            if raw is None:
+                continue
+
+            category_slug, category_confidence = map_category(raw.category_path, raw.title)
+            item = normalize(raw, category_slug=category_slug)
+            candidate = item.model_dump(mode="json")
+            candidate["category_confidence"] = category_confidence
+            candidate["source_connector"] = browser_choice.name
+            candidate["source_priority"] = browser_choice.priority
+            merged, changed = merge_product_payload(
+                existing,
+                candidate,
+                replace_suspicious_image=suspicious_image_reuse,
+            )
+            if changed:
+                payloads[index] = merged
+                enriched_products += 1
+
+        output.write_text(
+            "".join(json.dumps(payload, ensure_ascii=False) + "\n" for payload in payloads),
+            encoding="utf-8",
+        )
+        strategy_stats = [stat for stat in strategy_stats if stat.get("connector") != "browser-rendered"]
+        strategy_stats.append({
+            "connector": browser_choice.name,
+            "priority": browser_choice.priority,
+            "reason": browser_choice.reason,
+            "mode": "quality-enrichment",
+            "trigger_reasons": enrichment_reasons,
+            "urls_checked": enrichment_checked,
+            "accepted": 0,
+            "duplicates": enrichment_checked,
+            "enriched": enriched_products,
+            "errors": enrichment_errors,
+            "skipped": False,
+        })
+        print(
+            f"[RESULT] browser quality enrichment: checked={enrichment_checked}, "
+            f"enriched={enriched_products}, errors={enrichment_errors}"
+        )
+
+    products_written = len(payloads)
+    quality = compute_quality(payloads, limit)
+    quality["errors"] = errors
+
     duration = round(perf_counter() - started, 3)
     outcome = "OK" if products_written > 0 else ("BLOCKED_BY_ORIGIN" if profile.blocked else "NO_PRODUCTS")
     report = {
@@ -179,6 +249,10 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
         "browser_fallback": {
             "threshold_ratio": browser_threshold,
             "trigger_below_products": browser_trigger_count,
+            "quality_enrichment_limit": browser_enrichment_limit,
+            "quality_trigger_reasons": enrichment_reasons,
+            "quality_enrichment_attempted": enrichment_attempted,
+            "enriched_products": enriched_products,
         },
         "discovery": {
             "blocked": profile.blocked,
@@ -190,29 +264,19 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, sto
             "html_product_hints": profile.html_product_hints,
         },
         "strategies": strategy_stats,
-        "quality": {
-            "unique_products": products_written,
-            "target_fill_pct": pct(products_written, limit),
-            "price_complete_pct": pct(with_price, products_written),
-            "known_stock_pct": pct(with_known_stock, products_written),
-            "image_complete_pct": pct(with_image, products_written),
-            "category_complete_pct": pct(with_category, products_written),
-            "identity_complete_pct": pct(with_identity, products_written),
-            "branch_availability_product_pct": pct(with_branch_availability, products_written),
-            "branch_availability_rows": branch_availability_rows,
-            "errors": errors,
-        },
+        "quality": quality,
         "output": str(output.relative_to(ROOT)),
     }
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    stats = ", ".join(f"{s['connector']}:{s['accepted']}/{s['urls_checked']}" for s in strategy_stats)
+    stats = ", ".join(f"{s['connector']}:{s.get('accepted', 0)}/{s.get('urls_checked', 0)}" for s in strategy_stats)
     print(f"Done. outcome={outcome}. Wrote {products_written} unique products to {output}. Strategies: {stats}")
     print(
-        f"Quality: target={report['quality']['target_fill_pct']}%, price={report['quality']['price_complete_pct']}%, "
-        f"stock={report['quality']['known_stock_pct']}%, image={report['quality']['image_complete_pct']}%, "
-        f"category={report['quality']['category_complete_pct']}%, identity={report['quality']['identity_complete_pct']}%, "
-        f"branch_stock={report['quality']['branch_availability_product_pct']}%."
+        f"Quality: target={quality['target_fill_pct']}%, price={quality['price_complete_pct']}%, "
+        f"stock={quality['known_stock_pct']}%, image={quality['image_complete_pct']}%, "
+        f"distinct_images={quality['distinct_image_pct']}%, max_image_reuse={quality['max_image_reuse_pct']}%, "
+        f"category={quality['category_complete_pct']}%, identity={quality['identity_complete_pct']}%, "
+        f"branch_stock={quality['branch_availability_product_pct']}%."
     )
     print(f"Report: {report_path}")
     return products_written
@@ -229,15 +293,37 @@ def main() -> None:
         "--browser-threshold",
         type=float,
         default=0.8,
-        help="Use browser fallback only when earlier strategies collect less than this fraction of --limit (0..1)",
+        help="Use browser fallback when earlier strategies collect less than this fraction of --limit (0..1)",
+    )
+    parser.add_argument(
+        "--browser-enrichment-limit",
+        type=int,
+        default=5,
+        help="Maximum existing product pages to re-render when the quality gate detects weak fields",
     )
     args = parser.parse_args()
     threshold = min(1.0, max(0.0, args.browser_threshold))
+    enrichment_limit = max(0, args.browser_enrichment_limit)
     if args.url:
         temp = store_from_url(args.url, args.slug)
-        products = asyncio.run(crawl(temp["slug"], max(1, args.limit), browser_threshold=threshold, store_url=args.url))
+        products = asyncio.run(
+            crawl(
+                temp["slug"],
+                max(1, args.limit),
+                browser_threshold=threshold,
+                browser_enrichment_limit=enrichment_limit,
+                store_url=args.url,
+            )
+        )
     else:
-        products = asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
+        products = asyncio.run(
+            crawl(
+                args.store,
+                max(1, args.limit),
+                browser_threshold=threshold,
+                browser_enrichment_limit=enrichment_limit,
+            )
+        )
     if products == 0:
         raise SystemExit(4)
 
