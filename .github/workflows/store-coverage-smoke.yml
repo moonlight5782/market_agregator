@@ -17,8 +17,12 @@ on:
 
 jobs:
   coverage-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        store: [darwin, maximum, cactus, supraten]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 8
     env:
       PYTHONUNBUFFERED: '1'
     steps:
@@ -29,52 +33,33 @@ jobs:
           cache: 'pip'
       - name: Install scraper dependencies
         run: pip install -r services/scraper/requirements.txt
-      - name: Run rate-limited real-store smoke crawls
+      - name: Crawl ${{ matrix.store }} with bounded smoke timeout
         shell: bash
         run: |
           set +e
           LIMIT="${{ github.event.inputs.limit || '25' }}"
           mkdir -p data/reports data/raw
-          failed=0
-          for store in darwin maximum cactus supraten; do
-            echo "===== $store ====="
-            python -m services.scraper.run --store "$store" --limit "$LIMIT" --browser-threshold 0.8
-            code=$?
-            if [ $code -ne 0 ]; then
-              echo "$store crawl exited with $code"
-              failed=1
-            fi
-          done
-          python -m services.scraper.coverage_audit --stores darwin maximum cactus supraten --output data/reports/_coverage-audit.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          summary = {}
-          for path in Path('data/reports').glob('*.json'):
-              if path.name.startswith('_'):
-                  continue
-              try:
-                  report = json.loads(path.read_text(encoding='utf-8'))
-              except Exception as exc:
-                  summary[path.stem] = {'error': str(exc)}
-                  continue
-              summary[path.stem] = {
-                  'quality': report.get('quality', {}),
-                  'strategies': report.get('strategies', []),
-                  'duration_seconds': report.get('duration_seconds'),
-                  'discovery': report.get('discovery', {}),
-              }
-          Path('data/reports/_smoke-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
-          print(json.dumps(summary, ensure_ascii=False, indent=2))
-          PY
-          exit $failed
-      - name: Upload crawl reports
+          timeout --signal=TERM 300s python -m services.scraper.run \
+            --store "${{ matrix.store }}" \
+            --limit "$LIMIT" \
+            --browser-threshold 0.8
+          crawl_code=$?
+          if [ $crawl_code -eq 124 ]; then
+            echo "${{ matrix.store }} smoke crawl exceeded 300 seconds"
+          fi
+          if [ -f "data/reports/${{ matrix.store }}.json" ]; then
+            python -m services.scraper.coverage_audit \
+              --stores "${{ matrix.store }}" \
+              --output "data/reports/${{ matrix.store }}-coverage-audit.json"
+          fi
+          exit $crawl_code
+      - name: Upload ${{ matrix.store }} reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: store-coverage-smoke-${{ github.run_id }}
+          name: store-coverage-${{ matrix.store }}-${{ github.run_id }}
           path: |
-            data/reports/*.json
-            data/raw/*.ndjson
+            data/reports/${{ matrix.store }}*.json
+            data/raw/${{ matrix.store }}.ndjson
           if-no-files-found: warn
           retention-days: 7
