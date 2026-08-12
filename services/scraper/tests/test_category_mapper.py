@@ -28,6 +28,30 @@ class CategoryMapperTests(unittest.TestCase):
         slug, _ = map_category(["Товары для дома", "Посуда"], "Сковорода 28 см")
         self.assertEqual(slug, "home")
 
+    def test_url_taxonomy_wins_over_ingredient_in_title(self):
+        slug, confidence = map_category(
+            ["pizza i patiserie congelate"],
+            "Placinte cu carne de pui congelate",
+        )
+        self.assertEqual(slug, "food")
+        self.assertGreaterEqual(confidence, 0.84)
+
+    def test_grocery_url_categories_map_without_store_specific_rules(self):
+        cases = [
+            (["vin spumant"], "MOTIV Vin spumant rose", "drinks"),
+            (["ingrijire corp"], "Spuma de dus Blooming Citrus", "beauty"),
+            (["marinate"], "Ceafa de porc fara os", "meat"),
+        ]
+        for path, title, expected in cases:
+            with self.subTest(path=path):
+                slug, _ = map_category(path, title)
+                self.assertEqual(slug, expected)
+
+    def test_title_only_has_lower_confidence_than_taxonomy(self):
+        _, title_confidence = map_category([], "Lapte UHT 3.5%")
+        _, path_confidence = map_category(["lactate"], "Produs X")
+        self.assertLess(title_confidence, path_confidence)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,7 @@
 import unittest
 
+from bs4 import BeautifulSoup
+
 from services.scraper.connectors.html_generic import GenericHtmlConnector
 from services.scraper.models import StockStatus
 
@@ -38,6 +40,29 @@ class GenericHtmlConnectorTests(unittest.TestCase):
 
     def test_sku_does_not_capture_label_suffix(self):
         self.assertNotEqual(GenericHtmlConnector._sku_from_text("Codul produsului: 111336"), "ului")
+
+    def test_url_category_path_is_store_agnostic(self):
+        path = GenericHtmlConnector._category_path_from_url(
+            "https://shop.example/ro/catalog/pizza_i_patiserie_congelate/product_slug?ref=home"
+        )
+        self.assertEqual(path, ["pizza i patiserie congelate"])
+
+    def test_lazy_product_image_wins_over_placeholder_src(self):
+        soup = BeautifulSoup(
+            '<main><div class="product-image"><img src="/img/placeholder.png" data-src="/products/real-coffee.jpg"></div></main>',
+            "lxml",
+        )
+        self.assertEqual(
+            GenericHtmlConnector._extract_product_image(soup, "https://shop.example/product/coffee"),
+            "https://shop.example/products/real-coffee.jpg",
+        )
+
+    def test_social_placeholder_is_not_treated_as_product_image(self):
+        soup = BeautifulSoup(
+            '<html><head><meta property="og:image" content="/public/thumbs/version_500x300xog500x300x1/site.jpg"></head></html>',
+            "lxml",
+        )
+        self.assertIsNone(GenericHtmlConnector._extract_product_image(soup, "https://shop.example/product/coffee"))
 
 
 if __name__ == "__main__":
