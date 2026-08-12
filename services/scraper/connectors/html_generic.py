@@ -50,6 +50,7 @@ class GenericHtmlConnector(StoreConnector):
             if not response.is_success:
                 return None
         soup = BeautifulSoup(response.text, "lxml")
+        page_text = soup.get_text(" ", strip=True)
 
         title = self._first_text(soup, ["h1", '[itemprop="name"]', '.product-title', '.product__title'])
         if not title:
@@ -72,21 +73,19 @@ class GenericHtmlConnector(StoreConnector):
             image = image_node.get("src") or image_node.get("data-src")
             image = urljoin(str(response.url), image) if image else None
 
+        quantity = self._quantity_from_text(page_text)
         availability_text = " ".join(filter(None, [
             self._first_text(soup, ['[itemprop="availability"]', '.stock', '.availability', '.product-stock']),
             str(soup.find("meta", attrs={"property": "product:availability"}) or ""),
+            page_text,
         ])).lower()
-        if any(x in availability_text for x in ("out of stock", "indisponibil", "stoc epuizat", "нет в наличии")):
-            status = StockStatus.OUT_OF_STOCK
-        elif any(x in availability_text for x in ("low stock", "stoc limitat", "ultimele", "мало")):
-            status = StockStatus.LOW_STOCK
-        elif any(x in availability_text for x in ("in stock", "in stoc", "disponibil", "в наличии")):
-            status = StockStatus.IN_STOCK
-        else:
-            status = StockStatus.UNKNOWN
+        status = self._stock_status(availability_text, quantity)
 
         sku_node = soup.find(attrs={"itemprop": "sku"})
         sku = sku_node.get("content") if sku_node and sku_node.has_attr("content") else (sku_node.get_text(" ", strip=True) if sku_node else None)
+        if not sku:
+            sku = self._sku_from_text(page_text)
+
         brand = self._first_text(soup, ['[itemprop="brand"]', '.brand', '.product-brand'])
         category_path = [x.get_text(" ", strip=True) for x in soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')][1:]
         description = self._first_text(soup, ['[itemprop="description"]', '.product-description', '#description'])
@@ -103,10 +102,51 @@ class GenericHtmlConnector(StoreConnector):
             old_price=old_price,
             currency=self._currency(soup),
             stock_status=status,
+            quantity=quantity,
             url=url,
             image_url=image,
             attributes={"source": "html-generic"},
         )
+
+    @staticmethod
+    def _stock_status(availability_text: str, quantity: int | None) -> StockStatus:
+        if quantity is not None:
+            if quantity <= 0:
+                return StockStatus.OUT_OF_STOCK
+            if quantity <= 10:
+                return StockStatus.LOW_STOCK
+            return StockStatus.IN_STOCK
+        text = availability_text.lower()
+        if any(x in text for x in ("out of stock", "indisponibil", "stoc epuizat", "nu este în stoc", "nu este in stoc", "нет в наличии")):
+            return StockStatus.OUT_OF_STOCK
+        if any(x in text for x in ("low stock", "stoc limitat", "ultimele", "мало")):
+            return StockStatus.LOW_STOCK
+        if any(x in text for x in ("in stock", "in stoc", "disponibil", "disponibilitate", "в наличии", "наличие")):
+            return StockStatus.IN_STOCK
+        return StockStatus.UNKNOWN
+
+    @staticmethod
+    def _quantity_from_text(text: str) -> int | None:
+        patterns = (
+            r"(?:Disponibilitate|Наличие|Availability)\s*:?\s*(\d{1,7})\b",
+            r"(?:În stoc|In stoc)\s*:?\s*(\d{1,7})\b",
+        )
+        for pattern in patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+            if match:
+                return int(match.group(1))
+        return None
+
+    @staticmethod
+    def _sku_from_text(text: str) -> str | None:
+        patterns = (
+            r"(?:Articol|Артикул|SKU|Cod produs|Cod produsului)\s*:?\s*([A-Za-z0-9._/-]{2,64})",
+        )
+        for pattern in patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return None
 
     @staticmethod
     def _first_text(soup: BeautifulSoup, selectors: list[str]) -> str | None:
