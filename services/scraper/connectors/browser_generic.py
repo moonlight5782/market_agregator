@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import asyncio
+import re
 from collections.abc import AsyncIterator
-from urllib.parse import urljoin
+from typing import Any
+from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
 from .base import StoreConnector
 from .html_generic import GenericHtmlConnector
+from .json_api import GenericJsonApiConnector
 from ..models import RawProduct, StockStatus
 
 
@@ -14,12 +18,15 @@ class BrowserRenderedConnector(StoreConnector):
     """Last-resort connector for JavaScript-rendered storefronts.
 
     Uses Playwright only after cheaper structured/HTTP strategies have been tried.
-    It does not bypass authentication, CAPTCHAs or access controls.
+    It does not bypass authentication, CAPTCHAs or access controls. While the page
+    renders, it may observe public JSON responses already requested by the storefront
+    and reuse the generic JSON parser to enrich the matching product.
     """
 
     product_link_selectors = GenericHtmlConnector.product_link_selectors
+    max_json_responses = 30
 
-    async def _render(self, url: str) -> tuple[str, str] | None:
+    async def _render(self, url: str) -> tuple[str, str, list[tuple[str, Any]]] | None:
         try:
             from playwright.async_api import async_playwright
         except ImportError:
@@ -32,6 +39,31 @@ class BrowserRenderedConnector(StoreConnector):
                     user_agent="MoldovaCommerceBot/0.2 (+catalog-indexer)",
                     viewport={"width": 1365, "height": 900},
                 )
+                network_json: list[tuple[str, Any]] = []
+                capture_tasks: list[asyncio.Task] = []
+
+                async def capture_json(response) -> None:
+                    if len(network_json) >= self.max_json_responses:
+                        return
+                    try:
+                        if response.status >= 400:
+                            return
+                        content_type = (response.headers.get("content-type") or "").lower()
+                        resource_type = response.request.resource_type
+                        if "json" not in content_type and resource_type not in ("xhr", "fetch"):
+                            return
+                        payload = await response.json()
+                        if isinstance(payload, (dict, list)):
+                            network_json.append((response.url, payload))
+                    except Exception:
+                        return
+
+                def on_response(response) -> None:
+                    if len(network_json) + len(capture_tasks) >= self.max_json_responses:
+                        return
+                    capture_tasks.append(asyncio.create_task(capture_json(response)))
+
+                page.on("response", on_response)
                 try:
                     response = await page.goto(url, wait_until="domcontentloaded", timeout=int(self.context.timeout_seconds * 1000))
                     if response and response.status in (401, 403, 429):
@@ -40,8 +72,10 @@ class BrowserRenderedConnector(StoreConnector):
                         await page.wait_for_load_state("networkidle", timeout=5000)
                     except Exception:
                         pass
+                    if capture_tasks:
+                        await asyncio.gather(*capture_tasks, return_exceptions=True)
                     html = await page.content()
-                    return page.url, html
+                    return page.url, html, network_json
                 finally:
                     await browser.close()
         except Exception:
@@ -51,7 +85,7 @@ class BrowserRenderedConnector(StoreConnector):
         rendered = await self._render(self.context.base_url)
         if not rendered:
             return
-        base_url, html = rendered
+        base_url, html, _network_json = rendered
         soup = BeautifulSoup(html, "lxml")
         seen: set[str] = set()
         for selector in self.product_link_selectors:
@@ -139,9 +173,89 @@ class BrowserRenderedConnector(StoreConnector):
             attributes={"source": "browser-rendered"},
         )
 
+    @staticmethod
+    def _normalized_words(value: str) -> set[str]:
+        return {part for part in re.findall(r"[a-z0-9]+", value.lower()) if len(part) > 1}
+
+    @classmethod
+    def _candidate_score(cls, dom: RawProduct, candidate: RawProduct, final_url: str) -> float:
+        score = 0.0
+        dom_ids = {str(value).lower() for value in (dom.sku, dom.ean, dom.external_id) if value}
+        candidate_ids = {str(value).lower() for value in (candidate.sku, candidate.ean, candidate.external_id) if value}
+        if dom_ids & candidate_ids:
+            score += 8.0
+
+        dom_words = cls._normalized_words(dom.title)
+        candidate_words = cls._normalized_words(candidate.title)
+        if dom_words and candidate_words:
+            overlap = len(dom_words & candidate_words) / max(1, len(dom_words | candidate_words))
+            score += overlap * 6.0
+            if dom.title.strip().lower() == candidate.title.strip().lower():
+                score += 4.0
+
+        final_path = urlparse(final_url).path.rstrip("/").lower()
+        candidate_path = urlparse(str(candidate.url)).path.rstrip("/").lower()
+        if final_path and candidate_path and (final_path == candidate_path or final_path.endswith(candidate_path) or candidate_path.endswith(final_path)):
+            score += 5.0
+        return score
+
+    def _network_product(
+        self,
+        final_url: str,
+        dom_product: RawProduct,
+        network_json: list[tuple[str, Any]],
+    ) -> RawProduct | None:
+        parser = GenericJsonApiConnector(self.context)
+        best: tuple[float, RawProduct] | None = None
+        for response_url, payload in network_json:
+            for item in parser._walk(payload):
+                if not parser._looks_like_product(item):
+                    continue
+                candidate = parser.product_from_item(item, response_url)
+                if candidate is None:
+                    continue
+                score = self._candidate_score(dom_product, candidate, final_url)
+                if score < 4.0:
+                    continue
+                if best is None or score > best[0]:
+                    best = (score, candidate)
+        return best[1] if best else None
+
+    @staticmethod
+    def _merge_network_product(dom: RawProduct, network: RawProduct | None) -> RawProduct:
+        if network is None:
+            return dom
+        data = dom.model_dump()
+        if dom.stock_status == StockStatus.UNKNOWN and network.stock_status != StockStatus.UNKNOWN:
+            data["stock_status"] = network.stock_status
+        if dom.quantity is None and network.quantity is not None:
+            data["quantity"] = network.quantity
+        if network.image_url and (not dom.image_url or str(network.image_url) != str(dom.image_url)):
+            data["image_url"] = network.image_url
+        if not dom.brand and network.brand:
+            data["brand"] = network.brand
+        if not dom.sku and network.sku:
+            data["sku"] = network.sku
+        if not dom.ean and network.ean:
+            data["ean"] = network.ean
+        if not dom.description and network.description:
+            data["description"] = network.description
+        if not dom.category_path and network.category_path:
+            data["category_path"] = network.category_path
+        data["attributes"] = {
+            **(dom.attributes or {}),
+            "network_json_enriched": True,
+            "network_source": str((network.attributes or {}).get("source") or "generic-json-api"),
+        }
+        return RawProduct.model_validate(data)
+
     async def fetch_product(self, url: str) -> RawProduct | None:
         rendered = await self._render(url)
         if not rendered:
             return None
-        final_url, html = rendered
-        return self._parse_rendered_product(final_url, html)
+        final_url, html, network_json = rendered
+        dom_product = self._parse_rendered_product(final_url, html)
+        if dom_product is None:
+            return None
+        network_product = self._network_product(final_url, dom_product, network_json)
+        return self._merge_network_product(dom_product, network_product)
