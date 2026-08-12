@@ -26,6 +26,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const brandName = result.mode === "demo" ? product.brand : product.brand?.name;
   const availableOffers = offers.filter((offer: any) => {
     if (offer.availabilities?.length) return offer.availabilities.some((item: any) => isAvailable(item.stockStatus));
+    if (city && !offer.location) return false;
     return isAvailable(offer.stockStatus);
   });
 
@@ -43,7 +44,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
             <div style={{ border: "1px solid #e5e5e5", borderRadius: 18, padding: 20, marginBottom: 22 }}>
               <div style={{ color: "#666", fontSize: 14 }}>Лучшая цена{city ? ` в ${city}` : ""}</div>
               <div style={{ fontSize: "clamp(28px,8vw,34px)", fontWeight: 900, marginTop: 3 }}>от {Number(best.price).toLocaleString("ru-RU")} {best.currency}</div>
-              <div style={{ color: "#666", marginTop: 7 }}>{offers.length} предлож. · {availableOffers.length} доступно</div>
+              <div style={{ color: "#666", marginTop: 7 }}>{offers.length} предлож. · {availableOffers.length} с подтверждённым наличием</div>
             </div>
           ) : (
             <div style={{ border: "1px solid #e5e5e5", borderRadius: 18, padding: 20, marginBottom: 22, color: "#666" }}>Нет актуальных предложений{city ? ` в ${city}` : ""}.</div>
@@ -67,8 +68,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           {offers.map((offer: any) => {
             const branches = offer.availabilities ?? [];
             const selectedBranch = branches[0];
-            const status = selectedBranch?.stockStatus ?? offer.stockStatus;
-            const quantity = selectedBranch?.quantity ?? offer.quantity;
+            const cityStockUnverified = Boolean(city && !selectedBranch && !offer.location);
+            const status = cityStockUnverified ? "UNKNOWN" : (selectedBranch?.stockStatus ?? offer.stockStatus);
+            const quantity = cityStockUnverified ? null : (selectedBranch?.quantity ?? offer.quantity);
             const branchAvailableCount = branches.filter((item: any) => isAvailable(item.stockStatus)).length;
             return (
               <div key={offer.id} className="offer-row">
@@ -77,6 +79,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
                   {selectedBranch?.location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{selectedBranch.location.city}{selectedBranch.location.address ? ` · ${selectedBranch.location.address}` : ""}</div>}
                   {!city && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>Доступно в {branchAvailableCount} из {branches.length} проверенных филиалов</div>}
                   {!selectedBranch && offer.location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{offer.location.city}{offer.location.address ? ` · ${offer.location.address}` : ""}</div>}
+                  {cityStockUnverified && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{city} · магазин присутствует, остаток филиала не подтверждён</div>}
                 </div>
                 <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString("ru-RU")} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString("ru-RU")} {offer.currency}</div></div>
                 <div style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333" }}>{stockLabel(status, quantity)}</div>
