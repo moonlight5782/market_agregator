@@ -12,11 +12,7 @@ from ..models import RawProduct, StockStatus
 
 
 class GenericHtmlConnector(StoreConnector):
-    """Fallback connector for stores without usable Product JSON-LD.
-
-    It relies on common product-card/page conventions and should be overridden by
-    store-specific selectors when a merchant diverges from them.
-    """
+    """Fallback connector for stores without usable Product JSON-LD."""
 
     product_link_selectors = (
         'a[href*="/product/"]',
@@ -90,7 +86,7 @@ class GenericHtmlConnector(StoreConnector):
         category_path = [x.get_text(" ", strip=True) for x in soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')][1:]
         description = self._first_text(soup, ['[itemprop="description"]', '.product-description', '#description'])
 
-        return RawProduct(
+        raw = RawProduct(
             store_slug=self.context.store_slug,
             external_id=str(sku or self._url_key(url)),
             title=title,
@@ -107,6 +103,11 @@ class GenericHtmlConnector(StoreConnector):
             image_url=image,
             attributes={"source": "html-generic"},
         )
+        return self.enrich_product(raw, soup, page_text)
+
+    def enrich_product(self, product: RawProduct, soup: BeautifulSoup, page_text: str) -> RawProduct:
+        """Store-specific subclasses may enrich the already parsed product without another HTTP request."""
+        return product
 
     @staticmethod
     def _stock_status(availability_text: str, quantity: int | None) -> StockStatus:
