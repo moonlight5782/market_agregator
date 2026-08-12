@@ -1,0 +1,43 @@
+name: Generic grocery smoke
+
+on:
+  pull_request:
+    paths:
+      - "services/scraper/**"
+      - ".github/workflows/generic-grocery-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/scraper/**"
+      - ".github/workflows/generic-grocery-smoke.yml"
+
+jobs:
+  linella-generic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install scraper dependencies
+        run: |
+          pip install -r services/scraper/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Crawl Linella using only generic unknown-store path
+        run: |
+          timeout 360s python -m services.scraper.run \
+            --url https://linella.md/ro \
+            --slug linella-generic \
+            --limit 25 \
+            --browser-threshold 0.8
+      - name: Upload generic grocery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linella-generic-report
+          path: |
+            data/reports/linella-generic.json
+            data/raw/linella-generic.ndjson
+          if-no-files-found: warn
+          retention-days: 7
