@@ -67,7 +67,15 @@ class GenericHtmlConnector(StoreConnector):
         image_node = soup.select_one('[itemprop="image"], .product-image img, .gallery img, main img')
         if image_node:
             image = image_node.get("src") or image_node.get("data-src")
-            image = urljoin(str(response.url), image) if image else None
+        if not image:
+            image_meta = (
+                soup.find("meta", attrs={"property": "og:image"})
+                or soup.find("meta", attrs={"name": "twitter:image"})
+                or soup.find("link", attrs={"rel": "image_src"})
+            )
+            if image_meta:
+                image = image_meta.get("content") or image_meta.get("href")
+        image = urljoin(str(response.url), str(image)) if image else None
 
         quantity = self._quantity_from_text(page_text)
         availability_text = " ".join(filter(None, [
@@ -118,7 +126,10 @@ class GenericHtmlConnector(StoreConnector):
                 return StockStatus.LOW_STOCK
             return StockStatus.IN_STOCK
         text = availability_text.lower()
-        if any(x in text for x in ("out of stock", "indisponibil", "stoc epuizat", "nu este în stoc", "nu este in stoc", "нет в наличии")):
+        if any(x in text for x in (
+            "out of stock", "indisponibil", "stoc epuizat", "nu este în stoc", "nu este in stoc",
+            "nu este disponibil", "нет в наличии", "не в наличии",
+        )):
             return StockStatus.OUT_OF_STOCK
         if any(x in text for x in ("low stock", "stoc limitat", "ultimele", "мало")):
             return StockStatus.LOW_STOCK
@@ -141,7 +152,7 @@ class GenericHtmlConnector(StoreConnector):
     @staticmethod
     def _sku_from_text(text: str) -> str | None:
         patterns = (
-            r"(?:Articol|Артикул|SKU|Cod produs|Cod produsului)\s*:?\s*([A-Za-z0-9._/-]{2,64})",
+            r"(?:Articol|Артикул|SKU|Код товара|Cod produs|Cod produsului|Codul produs|Codul produsului)\s*:?\s*([A-Za-z0-9._/-]{2,64})",
         )
         for pattern in patterns:
             match = re.search(pattern, text, flags=re.IGNORECASE)
