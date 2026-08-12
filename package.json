@@ -8,12 +8,13 @@
     "start": "next start",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts",
+    "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts && tsx scripts/sync-store-verification.ts",
     "data:crawl": "python -m services.scraper.run",
     "data:import": "tsx scripts/import-raw.ts",
     "data:sync": "tsx scripts/sync-store.ts",
     "data:sync:verified": "node scripts/sync-verified-stores.mjs",
-    "data:status": "tsx scripts/store-health.ts"
+    "data:status": "tsx scripts/store-health.ts",
+    "data:validate-registry": "node scripts/validate-store-registry.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
@@ -28,5 +29,5 @@
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
   },
-  "prisma": {"seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts"}
+  "prisma": {"seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts && tsx scripts/sync-store-verification.ts"}
 }
