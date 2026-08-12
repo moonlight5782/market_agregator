@@ -16,19 +16,32 @@ class SourceProfile:
     embedded_json: bool = False
     html_product_hints: bool = False
     api_hints: list[str] = field(default_factory=list)
+    feed_hints: list[str] = field(default_factory=list)
     blocked: bool = False
 
 
 API_PATTERNS = (
-    r"/api/[^\"']+",
-    r"/graphql(?:\?[^\"']*)?",
-    r"/_next/data/[^\"']+\.json",
+    r"/api/[^\"'<> ]+",
+    r"/graphql(?:\?[^\"'<> ]*)?",
+    r"/_next/data/[^\"'<> ]+\.json",
+)
+
+FEED_EXTENSIONS = (".json", ".xml", ".csv", ".yml", ".yaml")
+COMMON_FEEDS = (
+    "/products.json",
+    "/catalog.json",
+    "/feed.xml",
+    "/products.xml",
+    "/catalog.xml",
+    "/feed.csv",
+    "/products.csv",
+    "/yml.xml",
 )
 
 
 async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> SourceProfile:
     profile = SourceProfile(base_url=base_url)
-    headers = {"User-Agent": "MoldovaCommerceBot/0.2 (+catalog-indexer)"}
+    headers = {"User-Agent": "MoldovaCommerceBot/0.3 (+catalog-indexer)"}
     async with httpx.AsyncClient(timeout=timeout_seconds, follow_redirects=True, headers=headers) as client:
         try:
             response = await client.get(base_url)
@@ -60,7 +73,48 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         for pattern in API_PATTERNS:
             for match in re.findall(pattern, html, flags=re.I):
                 found_api.add(urljoin(str(response.url), match))
-        profile.api_hints = sorted(found_api)[:20]
+
+        # Links/scripts often expose public JSON endpoints or export feeds.
+        found_feed: set[str] = set()
+        for tag in soup.find_all(["a", "link", "script"]):
+            candidate = tag.get("href") or tag.get("src")
+            if not candidate:
+                continue
+            absolute = urljoin(str(response.url), candidate)
+            lowered = absolute.lower().split("?", 1)[0]
+            if lowered.endswith(FEED_EXTENSIONS):
+                found_feed.add(absolute)
+            if "/api/" in lowered or "/graphql" in lowered:
+                found_api.add(absolute)
+
+        # Probe a few common public catalog endpoints. Only successful structured responses are retained.
+        for path in COMMON_FEEDS:
+            candidate = urljoin(base_url, path)
+            try:
+                fr = await client.get(candidate)
+            except httpx.HTTPError:
+                continue
+            ctype = fr.headers.get("content-type", "").lower()
+            if fr.is_success and (
+                "json" in ctype
+                or "xml" in ctype
+                or "csv" in ctype
+                or fr.text.lstrip().startswith(("{", "[", "<?xml", "<yml_catalog"))
+            ):
+                found_feed.add(str(fr.url))
+
+        # Validate API hints enough to avoid wasting crawl time on obvious HTML/static endpoints.
+        validated_api: list[str] = []
+        for candidate in sorted(found_api)[:30]:
+            try:
+                ar = await client.get(candidate)
+            except httpx.HTTPError:
+                continue
+            ctype = ar.headers.get("content-type", "").lower()
+            if ar.is_success and ("json" in ctype or ar.text.lstrip().startswith(("{", "["))):
+                validated_api.append(str(ar.url))
+        profile.api_hints = validated_api[:20]
+        profile.feed_hints = sorted(found_feed)[:20]
 
         candidates = [
             urljoin(base_url, "/sitemap.xml"),
