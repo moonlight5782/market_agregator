@@ -59,19 +59,23 @@ model Store {
 }
 
 model StoreLocation {
-  id           String   @id @default(cuid())
-  storeId      String
-  name         String
-  address      String
-  city         String
-  latitude     Float
-  longitude    Float
-  phone        String?
-  openingHours Json?
-  active       Boolean  @default(true)
-  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  offers       Offer[]
+  id              String              @id @default(cuid())
+  storeId         String
+  externalId      String?
+  name            String
+  address         String?
+  city            String
+  latitude        Float?
+  longitude       Float?
+  phone           String?
+  openingHours    Json?
+  active          Boolean             @default(true)
+  store           Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  offers          Offer[]
+  availabilities  OfferAvailability[]
+  @@unique([storeId, externalId])
   @@index([storeId, city])
+  @@index([city, active])
 }
 
 model StoreSource {
@@ -150,10 +154,26 @@ model Offer {
   product         Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   store           Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
   location        StoreLocation? @relation(fields: [locationId], references: [id])
+  availabilities  OfferAvailability[]
   priceHistory    PriceHistory[]
   @@unique([storeId, externalId])
   @@index([productId, price])
   @@index([storeId, stockStatus])
+}
+
+model OfferAvailability {
+  id              String        @id @default(cuid())
+  offerId         String
+  locationId      String
+  stockStatus     StockStatus   @default(UNKNOWN)
+  quantity        Int?
+  lastSeenAt      DateTime      @default(now())
+  lastStockUpdate DateTime      @default(now())
+  offer           Offer         @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  location        StoreLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  @@unique([offerId, locationId])
+  @@index([locationId, stockStatus])
+  @@index([offerId, lastSeenAt])
 }
 
 model PriceHistory {
