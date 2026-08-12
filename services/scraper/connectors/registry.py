@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from .base import ConnectorContext, StoreConnector
 from .browser_generic import BrowserRenderedConnector
+from .cactus import CactusConnector
 from .darwin import DarwinConnector
 from .feed_generic import GenericFeedConnector
 from .html_generic import GenericHtmlConnector
@@ -62,6 +63,14 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             name="maximum-catalog",
             connector=MaximumConnector(context),
             reason="store-specific category traversal with stable numeric product URLs",
+            priority=35,
+        ))
+
+    if context.store_slug == "cactus":
+        plan.append(ConnectorChoice(
+            name="cactus-catalog",
+            connector=CactusConnector(context),
+            reason="store-specific recursive /catalogue/ discovery with product-page detection",
             priority=35,
         ))
 
