@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .base import ConnectorContext, StoreConnector
+from .feed_generic import GenericFeedConnector
 from .html_generic import GenericHtmlConnector
 from .json_api import GenericJsonApiConnector
 from .jsonld import SitemapJsonLdConnector
@@ -20,9 +21,9 @@ class ConnectorChoice:
 def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> list[ConnectorChoice]:
     """Return acquisition strategies in strict priority order.
 
-    Prefer structured public interfaces because they are faster, more complete and less
-    fragile than HTML parsing. Fall back progressively when a higher-quality source does
-    not produce usable products.
+    Structured public interfaces are preferred because they are faster, more complete
+    and less fragile than HTML parsing. Lower-priority strategies remain available as
+    fallbacks and can contribute products missed by earlier sources.
     """
     plan: list[ConnectorChoice] = []
 
@@ -36,13 +37,23 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             )
         )
 
+    if profile.feed_hints:
+        plan.append(
+            ConnectorChoice(
+                name="catalog-feed",
+                connector=GenericFeedConnector(context, feeds=profile.feed_hints),
+                reason=f"{len(profile.feed_hints)} public JSON/XML/CSV/YML feed(s) detected",
+                priority=20,
+            )
+        )
+
     if profile.sitemap_urls or profile.product_jsonld or profile.embedded_json:
         plan.append(
             ConnectorChoice(
                 name="sitemap-jsonld",
                 connector=SitemapJsonLdConnector(context),
                 reason="sitemap/JSON-LD/embedded structured data detected",
-                priority=20,
+                priority=30,
             )
         )
 
@@ -51,7 +62,7 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             name="html-generic",
             connector=GenericHtmlConnector(context),
             reason="generic HTML parser fallback",
-            priority=30,
+            priority=40,
         )
     )
 
