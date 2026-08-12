@@ -48,11 +48,11 @@ Current store-specific discovery exists for Darwin, Maximum and Cactus. SUPRATEN
 6. install scraper dependencies: `pip install -r services/scraper/requirements.txt`
 7. start the app: `npm run dev` (or `npm run build && npm start`)
 
-`db:seed` creates categories and stores only. Sample products are opt-in with `SEED_SAMPLE_PRODUCTS=true`; production must not use sample snapshots as fresh merchant data.
+`db:seed` creates categories, stores and verified store locations. Sample products are opt-in with `SEED_SAMPLE_PRODUCTS=true`; production must not use sample snapshots as fresh merchant data.
 
 ## Crawl and import real store data
 
-One command runs acquisition and then imports the generated NDJSON into PostgreSQL:
+One command creates a tracked scraper run, performs acquisition and imports the generated NDJSON into PostgreSQL:
 
 `npm run data:sync -- --store=darwin --limit=500`
 
@@ -64,15 +64,34 @@ Other examples:
 
 `npm run data:sync -- --store=supraten --limit=500`
 
-Per-run acquisition reports are written to `data/reports/<store>.json`. Reports include strategy-level checked/accepted/duplicate/error counts and completeness for price, stock, image, category and identity.
+To update every store currently marked `VERIFIED` while isolating failures:
 
-## Freshness and stock rules
+`npm run data:sync:verified -- --limit=500`
+
+Per-run acquisition reports are written to `data/reports/<store>.json`. Reports include strategy-level checked/accepted/duplicate/error counts and completeness for price, stock, image, category, identity and branch availability.
+
+Each sync is also recorded in PostgreSQL as `ScraperRun` with `RUNNING / SUCCESS / PARTIAL / FAILED`, products found/imported, errors, timestamps and report metrics. Partial row-import failures therefore do not silently look like successful syncs.
+
+## Store health
+
+Run:
+
+`npm run data:status`
+
+The command reports every active store with its last scraper status/age, products found/imported, errors, fresh offers and total offers. A verified store is treated as unhealthy when it never synced, the latest sync failed/was partial, or it is overdue relative to its configured crawl frequency.
+
+This is the first operational health layer; a web admin dashboard can later read the same `ScraperRun` data.
+
+## Freshness, locations and stock rules
 
 - Real UI only shows offers seen within `OFFER_MAX_AGE_HOURS` (default 48 hours).
+- Branch-level availability has its own `lastSeenAt` and stale branch records are excluded from city filtering.
+- `Offer` is the merchant price/link; `OfferAvailability` is stock for a concrete store location.
 - Never invent quantity when a store only says “in stock”.
 - Persist numeric quantity when a merchant exposes it.
 - UI shows exact quantity only for 1–10 units; 11+ is displayed as “In stock”.
 - Quantity 0 means out of stock.
+- If a merchant physically has a branch in the selected city but branch stock is not confirmed, UI says stock is unknown rather than claiming it is in stock.
 - Repeated imports update `lastSeenAt`; price/stock timestamps change only when those values change.
 
 ## Non-negotiable data rules
@@ -92,9 +111,10 @@ GitHub Actions validates Prisma, TypeScript and Python compilation and runs scra
 
 ## Next implementation milestones
 
-1. Run real coverage tests for Darwin / Maximum / Cactus / SUPRATEN and fix parsing gaps.
-2. Add more Moldovan stores across groceries, construction, furniture, beauty and fashion.
-3. Expand canonical category mappings and matching tests.
-4. Add physical store locations and city/radius filtering.
-5. Add scheduled store sync workers on a Linux server/cloud environment.
-6. Add data-quality/admin dashboard and stale-source alerts.
+1. Deploy a PostgreSQL-backed development environment and run verified stores end-to-end.
+2. Continue real coverage tests for Darwin / Maximum / Cactus / SUPRATEN and fix parsing gaps.
+3. Add more Moldovan stores across groceries, construction, furniture, beauty and fashion.
+4. Expand canonical category mappings and matching tests.
+5. Add reliable coordinates and radius filtering once an appropriate geocoding/location source is selected.
+6. Add scheduled store sync workers on a Linux server/cloud environment.
+7. Add a data-quality/admin web dashboard and stale-source alerts.
