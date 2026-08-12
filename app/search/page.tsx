@@ -45,12 +45,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 <div style={{ display: "grid", gap: 7 }}>
                   {offers.map((offer: any) => {
                     const branch = offer.availabilities?.[0];
-                    const status = branch?.stockStatus ?? offer.stockStatus;
-                    const quantity = branch?.quantity ?? offer.quantity;
                     const location = branch?.location ?? offer.location;
+                    const cityStockUnverified = Boolean(city && !branch && !offer.location);
+                    const status = cityStockUnverified ? "UNKNOWN" : (branch?.stockStatus ?? offer.stockStatus);
+                    const quantity = cityStockUnverified ? null : (branch?.quantity ?? offer.quantity);
                     return (
                       <div key={offer.id} className="search-offer">
-                        <div><b>{offer.store.name}</b>{location && <div style={{ color: "#666", fontSize: 13 }}>{location.city}{location.address ? `, ${location.address}` : ""}</div>}{!location && city && <div style={{ color: "#666", fontSize: 13 }}>{city}</div>}</div>
+                        <div><b>{offer.store.name}</b>{location && <div style={{ color: "#666", fontSize: 13 }}>{location.city}{location.address ? `, ${location.address}` : ""}</div>}{!location && city && <div style={{ color: "#666", fontSize: 13 }}>{city} · филиал есть, локальный остаток не подтверждён</div>}</div>
                         <div style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333", fontSize: 14 }}>{stockLabel(status, quantity)}</div>
                         <div><div style={{ textAlign: "right" }}>{offer.oldPrice && <div style={{ color: "#999", fontSize: 13, textDecoration: "line-through" }}>{Number(offer.oldPrice).toLocaleString("ru-RU")} {offer.currency}</div>}<b>{Number(offer.price).toLocaleString("ru-RU")} {offer.currency}</b></div></div>
                         <a href={offer.externalUrl} target="_blank" rel="noreferrer" className="search-offer__cta touch-target">В магазин ↗</a>
