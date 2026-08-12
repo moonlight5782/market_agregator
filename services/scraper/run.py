@@ -7,8 +7,9 @@ from pathlib import Path
 
 from .category_mapper import map_category
 from .connectors.base import ConnectorContext
-from .connectors.jsonld import SitemapJsonLdConnector
+from .connectors.registry import choose_connector
 from .normalizer import normalize
+from .source_discovery import discover_sources
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "data" / "store-registry.json"
@@ -25,8 +26,16 @@ def load_store(slug: str) -> dict:
 
 async def crawl(store_slug: str, limit: int) -> None:
     store = load_store(store_slug)
-    connector = SitemapJsonLdConnector(
-        ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
+    context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
+    profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
+    choice = choose_connector(context, profile)
+    connector = choice.connector
+
+    print(
+        f"[DISCOVERY] {store_slug}: connector={choice.name}; reason={choice.reason}; "
+        f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
+        f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
+        f"api_hints={len(profile.api_hints)}; blocked={profile.blocked}"
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -50,6 +59,7 @@ async def crawl(store_slug: str, limit: int) -> None:
             item = normalize(raw, category_slug=category_slug)
             payload = item.model_dump(mode="json")
             payload["category_confidence"] = category_confidence
+            payload["source_connector"] = choice.name
             fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
             products_written += 1
             print(f"[{products_written}] {item.title} — {item.price} {item.currency} — {category_slug or 'unmapped'}")
@@ -58,7 +68,7 @@ async def crawl(store_slug: str, limit: int) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Crawl one registry store using generic sitemap + JSON-LD discovery")
+    parser = argparse.ArgumentParser(description="Crawl one registry store with adaptive source discovery")
     parser.add_argument("--store", required=True, help="Store slug from data/store-registry.json")
     parser.add_argument("--limit", type=int, default=100, help="Maximum product URLs to inspect")
     args = parser.parse_args()
