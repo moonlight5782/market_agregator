@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from decimal import Decimal, InvalidOperation
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, unquote
 import re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from .base import StoreConnector
 from ..models import RawProduct, StockStatus
 
 
 class GenericHtmlConnector(StoreConnector):
-    """Fallback connector for stores without usable Product JSON-LD."""
+    """Fallback parser for product pages without a usable structured source."""
 
     product_link_selectors = (
         'a[href*="/product/"]',
@@ -63,19 +63,7 @@ class GenericHtmlConnector(StoreConnector):
             return None
 
         old_price = self._decimal(self._first_text(soup, ['.old-price', '.price-old', '.regular-price', 'del']))
-        image = None
-        image_node = soup.select_one('[itemprop="image"], .product-image img, .gallery img, main img')
-        if image_node:
-            image = image_node.get("src") or image_node.get("data-src")
-        if not image:
-            image_meta = (
-                soup.find("meta", attrs={"property": "og:image"})
-                or soup.find("meta", attrs={"name": "twitter:image"})
-                or soup.find("link", attrs={"rel": "image_src"})
-            )
-            if image_meta:
-                image = image_meta.get("content") or image_meta.get("href")
-        image = urljoin(str(response.url), str(image)) if image else None
+        image = self._extract_product_image(soup, str(response.url))
 
         quantity = self._quantity_from_text(page_text)
         availability_text = " ".join(filter(None, [
@@ -92,7 +80,9 @@ class GenericHtmlConnector(StoreConnector):
 
         brand = self._first_text(soup, ['[itemprop="brand"]', '.brand', '.product-brand'])
         category_path = [x.get_text(" ", strip=True) for x in soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')][1:]
-        description = self._first_text(soup, ['[itemprop="description"]', '.product-description', '#description'])
+        if not category_path:
+            category_path = self._category_path_from_url(str(response.url))
+        description = self._first_text(soup, ['[itemprop="description"]', '.product-description', '#description', '.description'])
 
         raw = RawProduct(
             store_slug=self.context.store_slug,
@@ -151,8 +141,6 @@ class GenericHtmlConnector(StoreConnector):
 
     @staticmethod
     def _sku_from_text(text: str) -> str | None:
-        # Longest labels first so a shorter Romanian prefix cannot consume part
-        # of e.g. "Codul produsului" and return the suffix as the SKU.
         labels = (
             r"Codul\s+produsului",
             r"Codul\s+produs",
@@ -166,6 +154,72 @@ class GenericHtmlConnector(StoreConnector):
         pattern = rf"(?:{'|'.join(labels)})\s*:?\s*([A-Za-z0-9._/-]{{2,64}})\b"
         match = re.search(pattern, text, flags=re.IGNORECASE)
         return match.group(1).strip() if match else None
+
+    @classmethod
+    def _extract_product_image(cls, soup: BeautifulSoup, page_url: str) -> str | None:
+        selectors = (
+            '[itemprop="image"]', '.product-image img', '.product__image img', '.product-gallery img',
+            '.gallery img', '[class*="product"][class*="image"] img', 'main img',
+        )
+        attributes = ("data-src", "data-original", "data-lazy-src", "data-zoom-image", "src")
+        for selector in selectors:
+            for node in soup.select(selector):
+                if not isinstance(node, Tag):
+                    continue
+                for attr in attributes:
+                    candidate = node.get(attr)
+                    if candidate and cls._usable_image_url(str(candidate)):
+                        return urljoin(page_url, str(candidate))
+                srcset = node.get("data-srcset") or node.get("srcset")
+                if srcset:
+                    candidates = [part.strip().split(" ", 1)[0] for part in str(srcset).split(",") if part.strip()]
+                    for candidate in reversed(candidates):
+                        if cls._usable_image_url(candidate):
+                            return urljoin(page_url, candidate)
+
+        # Social preview images are frequently global storefront placeholders.
+        # Keep them only when they are not visibly marked as generic/social assets.
+        image_meta = (
+            soup.find("meta", attrs={"property": "og:image"})
+            or soup.find("meta", attrs={"name": "twitter:image"})
+            or soup.find("link", attrs={"rel": "image_src"})
+        )
+        if image_meta:
+            candidate = image_meta.get("content") or image_meta.get("href")
+            if candidate and cls._usable_image_url(str(candidate), social_fallback=True):
+                return urljoin(page_url, str(candidate))
+        return None
+
+    @staticmethod
+    def _usable_image_url(value: str, social_fallback: bool = False) -> bool:
+        lowered = value.strip().lower()
+        if not lowered or lowered.startswith("data:"):
+            return False
+        bad_tokens = ("placeholder", "no-image", "no_image", "default-image", "default_image", "spinner", "loading.gif", "blank.gif", "sprite")
+        if any(token in lowered for token in bad_tokens):
+            return False
+        if social_fallback and any(token in lowered for token in ("social", "share", "og-image", "og_image", "og500x", "facebook")):
+            return False
+        return True
+
+    @staticmethod
+    def _category_path_from_url(url: str) -> list[str]:
+        path = unquote(urlparse(url).path)
+        parts = [part for part in path.split("/") if part]
+        if len(parts) < 2:
+            return []
+        ignored = {
+            "ru", "ro", "en", "catalog", "catalogue", "category", "categories", "products", "product",
+            "produse", "produs", "shop", "store", "item", "detail", "p",
+        }
+        cleaned: list[str] = []
+        # Last segment is normally the product slug. Parent segments carry taxonomy.
+        for part in parts[:-1]:
+            normalized = re.sub(r"[_-]+", " ", part).strip().lower()
+            if not normalized or normalized in ignored or normalized.isdigit():
+                continue
+            cleaned.append(normalized)
+        return cleaned[-3:]
 
     @staticmethod
     def _first_text(soup: BeautifulSoup, selectors: list[str]) -> str | None:
