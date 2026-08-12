@@ -2,6 +2,12 @@ import { demoCategories, demoProducts, demoStores, getBestOffer } from "./demo-d
 
 export const isDemoMode = process.env.DEMO_MODE === "true" || !process.env.DATABASE_URL;
 
+function freshSince() {
+  const configured = Number(process.env.OFFER_MAX_AGE_HOURS ?? 48);
+  const hours = Number.isFinite(configured) && configured > 0 ? configured : 48;
+  return new Date(Date.now() - hours * 60 * 60 * 1000);
+}
+
 export async function getHomeData() {
   if (isDemoMode) {
     return {
@@ -15,13 +21,20 @@ export async function getHomeData() {
   }
 
   const { prisma } = await import("./prisma");
+  const cutoff = freshSince();
+  const freshOfferWhere = { lastSeenAt: { gte: cutoff }, store: { active: true } };
   const [categories, storeCount, productCount, offerCount, latestProducts] = await Promise.all([
     prisma.category.findMany({ where: { parentId: null }, orderBy: { nameRu: "asc" } }),
     prisma.store.count({ where: { active: true } }),
-    prisma.product.count(),
-    prisma.offer.count(),
+    prisma.product.count({ where: { offers: { some: freshOfferWhere } } }),
+    prisma.offer.count({ where: freshOfferWhere }),
     prisma.product.findMany({
-      include: { category: true, brand: true, offers: { include: { store: true }, orderBy: { price: "asc" }, take: 3 } },
+      where: { offers: { some: freshOfferWhere } },
+      include: {
+        category: true,
+        brand: true,
+        offers: { where: freshOfferWhere, include: { store: true }, orderBy: { price: "asc" }, take: 3 },
+      },
       orderBy: { updatedAt: "desc" },
       take: 12,
     }),
@@ -45,19 +58,26 @@ export async function searchCatalog(q: string, sort: string) {
   }
 
   const { prisma } = await import("./prisma");
+  const freshOfferWhere = { lastSeenAt: { gte: freshSince() }, store: { active: true } };
   const products = q
     ? await prisma.product.findMany({
         where: {
-          OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { normalizedTitle: { contains: q.toLowerCase(), mode: "insensitive" } },
-            { brand: { name: { contains: q, mode: "insensitive" } } },
+          AND: [
+            { offers: { some: freshOfferWhere } },
+            {
+              OR: [
+                { title: { contains: q, mode: "insensitive" } },
+                { normalizedTitle: { contains: q.toLowerCase(), mode: "insensitive" } },
+                { brand: { name: { contains: q, mode: "insensitive" } } },
+              ],
+            },
           ],
         },
         include: {
           category: true,
           brand: true,
           offers: {
+            where: freshOfferWhere,
             include: { store: true, location: true },
             orderBy: sort === "price-desc" ? { price: "desc" } : { price: "asc" },
           },
@@ -84,12 +104,14 @@ export async function getCategoryData(slug: string) {
   }
 
   const { prisma } = await import("./prisma");
+  const freshOfferWhere = { lastSeenAt: { gte: freshSince() }, store: { active: true } };
   const category = await prisma.category.findUnique({
     where: { slug },
     include: {
       children: true,
       products: {
-        include: { brand: true, offers: { include: { store: true }, orderBy: { price: "asc" } } },
+        where: { offers: { some: freshOfferWhere } },
+        include: { brand: true, offers: { where: freshOfferWhere, include: { store: true }, orderBy: { price: "asc" } } },
         orderBy: { title: "asc" },
         take: 200,
       },
