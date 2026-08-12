@@ -10,13 +10,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const result = await searchCatalog(q, sort);
 
   return (
-    <main style={{ maxWidth: 1180, margin: "0 auto", padding: "28px 20px 56px", fontFamily: "system-ui" }}>
+    <main className="page-shell">
       <a href="/" style={{ color: "#111", textDecoration: "none" }}>← Главная</a>
-      <div style={{ marginTop: 12 }}><h1 style={{ fontSize: 38, marginBottom: 6 }}>Поиск: {q || "все товары"}</h1><div style={{ color: "#666" }}>{result.products.length} результатов {result.mode === "demo" ? "· demo data" : ""}</div></div>
-      <form style={{ display: "flex", gap: 10, margin: "24px 0 30px", flexWrap: "wrap" }}>
-        <input name="q" defaultValue={q} placeholder="Что вы ищете?" style={{ flex: "1 1 300px", padding: 15, border: "1px solid #ccc", borderRadius: 12, fontSize: 16 }} />
+      <div style={{ marginTop: 12 }}><h1 style={{ fontSize: "clamp(30px,8vw,38px)", marginBottom: 6 }}>Поиск: {q || "все товары"}</h1><div style={{ color: "#666" }}>{result.products.length} результатов {result.mode === "demo" ? "· demo data" : ""}</div></div>
+      <form className="search-form">
+        <input name="q" defaultValue={q} placeholder="Что вы ищете?" style={{ padding: 15, border: "1px solid #ccc", borderRadius: 12, fontSize: 16, minWidth: 0 }} />
         <select name="sort" defaultValue={sort} style={{ padding: 14, border: "1px solid #ccc", borderRadius: 12, background: "white" }}><option value="price-asc">Сначала дешевле</option><option value="price-desc">Сначала дороже</option></select>
-        <button style={{ padding: "0 22px", border: 0, borderRadius: 12, background: "#111", color: "white", fontWeight: 800 }}>Применить</button>
+        <button className="touch-target" style={{ padding: "0 22px", border: 0, borderRadius: 12, background: "#111", color: "white", fontWeight: 800 }}>Применить</button>
       </form>
 
       <div style={{ display: "grid", gap: 20 }}>
@@ -27,19 +27,19 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           const category = result.mode === "demo" ? product.categoryName : product.category?.nameRu;
           const brand = result.mode === "demo" ? product.brand : product.brand?.name;
           return (
-            <article key={product.id} style={{ border: "1px solid #e5e5e5", borderRadius: 20, padding: 18, display: "grid", gridTemplateColumns: "minmax(150px,220px) 1fr", gap: 22, background: "#fff", boxShadow: "0 8px 24px rgba(0,0,0,.04)" }}>
-              <a href={`/product/${product.slug}`} style={{ minHeight: 190, background: "#f6f6f6", borderRadius: 15, overflow: "hidden", display: "block" }}>{imageUrl && <img src={imageUrl} alt={product.title} style={{ width: "100%", height: "100%", maxHeight: 230, objectFit: result.mode === "demo" ? "cover" : "contain" }} />}</a>
-              <div>
+            <article key={product.id} className="search-result">
+              <a href={`/product/${product.slug}`} className="search-result__image">{imageUrl && <img src={imageUrl} alt={product.title} style={{ width: "100%", height: "100%", maxHeight: 230, objectFit: result.mode === "demo" ? "cover" : "contain" }} />}</a>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ color: "#777", fontSize: 14 }}>{category ?? "Без категории"} {brand ? `• ${brand}` : ""}</div>
-                <h2 style={{ margin: "7px 0" }}><a href={`/product/${product.slug}`} style={{ color: "inherit", textDecoration: "none" }}>{product.title}</a></h2>
+                <h2 style={{ margin: "7px 0", overflowWrap: "anywhere" }}><a href={`/product/${product.slug}`} style={{ color: "inherit", textDecoration: "none" }}>{product.title}</a></h2>
                 {best && <div style={{ fontSize: 25, fontWeight: 900, marginBottom: 15 }}>от {Number(best.price).toLocaleString("ru-RU")} {best.currency}</div>}
                 <div style={{ display: "grid", gap: 7 }}>
                   {offers.map((offer: any) => (
-                    <div key={offer.id} style={{ display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(135px,auto) auto auto", gap: 14, alignItems: "center", padding: "11px 0", borderTop: "1px solid #eee" }}>
+                    <div key={offer.id} className="search-offer">
                       <div><b>{offer.store.name}</b>{offer.location && <div style={{ color: "#666", fontSize: 13 }}>{offer.location.city}, {offer.location.address}</div>}</div>
                       <div style={{ color: offer.stockStatus === "OUT_OF_STOCK" ? "#888" : "#333", fontSize: 14 }}>{stockLabel(offer.stockStatus, offer.quantity)}</div>
-                      <div style={{ textAlign: "right" }}>{offer.oldPrice && <div style={{ color: "#999", fontSize: 13, textDecoration: "line-through" }}>{Number(offer.oldPrice).toLocaleString("ru-RU")} {offer.currency}</div>}<b>{Number(offer.price).toLocaleString("ru-RU")} {offer.currency}</b></div>
-                      <a href={offer.externalUrl} target="_blank" rel="noreferrer" style={{ padding: "10px 14px", background: "#111", color: "#fff", borderRadius: 10, textDecoration: "none", whiteSpace: "nowrap", fontWeight: 750 }}>В магазин ↗</a>
+                      <div><div style={{ textAlign: "right" }}>{offer.oldPrice && <div style={{ color: "#999", fontSize: 13, textDecoration: "line-through" }}>{Number(offer.oldPrice).toLocaleString("ru-RU")} {offer.currency}</div>}<b>{Number(offer.price).toLocaleString("ru-RU")} {offer.currency}</b></div></div>
+                      <a href={offer.externalUrl} target="_blank" rel="noreferrer" className="search-offer__cta touch-target">В магазин ↗</a>
                     </div>
                   ))}
                 </div>
