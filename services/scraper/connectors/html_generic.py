@@ -151,14 +151,21 @@ class GenericHtmlConnector(StoreConnector):
 
     @staticmethod
     def _sku_from_text(text: str) -> str | None:
-        patterns = (
-            r"(?:Articol|Артикул|SKU|Код товара|Cod produs|Cod produsului|Codul produs|Codul produsului)\s*:?\s*([A-Za-z0-9._/-]{2,64})",
+        # Longest labels first so a shorter Romanian prefix cannot consume part
+        # of e.g. "Codul produsului" and return the suffix as the SKU.
+        labels = (
+            r"Codul\s+produsului",
+            r"Codul\s+produs",
+            r"Cod\s+produsului",
+            r"Cod\s+produs",
+            r"Код\s+товара",
+            r"Articol",
+            r"Артикул",
+            r"SKU",
         )
-        for pattern in patterns:
-            match = re.search(pattern, text, flags=re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-        return None
+        pattern = rf"(?:{'|'.join(labels)})\s*:?\s*([A-Za-z0-9._/-]{{2,64}})\b"
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        return match.group(1).strip() if match else None
 
     @staticmethod
     def _first_text(soup: BeautifulSoup, selectors: list[str]) -> str | None:
