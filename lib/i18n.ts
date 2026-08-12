@@ -111,14 +111,28 @@ export const dictionaries = {
   },
 } as const;
 
-export type Dictionary = typeof dictionaries.ru;
+type TranslationKey = keyof typeof dictionaries.ru;
+export type Dictionary = Record<TranslationKey, string>;
 
 export function getDictionary(locale: Locale): Dictionary {
-  return dictionaries[locale] as Dictionary;
+  return dictionaries[locale];
 }
 
 export function formatMessage(template: string, values: Record<string, string | number>) {
   return Object.entries(values).reduce((result, [key, value]) => result.replaceAll(`{${key}}`, String(value)), template);
+}
+
+export function numberLocale(locale: Locale) {
+  return locale === "ro" ? "ro-RO" : "ru-RU";
+}
+
+export function stockLabel(status: string, quantity: number | null | undefined, locale: Locale) {
+  const t = getDictionary(locale);
+  if (status === "OUT_OF_STOCK" || quantity === 0) return t.outOfStock;
+  if (status === "PREORDER") return t.preorder;
+  if (quantity != null && quantity > 0 && quantity <= 10) return formatMessage(t.inStockExact, { quantity });
+  if (status === "IN_STOCK" || status === "LOW_STOCK" || (quantity != null && quantity > 10)) return t.inStockLabel;
+  return t.stockUnknown;
 }
 
 const demoCategoryNames: Record<string, Record<Locale, string>> = {
