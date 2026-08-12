@@ -11,8 +11,9 @@
     "db:seed": "tsx prisma/seed.ts && tsx prisma/seed-locations.ts",
     "data:crawl": "python -m services.scraper.run",
     "data:import": "tsx scripts/import-raw.ts",
-    "data:sync": "node scripts/sync-store.mjs",
-    "data:sync:verified": "node scripts/sync-verified-stores.mjs"
+    "data:sync": "tsx scripts/sync-store.ts",
+    "data:sync:verified": "node scripts/sync-verified-stores.mjs",
+    "data:status": "tsx scripts/store-health.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",

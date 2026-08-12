@@ -1,4 +1,4 @@
-import { createReadStream } from "node:fs";
+import { createReadStream, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { createInterface } from "node:readline";
 import { Prisma, PrismaClient, StockStatus } from "@prisma/client";
@@ -88,14 +88,9 @@ async function resolveLocation(storeId: string, availability: RawAvailability) {
     });
   }
 
-  const existing = await prisma.storeLocation.findFirst({
-    where: { storeId, city, name, address },
-  });
+  const existing = await prisma.storeLocation.findFirst({ where: { storeId, city, name, address } });
   if (existing) return existing;
-
-  return prisma.storeLocation.create({
-    data: { storeId, name, address, city, active: true },
-  });
+  return prisma.storeLocation.create({ data: { storeId, name, address, city, active: true } });
 }
 
 async function importAvailabilities(offerId: string, storeId: string, availabilities: RawAvailability[]) {
@@ -104,27 +99,16 @@ async function importAvailabilities(offerId: string, storeId: string, availabili
     const location = await resolveLocation(storeId, availability);
     const stockStatus = toStockStatus(availability.stock_status);
     const quantity = availability.quantity ?? null;
-    const previous = await prisma.offerAvailability.findUnique({
-      where: { offerId_locationId: { offerId, locationId: location.id } },
-    });
-
+    const previous = await prisma.offerAvailability.findUnique({ where: { offerId_locationId: { offerId, locationId: location.id } } });
     await prisma.offerAvailability.upsert({
       where: { offerId_locationId: { offerId, locationId: location.id } },
       update: {
         stockStatus,
         quantity,
         lastSeenAt: new Date(),
-        lastStockUpdate:
-          previous && previous.stockStatus === stockStatus && previous.quantity === quantity
-            ? previous.lastStockUpdate
-            : new Date(),
+        lastStockUpdate: previous && previous.stockStatus === stockStatus && previous.quantity === quantity ? previous.lastStockUpdate : new Date(),
       },
-      create: {
-        offerId,
-        locationId: location.id,
-        stockStatus,
-        quantity,
-      },
+      create: { offerId, locationId: location.id, stockStatus, quantity },
     });
   }
 }
@@ -137,16 +121,13 @@ async function importItem(item: RawLine) {
   const brand = item.brand?.trim()
     ? await prisma.brand.upsert({ where: { name: item.brand.trim() }, update: {}, create: { name: item.brand.trim() } })
     : null;
-  const category = item.category_slug
-    ? await prisma.category.findUnique({ where: { slug: item.category_slug } })
-    : null;
+  const category = item.category_slug ? await prisma.category.findUnique({ where: { slug: item.category_slug } }) : null;
 
   let product = await findMatchingProduct(item, brand?.id);
   if (!product) {
     let slug = slugify(item.normalized_title);
     const collision = await prisma.product.findUnique({ where: { slug } });
     if (collision) slug = `${slug}-${slugify(item.store_slug)}-${slugify(externalId).slice(-24)}`;
-
     product = await prisma.product.create({
       data: {
         slug,
@@ -178,10 +159,7 @@ async function importItem(item: RawLine) {
     });
   }
 
-  const previous = await prisma.offer.findUnique({
-    where: { storeId_externalId: { storeId: store.id, externalId } },
-  });
-
+  const previous = await prisma.offer.findUnique({ where: { storeId_externalId: { storeId: store.id, externalId } } });
   const stockStatus = toStockStatus(item.stock_status);
   const offer = await prisma.offer.upsert({
     where: { storeId_externalId: { storeId: store.id, externalId } },
@@ -197,10 +175,7 @@ async function importItem(item: RawLine) {
       imageUrl: item.image_url || null,
       lastSeenAt: new Date(),
       lastPriceUpdate: previous && previous.price.toString() === String(item.price) ? previous.lastPriceUpdate : new Date(),
-      lastStockUpdate:
-        previous && previous.stockStatus === stockStatus && previous.quantity === (item.quantity ?? null)
-          ? previous.lastStockUpdate
-          : new Date(),
+      lastStockUpdate: previous && previous.stockStatus === stockStatus && previous.quantity === (item.quantity ?? null) ? previous.lastStockUpdate : new Date(),
     },
     create: {
       productId: product.id,
@@ -217,14 +192,8 @@ async function importItem(item: RawLine) {
     },
   });
 
-  if (item.availabilities?.length) {
-    await importAvailabilities(offer.id, store.id, item.availabilities);
-  }
-
-  if (!previous || previous.price.toString() !== String(item.price)) {
-    await prisma.priceHistory.create({ data: { offerId: offer.id, price: item.price } });
-  }
-
+  if (item.availabilities?.length) await importAvailabilities(offer.id, store.id, item.availabilities);
+  if (!previous || previous.price.toString() !== String(item.price)) await prisma.priceHistory.create({ data: { offerId: offer.id, price: item.price } });
   return { product, offer, matched: Boolean(previous) };
 }
 
@@ -247,7 +216,13 @@ async function main() {
       console.error(`[FAIL ${basename(file)}:${imported + failed}]`, error);
     }
   }
+
+  const summary = { file, imported, failed, total: imported + failed, completedAt: new Date().toISOString() };
   console.log(`Done: ${imported} imported, ${failed} failed.`);
+  if (process.env.IMPORT_SUMMARY_PATH) {
+    writeFileSync(process.env.IMPORT_SUMMARY_PATH, JSON.stringify(summary, null, 2), "utf-8");
+  }
+  if (failed > 0) process.exitCode = 2;
 }
 
 main().finally(() => prisma.$disconnect());

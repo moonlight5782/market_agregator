@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from time import monotonic
 from typing import Any
 
 import httpx
@@ -21,17 +23,35 @@ class ConnectorContext:
 class StoreConnector(ABC):
     """Store-specific acquisition lives behind this interface.
 
-    Catalog/search/business logic must never branch on store name.
+    Catalog/search/business logic must never branch on store name. HTTP clients
+    created by a connector share one rate limiter, so discovery and product-page
+    fetching cannot accidentally exceed the configured request rate.
     """
 
     def __init__(self, context: ConnectorContext) -> None:
         self.context = context
+        self._rate_lock = asyncio.Lock()
+        self._last_request_started_at = 0.0
+
+    @property
+    def _request_interval(self) -> float:
+        return 1.0 / max(self.context.requests_per_second, 0.1)
+
+    async def _throttle_request(self, request: httpx.Request) -> None:
+        del request
+        async with self._rate_lock:
+            now = monotonic()
+            wait_for = self._request_interval - (now - self._last_request_started_at)
+            if wait_for > 0:
+                await asyncio.sleep(wait_for)
+            self._last_request_started_at = monotonic()
 
     def client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(
             timeout=self.context.timeout_seconds,
             follow_redirects=True,
             headers={"User-Agent": "MoldovaCommerceBot/0.1 (+catalog-indexer)"},
+            event_hooks={"request": [self._throttle_request]},
         )
 
     @abstractmethod

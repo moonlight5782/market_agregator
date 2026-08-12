@@ -10,12 +10,22 @@ class CategoryRule:
     keywords: tuple[str, ...]
 
 
+# Rules deliberately prefer product-type words over broad department names.
+# Example: "Телефония и гаджеты > Наушники" must not become smartphones merely
+# because the parent department contains the substring "телефон".
 RULES: tuple[CategoryRule, ...] = (
-    CategoryRule("smartphones", ("smartphone", "telefon", "телефон", "смартфон", "iphone", "galaxy")),
+    CategoryRule("smartphones", ("smartphone", "смартфон", "iphone", "galaxy", "telefon inteligent")),
     CategoryRule("laptops", ("laptop", "notebook", "ноутбук")),
     CategoryRule("computers", ("computer", "desktop", "pc", "calculator", "компьютер")),
-    CategoryRule("tv-audio", ("televizor", "television", "tv", "audio", "speaker", "телевизор", "аудио")),
-    CategoryRule("home-appliances", ("electrocasnic", "frigider", "masina de spalat", "aspirator", "холодильник", "стиральн", "пылесос")),
+    CategoryRule("tv-audio", ("televizor", "television", "tv", "audio", "speaker", "casti", "headphone", "earphone", "телевизор", "аудио", "наушник")),
+    CategoryRule("home-appliances", (
+        "electrocasnic", "frigider", "masina de spalat", "aspirator", "hota", "climat", "aer conditionat",
+        "холодильник", "стиральн", "пылесос", "вытяжк", "климатическ", "мойка воздуха", "кондиционер",
+    )),
+    CategoryRule("beauty", (
+        "cosmetic", "parfum", "sampon", "beauty", "tehnica pentru frumusete", "uscator de par", "placa de par",
+        "космет", "парфюм", "шампун", "техника для красоты", "фен", "выпрямител", "стайлер", "эпилятор",
+    )),
     CategoryRule("furniture", ("mobila", "mobilier", "sofa", "pat", "шкаф", "диван", "мебель")),
     CategoryRule("lighting", ("iluminat", "lampa", "bec", "led", "освещ", "лампа", "лампочка")),
     CategoryRule("building-materials", ("materiale de construct", "ciment", "adeziv", "gips", "цемент", "стройматериал", "гипс")),
@@ -27,7 +37,6 @@ RULES: tuple[CategoryRule, ...] = (
     CategoryRule("meat", ("carne", "mezel", "salam", "мясо", "колбас")),
     CategoryRule("fruit-vegetables", ("fruct", "legum", "mere", "rosii", "фрукт", "овощ", "яблок", "помидор")),
     CategoryRule("drinks", ("bautur", "apa", "suc", "cafea", "ceai", "напит", "вода", "сок", "кофе", "чай")),
-    CategoryRule("beauty", ("cosmetic", "parfum", "sampon", "beauty", "космет", "парфюм", "шампун")),
     CategoryRule("kids", ("copii", "jucarie", "carucior", "детск", "игруш", "коляск")),
     CategoryRule("sport", ("sport", "fitness", "biciclet", "туризм", "фитнес", "велосипед")),
     CategoryRule("auto", ("auto", "anvelop", "ulei motor", "masina", "шина", "автомоб", "масло мотор")),
@@ -36,6 +45,7 @@ RULES: tuple[CategoryRule, ...] = (
     CategoryRule("office", ("birou", "papetarie", "office", "канцел", "офис")),
     CategoryRule("books-hobby", ("carte", "carti", "hobby", "puzzle", "книга", "хобби", "пазл")),
     CategoryRule("fashion", ("imbracaminte", "incaltaminte", "haine", "fashion", "одежд", "обув")),
+    CategoryRule("home", ("vesela", "tigaie", "sticla pentru apa", "посуда", "сковород", "бутылк", "товары для дома")),
 )
 
 

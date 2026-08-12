@@ -3,9 +3,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
+from urllib.parse import urlparse
 
 from .category_mapper import map_category
 from .connectors.base import ConnectorContext
@@ -27,14 +29,30 @@ def load_store(slug: str) -> dict:
     raise SystemExit(f"Store '{slug}' not found in registry")
 
 
+def store_from_url(url: str, slug: str | None = None) -> dict:
+    parsed = urlparse(url if "://" in url else f"https://{url}")
+    if not parsed.netloc:
+        raise SystemExit(f"Invalid store URL: {url}")
+    base_url = f"{parsed.scheme or 'https'}://{parsed.netloc}"
+    derived = parsed.netloc.lower().removeprefix("www.").split(".", 1)[0]
+    safe_slug = re.sub(r"[^a-z0-9-]+", "-", (slug or derived).lower()).strip("-") or "external-store"
+    return {
+        "slug": safe_slug,
+        "name": parsed.netloc,
+        "domain": base_url,
+        "status": "UNREGISTERED",
+    }
+
+
 def pct(part: int, total: int) -> float:
     return round((part / total) * 100, 2) if total else 0.0
 
 
-async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> None:
+async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8, store_url: str | None = None) -> int:
     started_at = datetime.now(timezone.utc)
     started = perf_counter()
-    store = load_store(store_slug)
+    store = store_from_url(store_url, store_slug) if store_url else load_store(store_slug)
+    store_slug = store["slug"]
     context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
     profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
     plan = build_connector_plan(context, profile)
@@ -44,7 +62,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
         f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
         f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
         f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
-        f"api_hints={len(profile.api_hints)}; feeds={len(getattr(profile, 'feed_urls', []))}; blocked={profile.blocked}"
+        f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}"
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -148,13 +166,16 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
                 break
 
     duration = round(perf_counter() - started, 3)
+    outcome = "OK" if products_written > 0 else ("BLOCKED_BY_ORIGIN" if profile.blocked else "NO_PRODUCTS")
     report = {
         "store_slug": store_slug,
         "store_name": store.get("name"),
         "domain": store.get("domain"),
+        "registry_status": store.get("status"),
         "started_at": started_at.isoformat(),
         "duration_seconds": duration,
         "limit": limit,
+        "outcome": outcome,
         "browser_fallback": {
             "threshold_ratio": browser_threshold,
             "trigger_below_products": browser_trigger_count,
@@ -163,7 +184,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
             "blocked": profile.blocked,
             "sitemaps": profile.sitemap_urls,
             "api_hints": profile.api_hints,
-            "feed_urls": getattr(profile, "feed_urls", []),
+            "feed_urls": profile.feed_hints,
             "product_jsonld": profile.product_jsonld,
             "embedded_json": profile.embedded_json,
             "html_product_hints": profile.html_product_hints,
@@ -186,7 +207,7 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     stats = ", ".join(f"{s['connector']}:{s['accepted']}/{s['urls_checked']}" for s in strategy_stats)
-    print(f"Done. Wrote {products_written} unique products to {output}. Strategies: {stats}")
+    print(f"Done. outcome={outcome}. Wrote {products_written} unique products to {output}. Strategies: {stats}")
     print(
         f"Quality: target={report['quality']['target_fill_pct']}%, price={report['quality']['price_complete_pct']}%, "
         f"stock={report['quality']['known_stock_pct']}%, image={report['quality']['image_complete_pct']}%, "
@@ -194,11 +215,15 @@ async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> 
         f"branch_stock={report['quality']['branch_availability_product_pct']}%."
     )
     print(f"Report: {report_path}")
+    return products_written
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Crawl one registry store using prioritized adaptive acquisition")
-    parser.add_argument("--store", required=True, help="Store slug from data/store-registry.json")
+    parser = argparse.ArgumentParser(description="Crawl a registry store or any storefront URL using prioritized adaptive acquisition")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--store", help="Store slug from data/store-registry.json")
+    source.add_argument("--url", help="Arbitrary storefront URL; no registry entry required")
+    parser.add_argument("--slug", help="Optional slug when using --url")
     parser.add_argument("--limit", type=int, default=100, help="Maximum unique products to collect")
     parser.add_argument(
         "--browser-threshold",
@@ -208,7 +233,13 @@ def main() -> None:
     )
     args = parser.parse_args()
     threshold = min(1.0, max(0.0, args.browser_threshold))
-    asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
+    if args.url:
+        temp = store_from_url(args.url, args.slug)
+        products = asyncio.run(crawl(temp["slug"], max(1, args.limit), browser_threshold=threshold, store_url=args.url))
+    else:
+        products = asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
+    if products == 0:
+        raise SystemExit(4)
 
 
 if __name__ == "__main__":
