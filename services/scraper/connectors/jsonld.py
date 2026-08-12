@@ -24,20 +24,37 @@ class SitemapJsonLdConnector(StoreConnector):
 
     async def discover_product_urls(self) -> AsyncIterator[str]:
         async with self.client() as client:
-            sitemap_url = None
-            body = None
-            for path in self.sitemap_paths:
-                candidate = urljoin(self.context.base_url, path)
-                response = await client.get(candidate)
-                if response.is_success and "xml" in response.headers.get("content-type", "").lower():
-                    sitemap_url, body = candidate, response.text
-                    break
-            if not body:
-                return
+            candidates: list[str] = [urljoin(self.context.base_url, path) for path in self.sitemap_paths]
 
-            seen: set[str] = set()
-            async for url in self._walk_sitemap(client, sitemap_url or self.context.base_url, body, seen):
-                yield url
+            robots_url = urljoin(self.context.base_url, "/robots.txt")
+            try:
+                robots = await client.get(robots_url)
+                if robots.is_success:
+                    for line in robots.text.splitlines():
+                        if line.lower().startswith("sitemap:"):
+                            candidate = line.split(":", 1)[1].strip()
+                            if candidate:
+                                candidates.append(candidate)
+            except Exception:
+                pass
+
+            seen_sitemaps: set[str] = set()
+            yielded_urls: set[str] = set()
+            for candidate in dict.fromkeys(candidates):
+                try:
+                    response = await client.get(candidate)
+                except Exception:
+                    continue
+                if not response.is_success:
+                    continue
+                body = response.text
+                if "<urlset" not in body and "<sitemapindex" not in body:
+                    continue
+                async for url in self._walk_sitemap(client, str(response.url), body, seen_sitemaps):
+                    if url in yielded_urls:
+                        continue
+                    yielded_urls.add(url)
+                    yield url
 
     async def _walk_sitemap(self, client, sitemap_url: str, xml: str, seen: set[str]) -> AsyncIterator[str]:
         if sitemap_url in seen:
@@ -54,9 +71,12 @@ class SitemapJsonLdConnector(StoreConnector):
                 child_url = (node.text or "").strip()
                 if not child_url:
                     continue
-                response = await client.get(child_url)
+                try:
+                    response = await client.get(child_url)
+                except Exception:
+                    continue
                 if response.is_success:
-                    async for url in self._walk_sitemap(client, child_url, response.text, seen):
+                    async for url in self._walk_sitemap(client, str(response.url), response.text, seen):
                         yield url
             return
 
