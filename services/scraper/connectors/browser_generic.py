@@ -221,18 +221,43 @@ class BrowserRenderedConnector(StoreConnector):
                     best = (score, candidate)
         return best[1] if best else None
 
+    @classmethod
+    def _network_shapes(cls, network_json: list[tuple[str, Any]]) -> list[dict[str, Any]]:
+        parser = GenericJsonApiConnector
+        shapes: list[dict[str, Any]] = []
+        id_keys = {"id", "sku", "code", "ean", "gtin", "productId", "product_id"}
+        stock_keys = {"quantity", "qty", "stock", "stockQuantity", "stock_quantity", "availability", "available", "inStock", "in_stock"}
+        for response_url, payload in network_json[:5]:
+            objects = list(parser._walk(payload))
+            top_keys = sorted(str(key) for key in payload.keys())[:20] if isinstance(payload, dict) else []
+            product_like = sum(1 for item in objects if parser._looks_like_product(item))
+            id_like = sum(1 for item in objects if any(key in item for key in id_keys))
+            stock_like = sum(1 for item in objects if any(key in item for key in stock_keys))
+            shapes.append({
+                "path": urlparse(response_url).path[:200],
+                "root_type": "object" if isinstance(payload, dict) else "array",
+                "top_keys": top_keys,
+                "object_count": len(objects),
+                "product_like_count": product_like,
+                "id_like_count": id_like,
+                "stock_like_count": stock_like,
+            })
+        return shapes
+
     @staticmethod
     def _merge_network_product(
         dom: RawProduct,
         network: RawProduct | None,
         *,
         observed_json_responses: int = 0,
+        network_shapes: list[dict[str, Any]] | None = None,
     ) -> RawProduct:
         data = dom.model_dump()
         data["attributes"] = {
             **(dom.attributes or {}),
             "network_json_responses": observed_json_responses,
             "network_json_product_match": network is not None,
+            "network_json_shapes": network_shapes or [],
         }
         if network is None:
             return RawProduct.model_validate(data)
@@ -272,4 +297,5 @@ class BrowserRenderedConnector(StoreConnector):
             dom_product,
             network_product,
             observed_json_responses=len(network_json),
+            network_shapes=self._network_shapes(network_json),
         )
