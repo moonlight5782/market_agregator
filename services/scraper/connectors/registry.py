@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from .base import ConnectorContext, StoreConnector
 from .browser_generic import BrowserRenderedConnector
+from .catalog_generic import GenericCatalogConnector
 from .cactus import CactusConnector
 from .darwin import DarwinConnector
 from .feed_generic import GenericFeedConnector
@@ -23,7 +24,12 @@ class ConnectorChoice:
 
 
 def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> list[ConnectorChoice]:
-    """Return acquisition strategies in strict priority order."""
+    """Return acquisition strategies in strict priority order.
+
+    The default path must work for previously unknown stores. Store-specific
+    connectors are optional optimizers/enrichers, never the foundation of the
+    acquisition engine.
+    """
     plan: list[ConnectorChoice] = []
 
     if profile.api_hints:
@@ -50,11 +56,22 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             priority=30,
         ))
 
+    # Universal same-origin catalog traversal works even when the store has no
+    # registry-specific implementation.
+    plan.append(ConnectorChoice(
+        name="catalog-generic",
+        connector=GenericCatalogConnector(context),
+        reason="generic same-origin catalog/category discovery",
+        priority=34,
+    ))
+
+    # Optional store-specific accelerators/enrichers. They may improve coverage
+    # or branch-level stock, but an unknown store still has a complete plan.
     if context.store_slug == "darwin":
         plan.append(ConnectorChoice(
             name="darwin-catalog",
             connector=DarwinConnector(context),
-            reason="store-specific paginated public HTML catalog discovery",
+            reason="optional store-specific paginated public HTML discovery + branch stock",
             priority=35,
         ))
 
@@ -62,7 +79,7 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         plan.append(ConnectorChoice(
             name="maximum-catalog",
             connector=MaximumConnector(context),
-            reason="store-specific category traversal with stable numeric product URLs",
+            reason="optional store-specific category traversal with stable numeric product URLs",
             priority=35,
         ))
 
@@ -70,14 +87,14 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         plan.append(ConnectorChoice(
             name="cactus-catalog",
             connector=CactusConnector(context),
-            reason="store-specific recursive /catalogue/ discovery with product-page detection",
+            reason="optional store-specific catalogue discovery accelerator",
             priority=35,
         ))
 
     plan.append(ConnectorChoice(
         name="html-generic",
         connector=GenericHtmlConnector(context),
-        reason="generic HTTP/HTML parser fallback",
+        reason="generic HTTP/HTML product-page parser fallback",
         priority=40,
     ))
 
