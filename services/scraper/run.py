@@ -31,13 +31,14 @@ def pct(part: int, total: int) -> float:
     return round((part / total) * 100, 2) if total else 0.0
 
 
-async def crawl(store_slug: str, limit: int) -> None:
+async def crawl(store_slug: str, limit: int, browser_threshold: float = 0.8) -> None:
     started_at = datetime.now(timezone.utc)
     started = perf_counter()
     store = load_store(store_slug)
     context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
     profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
     plan = build_connector_plan(context, profile)
+    browser_trigger_count = max(1, min(limit, int(limit * browser_threshold)))
 
     print(
         f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
@@ -63,6 +64,21 @@ async def crawl(store_slug: str, limit: int) -> None:
 
     with output.open("w", encoding="utf-8") as fh:
         for choice in plan:
+            if choice.name == "browser-rendered" and products_written >= browser_trigger_count:
+                strategy_stats.append({
+                    "connector": choice.name,
+                    "priority": choice.priority,
+                    "reason": choice.reason,
+                    "urls_checked": 0,
+                    "accepted": 0,
+                    "duplicates": 0,
+                    "errors": 0,
+                    "skipped": True,
+                    "skip_reason": f"coverage threshold reached ({products_written}/{browser_trigger_count})",
+                })
+                print(f"[SKIP] {choice.name}: coverage threshold reached ({products_written}/{browser_trigger_count})")
+                continue
+
             urls_seen = 0
             accepted = 0
             duplicates = 0
@@ -119,6 +135,7 @@ async def crawl(store_slug: str, limit: int) -> None:
                 "accepted": accepted,
                 "duplicates": duplicates,
                 "errors": strategy_errors,
+                "skipped": False,
             })
             print(f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, errors={strategy_errors}")
 
@@ -133,6 +150,10 @@ async def crawl(store_slug: str, limit: int) -> None:
         "started_at": started_at.isoformat(),
         "duration_seconds": duration,
         "limit": limit,
+        "browser_fallback": {
+            "threshold_ratio": browser_threshold,
+            "trigger_below_products": browser_trigger_count,
+        },
         "discovery": {
             "blocked": profile.blocked,
             "sitemaps": profile.sitemap_urls,
@@ -145,6 +166,7 @@ async def crawl(store_slug: str, limit: int) -> None:
         "strategies": strategy_stats,
         "quality": {
             "unique_products": products_written,
+            "target_fill_pct": pct(products_written, limit),
             "price_complete_pct": pct(with_price, products_written),
             "known_stock_pct": pct(with_known_stock, products_written),
             "image_complete_pct": pct(with_image, products_written),
@@ -159,7 +181,7 @@ async def crawl(store_slug: str, limit: int) -> None:
     stats = ", ".join(f"{s['connector']}:{s['accepted']}/{s['urls_checked']}" for s in strategy_stats)
     print(f"Done. Wrote {products_written} unique products to {output}. Strategies: {stats}")
     print(
-        f"Quality: price={report['quality']['price_complete_pct']}%, "
+        f"Quality: target={report['quality']['target_fill_pct']}%, price={report['quality']['price_complete_pct']}%, "
         f"stock={report['quality']['known_stock_pct']}%, image={report['quality']['image_complete_pct']}%, "
         f"category={report['quality']['category_complete_pct']}%, identity={report['quality']['identity_complete_pct']}%."
     )
@@ -170,8 +192,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Crawl one registry store using prioritized adaptive acquisition")
     parser.add_argument("--store", required=True, help="Store slug from data/store-registry.json")
     parser.add_argument("--limit", type=int, default=100, help="Maximum unique products to collect")
+    parser.add_argument(
+        "--browser-threshold",
+        type=float,
+        default=0.8,
+        help="Use browser fallback only when earlier strategies collect less than this fraction of --limit (0..1)",
+    )
     args = parser.parse_args()
-    asyncio.run(crawl(args.store, max(1, args.limit)))
+    threshold = min(1.0, max(0.0, args.browser_threshold))
+    asyncio.run(crawl(args.store, max(1, args.limit), browser_threshold=threshold))
 
 
 if __name__ == "__main__":
