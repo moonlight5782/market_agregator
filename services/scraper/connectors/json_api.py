@@ -17,6 +17,8 @@ class GenericJsonApiConnector(StoreConnector):
     publicly reachable JSON and never bypasses authentication or access controls.
     """
 
+    max_pages_per_endpoint = 25
+
     def __init__(self, context, endpoints: list[str] | None = None) -> None:
         super().__init__(context)
         self.endpoints = endpoints or []
@@ -24,28 +26,42 @@ class GenericJsonApiConnector(StoreConnector):
 
     async def discover_product_urls(self) -> AsyncIterator[str]:
         async with self.client() as client:
+            visited_pages: set[str] = set()
             for endpoint in self.endpoints:
-                try:
-                    response = await client.get(endpoint)
-                except Exception:
-                    continue
-                if not response.is_success:
-                    continue
-                ctype = response.headers.get("content-type", "").lower()
-                if "json" not in ctype and not response.text.lstrip().startswith(("{", "[")):
-                    continue
-                try:
-                    payload = response.json()
-                except Exception:
-                    continue
-                for item in self._walk(payload):
-                    if not self._looks_like_product(item):
+                queue = [endpoint]
+                pages = 0
+                while queue and pages < self.max_pages_per_endpoint:
+                    page_url = queue.pop(0)
+                    if page_url in visited_pages:
                         continue
-                    key = self._item_url(item, endpoint)
-                    if key in self._items:
+                    visited_pages.add(page_url)
+                    pages += 1
+                    try:
+                        response = await client.get(page_url)
+                    except Exception:
                         continue
-                    self._items[key] = item
-                    yield key
+                    if not response.is_success:
+                        continue
+                    ctype = response.headers.get("content-type", "").lower()
+                    if "json" not in ctype and not response.text.lstrip().startswith(("{", "[")):
+                        continue
+                    try:
+                        payload = response.json()
+                    except Exception:
+                        continue
+
+                    for item in self._walk(payload):
+                        if not self._looks_like_product(item):
+                            continue
+                        key = self._item_url(item, page_url)
+                        if key in self._items:
+                            continue
+                        self._items[key] = item
+                        yield key
+
+                    next_url = self._next_page(payload, str(response.url))
+                    if next_url and next_url not in visited_pages:
+                        queue.append(next_url)
 
     async def fetch_product(self, url: str) -> RawProduct | None:
         item = self._items.get(url)
@@ -102,6 +118,26 @@ class GenericJsonApiConnector(StoreConnector):
             return urljoin(self.context.base_url, str(value))
         identifier = self._pick(item, "id", "sku", "code", "ean")
         return f"{fallback}#product-{identifier}" if identifier is not None else fallback
+
+    @classmethod
+    def _next_page(cls, payload: Any, current_url: str) -> str | None:
+        if not isinstance(payload, dict):
+            return None
+
+        direct = cls._pick(payload, "next", "nextUrl", "next_url", "nextPage", "next_page")
+        if isinstance(direct, str) and direct.strip():
+            return urljoin(current_url, direct.strip())
+
+        for container_name in ("links", "pagination", "paging", "meta"):
+            container = payload.get(container_name)
+            if not isinstance(container, dict):
+                continue
+            value = cls._pick(container, "next", "nextUrl", "next_url", "nextPage", "next_page")
+            if isinstance(value, dict):
+                value = cls._pick(value, "url", "href")
+            if isinstance(value, str) and value.strip():
+                return urljoin(current_url, value.strip())
+        return None
 
     @classmethod
     def _walk(cls, value: Any):
