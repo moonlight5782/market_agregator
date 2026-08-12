@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Moldova Commerce",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
-  return <html lang="ru"><body style={{margin: 0, color: "#171717", background: "#fff"}}>{children}</body></html>;
+  return <html lang="ru"><body>{children}</body></html>;
 }
