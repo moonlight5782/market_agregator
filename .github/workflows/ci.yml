@@ -18,6 +18,7 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
       - run: npm install
+      - run: npm run data:validate-registry
       - run: npm run db:generate
       - run: npx prisma validate
       - run: npx tsc --noEmit
