@@ -30,7 +30,7 @@ def compute_quality(payloads: list[dict[str, Any]], limit: int) -> dict[str, Any
 
     return {
         "unique_products": total,
-        "target_fill_pct": pct(total, limit),
+        "target_fill_pct": pct(total, limit) if limit > 0 else None,
         "price_complete_pct": pct(sum(1 for item in payloads if item.get("price") is not None), total),
         "known_stock_pct": pct(sum(1 for item in payloads if item.get("stock_status") not in (None, "UNKNOWN")), total),
         "image_complete_pct": pct(len(image_urls), total),
@@ -43,6 +43,54 @@ def compute_quality(payloads: list[dict[str, Any]], limit: int) -> dict[str, Any
         "network_json_observed_product_pct": pct(network_observed, total),
         "network_json_matched_product_pct": pct(network_matched, total),
         "network_json_response_count": network_response_total,
+    }
+
+
+def publish_readiness(
+    quality: dict[str, Any],
+    *,
+    coverage_verified: bool,
+    require_stock: bool = True,
+) -> dict[str, Any]:
+    """Return a strict publication decision.
+
+    A bounded sample can diagnose a parser but can never become publish-ready.
+    Product identity/category/price must be complete. Stock is required by default
+    because the storefront promises real availability rather than merely a catalog.
+    """
+    blockers: list[str] = []
+    total = int(quality.get("unique_products") or 0)
+    if total <= 0:
+        blockers.append("no_products")
+    if not coverage_verified:
+        blockers.append("catalog_coverage_unverified")
+
+    required = {
+        "price_complete_pct": 100.0,
+        "category_complete_pct": 100.0,
+        "identity_complete_pct": 100.0,
+    }
+    if require_stock:
+        required["known_stock_pct"] = 100.0
+
+    for metric, minimum in required.items():
+        value = float(quality.get(metric) or 0.0)
+        if value < minimum:
+            blockers.append(f"{metric}={value}%<{minimum}%")
+
+    image_complete = float(quality.get("image_complete_pct") or 0.0)
+    image_reuse = float(quality.get("max_image_reuse_pct") or 0.0)
+    warnings: list[str] = []
+    if image_complete < 95.0:
+        warnings.append(f"image_complete_pct={image_complete}%")
+    if image_complete >= 50.0 and image_reuse >= 80.0:
+        warnings.append(f"suspicious_image_reuse={image_reuse}%")
+
+    return {
+        "ready": not blockers,
+        "blockers": blockers,
+        "warnings": warnings,
+        "requirements": required,
     }
 
 
