@@ -84,23 +84,60 @@ async def crawl(
     store_slug = store["slug"]
     context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
     profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
-    plan = build_connector_plan(context, profile)
+    context = ConnectorContext(
+        store_slug=store_slug,
+        base_url=store["domain"],
+        requests_per_second=1.0,
+        timeout_seconds=context.timeout_seconds,
+        robots_policy=profile.robots_policy,
+    )
     bounded = limit > 0
     browser_trigger_count = max(1, min(limit, int(limit * browser_threshold))) if bounded else 1
     browser_enrichment_limit = max(0, browser_enrichment_limit)
-
-    print(
-        f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
-        f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
-        f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
-        f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}; "
-        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
-    )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     output = OUT_DIR / f"{store_slug}.ndjson"
     report_path = REPORT_DIR / f"{store_slug}.json"
+    robots = profile.robots_policy
+    if robots is None or not robots.base_allowed:
+        output.write_text("", encoding="utf-8")
+        duration = round(perf_counter() - started, 3)
+        report = {
+            "store_slug": store_slug,
+            "store_name": store.get("name"),
+            "domain": store.get("domain"),
+            "registry_status": store.get("status"),
+            "started_at": started_at.isoformat(),
+            "duration_seconds": duration,
+            "limit": limit,
+            "crawl_mode": "bounded" if bounded else "full",
+            "outcome": "BLOCKED_BY_ROBOTS",
+            "publish_readiness": {"ready": False, "blockers": [robots.reason if robots else "robots policy was not loaded"]},
+            "discovery": {
+                "blocked": True,
+                "robots": {
+                    "status": robots.status if robots else "UNAVAILABLE",
+                    "url": robots.robots_url if robots else None,
+                    "reason": robots.reason if robots else "robots policy was not loaded",
+                },
+            },
+            "strategies": [],
+            "quality": {"total": 0, "errors": 0},
+            "output": str(output.relative_to(ROOT)),
+        }
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[ROBOTS BLOCK] {store_slug}: {report['publish_readiness']['blockers'][0]}; report={report_path}")
+        return "BLOCKED_BY_ROBOTS", 0
+
+    plan = build_connector_plan(context, profile)
+    print(
+        f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
+        f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
+        f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
+        f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; robots={profile.robots_status}; blocked={profile.blocked}; "
+        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
+    )
 
     seen_products: set[str] = set()
     products_written = 0
@@ -350,6 +387,11 @@ async def crawl(
         },
         "discovery": {
             "blocked": profile.blocked,
+            "robots": {
+                "status": profile.robots_status,
+                "url": profile.robots_url,
+                "reason": profile.robots_reason,
+            },
             "sitemaps": profile.sitemap_urls,
             "api_hints": profile.api_hints,
             "feed_urls": profile.feed_hints,

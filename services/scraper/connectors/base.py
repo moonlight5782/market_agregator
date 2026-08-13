@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from ..models import RawProduct
+from ..robots import RobotsPolicy
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,7 @@ class ConnectorContext:
     base_url: str
     requests_per_second: float = 1.0
     timeout_seconds: float = 20.0
+    robots_policy: RobotsPolicy | None = None
 
 
 class StoreConnector(ABC):
@@ -37,6 +39,16 @@ class StoreConnector(ABC):
     def _request_interval(self) -> float:
         return 1.0 / max(self.context.requests_per_second, 0.1)
 
+    def is_url_allowed(self, url: str) -> bool:
+        return self.context.robots_policy is None or self.context.robots_policy.can_fetch(url)
+
+    async def _enforce_robots(self, request: httpx.Request) -> None:
+        if not self.is_url_allowed(str(request.url)):
+            raise httpx.RequestError(
+                f"Robots policy disallows {request.url}",
+                request=request,
+            )
+
     async def _throttle_request(self, request: httpx.Request) -> None:
         del request
         async with self._rate_lock:
@@ -51,7 +63,7 @@ class StoreConnector(ABC):
             timeout=self.context.timeout_seconds,
             follow_redirects=True,
             headers={"User-Agent": "MoldovaCommerceBot/0.1 (+catalog-indexer)"},
-            event_hooks={"request": [self._throttle_request]},
+            event_hooks={"request": [self._enforce_robots, self._throttle_request]},
         )
 
     @abstractmethod
