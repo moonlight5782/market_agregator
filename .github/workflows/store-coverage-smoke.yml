@@ -41,22 +41,46 @@ jobs:
           set +e
           LIMIT="${{ github.event.inputs.limit || '25' }}"
           mkdir -p data/reports data/raw
+
           timeout --signal=TERM 300s python -m services.scraper.run \
             --store "${{ matrix.store }}" \
             --limit "$LIMIT" \
             --browser-threshold 0.8
           crawl_code=$?
-          if [ $crawl_code -eq 124 ]; then
-            echo "${{ matrix.store }} smoke crawl exceeded 300 seconds"
-          elif [ $crawl_code -eq 4 ]; then
-            echo "${{ matrix.store }} returned zero products; report is retained for diagnosis"
-          fi
+
           if [ -f "data/reports/${{ matrix.store }}.json" ]; then
             python -m services.scraper.coverage_audit \
               --stores "${{ matrix.store }}" \
               --output "data/reports/${{ matrix.store }}-coverage-audit.json"
+            audit_code=$?
+          else
+            audit_code=0
           fi
-          exit $crawl_code
+
+          case "$crawl_code" in
+            0)
+              echo "${{ matrix.store }} smoke crawl succeeded"
+              ;;
+            4)
+              echo "::warning title=${{ matrix.store }} origin unavailable::Crawler returned zero products / BLOCKED_BY_ORIGIN. This is retained as a coverage diagnostic and does not fail scraper CI."
+              ;;
+            124)
+              echo "::error title=${{ matrix.store }} smoke timeout::Crawl exceeded 300 seconds"
+              exit 124
+              ;;
+            *)
+              echo "::error title=${{ matrix.store }} scraper failure::Crawler exited with code $crawl_code"
+              exit "$crawl_code"
+              ;;
+          esac
+
+          # Coverage audit remains diagnostic in smoke CI. Release/readiness gates
+          # should enforce required-store coverage separately.
+          if [ "$audit_code" -ne 0 ]; then
+            echo "::warning title=${{ matrix.store }} coverage audit::Coverage audit exited with code $audit_code; report retained for readiness diagnostics."
+          fi
+
+          exit 0
       - name: Upload ${{ matrix.store }} reports
         if: always()
         uses: actions/upload-artifact@v4
