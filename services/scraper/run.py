@@ -56,6 +56,13 @@ def _map_raw_category(raw) -> tuple[str | None, float]:
     )
 
 
+def _strategy_fetch_concurrency(connector_name: str) -> int:
+    # Playwright is memory-heavy and can trigger many subrequests per page.
+    # Keep browser rendering single-flight even when HTTP detail pages are
+    # fetched concurrently.
+    return 1 if connector_name == "browser-rendered" else PRODUCT_FETCH_CONCURRENCY
+
+
 async def _fetch_batch(connector, urls: list[str]):
     """Fetch detail pages concurrently while connector-level start-rate limiting remains authoritative."""
     return await asyncio.gather(
@@ -87,7 +94,7 @@ async def crawl(
         f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
         f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
         f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}; "
-        f"mode={'bounded' if bounded else 'full'}; detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
+        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -125,7 +132,11 @@ async def crawl(
             stopped_by_cap = False
             source_exhausted = False
             strategy_started = perf_counter()
-            print(f"[TRY] priority={choice.priority} connector={choice.name}: {choice.reason}")
+            strategy_concurrency = _strategy_fetch_concurrency(choice.name)
+            print(
+                f"[TRY] priority={choice.priority} connector={choice.name}: {choice.reason}; "
+                f"detail_concurrency={strategy_concurrency}"
+            )
 
             try:
                 url_iter = choice.connector.discover_product_urls().__aiter__()
@@ -134,8 +145,8 @@ async def crawl(
                         stopped_by_cap = True
                         break
 
-                    remaining = max(1, limit - products_written) if bounded else PRODUCT_FETCH_CONCURRENCY
-                    batch_target = min(PRODUCT_FETCH_CONCURRENCY, remaining)
+                    remaining = max(1, limit - products_written) if bounded else strategy_concurrency
+                    batch_target = min(strategy_concurrency, remaining)
                     urls: list[str] = []
                     for _ in range(batch_target):
                         try:
@@ -195,7 +206,7 @@ async def crawl(
                 "skipped": False,
                 "exhausted": source_exhausted and not stopped_by_cap,
                 "duration_seconds": strategy_duration,
-                "detail_fetch_concurrency": PRODUCT_FETCH_CONCURRENCY,
+                "detail_fetch_concurrency": strategy_concurrency,
             })
             print(
                 f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, "
@@ -277,6 +288,7 @@ async def crawl(
             "errors": enrichment_errors,
             "skipped": False,
             "exhausted": True,
+            "detail_fetch_concurrency": 1,
         })
         print(
             f"[RESULT] browser quality enrichment: checked={enrichment_checked}, "
@@ -315,7 +327,8 @@ async def crawl(
         "duration_seconds": duration,
         "limit": limit,
         "crawl_mode": "bounded" if bounded else "full",
-        "detail_fetch_concurrency": PRODUCT_FETCH_CONCURRENCY,
+        "http_detail_fetch_concurrency": PRODUCT_FETCH_CONCURRENCY,
+        "browser_detail_fetch_concurrency": 1,
         "outcome": outcome,
         "coverage": {
             "verified": coverage_verified,
