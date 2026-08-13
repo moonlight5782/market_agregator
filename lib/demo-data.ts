@@ -1,8 +1,11 @@
+import { WEEKDAYS, type OpeningHours } from "./opening-hours";
+
 export type DemoStore = {
   id: string;
   name: string;
   slug: string;
   city: string;
+  openingHours: OpeningHours;
 };
 
 export type DemoOffer = {
@@ -27,13 +30,32 @@ export type DemoProduct = {
   offers: DemoOffer[];
 };
 
+function everyDay(open: string, close: string): OpeningHours {
+  return {
+    version: 1,
+    timezone: "Europe/Chisinau",
+    weekly: Object.fromEntries(WEEKDAYS.map((day) => [day, [{ open, close }]])),
+  };
+}
+
+function weeklySchedule(weekdays: [string, string], saturday: [string, string], sunday: [string, string]): OpeningHours {
+  return {
+    version: 1,
+    timezone: "Europe/Chisinau",
+    weekly: Object.fromEntries(WEEKDAYS.map((day) => {
+      const [open, close] = day === "sat" ? saturday : day === "sun" ? sunday : weekdays;
+      return [day, [{ open, close }]];
+    })),
+  };
+}
+
 export const demoStores: DemoStore[] = [
-  { id: "enter", name: "Enter", slug: "enter", city: "Chișinău" },
-  { id: "darwin", name: "Darwin", slug: "darwin", city: "Chișinău" },
-  { id: "maximum", name: "Maximum", slug: "maximum", city: "Chișinău" },
-  { id: "linella", name: "Linella", slug: "linella", city: "Chișinău" },
-  { id: "metro", name: "METRO", slug: "metro", city: "Chișinău" },
-  { id: "supraten", name: "Supraten", slug: "supraten", city: "Chișinău" },
+  { id: "enter", name: "Enter", slug: "enter", city: "Chișinău", openingHours: everyDay("09:00", "20:00") },
+  { id: "darwin", name: "Darwin", slug: "darwin", city: "Chișinău", openingHours: everyDay("09:00", "20:00") },
+  { id: "maximum", name: "Maximum", slug: "maximum", city: "Chișinău", openingHours: weeklySchedule(["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "19:00"]) },
+  { id: "linella", name: "Linella", slug: "linella", city: "Chișinău", openingHours: everyDay("08:00", "22:00") },
+  { id: "metro", name: "METRO", slug: "metro", city: "Chișinău", openingHours: everyDay("08:00", "21:00") },
+  { id: "supraten", name: "Supraten", slug: "supraten", city: "Chișinău", openingHours: weeklySchedule(["08:00", "19:00"], ["08:00", "17:00"], ["10:00", "15:00"]) },
 ];
 
 export const demoCategories = [

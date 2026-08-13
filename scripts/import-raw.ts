@@ -4,6 +4,7 @@ import { createInterface } from "node:readline";
 import { Prisma, PrismaClient, StockStatus } from "@prisma/client";
 import { reconcileGraceHours, reconciliationCutoff } from "../lib/freshness";
 import { validCoordinates } from "../lib/geo";
+import { isStoreHours } from "../lib/opening-hours";
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,7 @@ type RawAvailability = {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  opening_hours?: Prisma.InputJsonObject | null;
   stock_status?: string;
   quantity?: number | null;
 };
@@ -83,6 +85,9 @@ function validateRawItem(item: RawLine) {
     if (hasLatitude !== hasLongitude || (hasLatitude && !validCoordinates(availability.latitude, availability.longitude))) {
       throw new Error("availability coordinates must be a valid latitude/longitude pair.");
     }
+    if (availability.opening_hours != null && !isStoreHours(availability.opening_hours)) {
+      throw new Error("availability.opening_hours must use the normalized v1 weekly schedule format.");
+    }
   }
 }
 
@@ -116,23 +121,25 @@ async function resolveLocation(storeId: string, availability: RawAvailability) {
     ...(availability.latitude != null ? { latitude: availability.latitude } : {}),
     ...(availability.longitude != null ? { longitude: availability.longitude } : {}),
   };
+  const hours = availability.opening_hours != null ? { openingHours: availability.opening_hours } : {};
 
   if (externalId) {
     return prisma.storeLocation.upsert({
       where: { storeId_externalId: { storeId, externalId } },
-      update: { name, address, city, ...coordinates, active: true },
-      create: { storeId, externalId, name, address, city, ...coordinates, active: true },
+      update: { name, address, city, ...coordinates, ...hours, active: true },
+      create: { storeId, externalId, name, address, city, ...coordinates, ...hours, active: true },
     });
   }
 
   const existing = await prisma.storeLocation.findFirst({ where: { storeId, city, name, address } });
   if (existing) {
     if (Object.keys(coordinates).length) {
-      return prisma.storeLocation.update({ where: { id: existing.id }, data: coordinates });
+      return prisma.storeLocation.update({ where: { id: existing.id }, data: { ...coordinates, ...hours } });
     }
+    if (Object.keys(hours).length) return prisma.storeLocation.update({ where: { id: existing.id }, data: hours });
     return existing;
   }
-  return prisma.storeLocation.create({ data: { storeId, name, address, city, ...coordinates, active: true } });
+  return prisma.storeLocation.create({ data: { storeId, name, address, city, ...coordinates, ...hours, active: true } });
 }
 
 async function importAvailabilities(offerId: string, storeId: string, availabilities: RawAvailability[]) {

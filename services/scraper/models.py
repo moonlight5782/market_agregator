@@ -15,6 +15,25 @@ class StockStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class OpeningPeriod(BaseModel):
+    open: str = Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    close: str = Field(pattern=r"^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$")
+
+
+class OpeningHoursSource(BaseModel):
+    url: HttpUrl | None = None
+    checkedAt: datetime | None = None
+
+
+class OpeningHours(BaseModel):
+    version: int = Field(default=1, ge=1, le=1)
+    kind: str = Field(default="schedule", pattern=r"^schedule$")
+    timezone: str = "Europe/Chisinau"
+    weekly: dict[str, list[OpeningPeriod]]
+    temporarilyClosed: bool = False
+    source: OpeningHoursSource | None = None
+
+
 class RawAvailability(BaseModel):
     location_external_id: str | None = None
     location_name: str | None = None
@@ -22,6 +41,7 @@ class RawAvailability(BaseModel):
     address: str | None = None
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
+    opening_hours: OpeningHours | None = None
     stock_status: StockStatus = StockStatus.UNKNOWN
     quantity: int | None = None
 

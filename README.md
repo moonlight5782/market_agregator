@@ -85,6 +85,9 @@ This is the first operational health layer; a web admin dashboard can later read
 ## Freshness, locations and stock rules
 
 - Real UI only shows offers seen within `OFFER_MAX_AGE_HOURS` (default 48 hours).
+- Branches can carry normalized `opening_hours` data. Search and product pages calculate
+  `Open now / Closed now` in `Europe/Chisinau`, show today's interval, handle overnight
+  periods, and keep missing schedules explicitly unknown instead of guessing.
 - Branch-level availability has its own `lastSeenAt` and stale branch records are excluded from city filtering.
 - `Offer` is the merchant price/link; `OfferAvailability` is stock for a concrete store location.
 - Never invent quantity when a store only says “in stock”.

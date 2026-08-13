@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import locations from "../data/store-locations.json";
 
 const prisma = new PrismaClient();
@@ -12,6 +13,7 @@ type LocationSeed = {
   latitude?: number;
   longitude?: number;
   phone?: string;
+  opening_hours?: Prisma.InputJsonObject;
 };
 
 async function main() {
@@ -23,6 +25,7 @@ async function main() {
       ...(item.latitude != null ? { latitude: item.latitude } : {}),
       ...(item.longitude != null ? { longitude: item.longitude } : {}),
     };
+    const hours = item.opening_hours ? { openingHours: item.opening_hours } : {};
     await prisma.storeLocation.upsert({
       where: { storeId_externalId: { storeId: store.id, externalId: item.external_id } },
       update: {
@@ -31,6 +34,7 @@ async function main() {
         address: item.address ?? null,
         phone: item.phone ?? null,
         ...coordinates,
+        ...hours,
         active: true,
       },
       create: {
@@ -41,6 +45,7 @@ async function main() {
         address: item.address ?? null,
         phone: item.phone ?? null,
         ...coordinates,
+        ...hours,
         active: true,
       },
     });
