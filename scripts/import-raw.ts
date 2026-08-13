@@ -2,6 +2,8 @@ import { createReadStream, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { createInterface } from "node:readline";
 import { Prisma, PrismaClient, StockStatus } from "@prisma/client";
+import { reconcileGraceHours, reconciliationCutoff } from "../lib/freshness";
+import { validCoordinates } from "../lib/geo";
 
 const prisma = new PrismaClient();
 
@@ -14,6 +16,13 @@ type RawAvailability = {
   longitude?: number | null;
   stock_status?: string;
   quantity?: number | null;
+};
+
+type ReconciliationSummary = {
+  storeSlug: string;
+  cutoff: string;
+  graceHours: number;
+  offersMarkedOutOfStock: number;
 };
 
 type RawLine = {
@@ -53,6 +62,28 @@ function toStockStatus(value?: string): StockStatus {
   return Object.values(StockStatus).includes(value as StockStatus)
     ? (value as StockStatus)
     : StockStatus.UNKNOWN;
+}
+
+function validateRawItem(item: RawLine) {
+  if (!item.store_slug?.trim()) throw new Error("store_slug is required.");
+  if (!item.title?.trim()) throw new Error("title is required.");
+  if (!item.normalized_title?.trim()) throw new Error("normalized_title is required.");
+  if (!Number.isFinite(Number(item.price)) || Number(item.price) <= 0) throw new Error(`price must be a positive number, received '${item.price}'.`);
+  let url: URL;
+  try {
+    url = new URL(item.url);
+  } catch {
+    throw new Error(`url must be absolute, received '${item.url}'.`);
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error(`url protocol '${url.protocol}' is not supported.`);
+  for (const availability of item.availabilities ?? []) {
+    if (!availability.city?.trim()) throw new Error("availability.city is required when availability is provided.");
+    const hasLatitude = availability.latitude != null;
+    const hasLongitude = availability.longitude != null;
+    if (hasLatitude !== hasLongitude || (hasLatitude && !validCoordinates(availability.latitude, availability.longitude))) {
+      throw new Error("availability coordinates must be a valid latitude/longitude pair.");
+    }
+  }
 }
 
 async function findMatchingProduct(item: RawLine, brandId?: string) {
@@ -208,9 +239,49 @@ async function importItem(item: RawLine) {
   return { product, offer, matched: Boolean(previous) };
 }
 
+function argValue(name: string) {
+  const prefix = `--${name}=`;
+  const inline = process.argv.find((arg) => arg.startsWith(prefix));
+  if (inline) return inline.slice(prefix.length);
+  const index = process.argv.indexOf(`--${name}`);
+  return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
+async function reconcileMissingOffers(storeSlug: string, runStartedAt: Date): Promise<ReconciliationSummary> {
+  const store = await prisma.store.findUnique({ where: { slug: storeSlug }, select: { id: true } });
+  if (!store) throw new Error(`Store ${storeSlug} is missing from DB.`);
+
+  // Reconciliation is intentionally limited to the offer-level stock state. A
+  // missing branch availability can mean that a source omitted inventory data,
+  // so automatically marking every branch unavailable would create false stock
+  // signals. Such a transition requires an authoritative branch-inventory feed.
+  const cutoff = reconciliationCutoff(runStartedAt);
+  const marked = await prisma.offer.updateMany({
+    where: {
+      storeId: store.id,
+      lastSeenAt: { lt: cutoff },
+      stockStatus: { not: StockStatus.OUT_OF_STOCK },
+    },
+    data: { stockStatus: StockStatus.OUT_OF_STOCK, quantity: null, lastStockUpdate: new Date() },
+  });
+  return {
+    storeSlug,
+    cutoff: cutoff.toISOString(),
+    graceHours: reconcileGraceHours(),
+    offersMarkedOutOfStock: marked.count,
+  };
+}
+
 async function main() {
   const file = process.argv[2];
-  if (!file) throw new Error("Usage: npm run data:import -- data/raw/<store>.ndjson");
+  if (!file) throw new Error("Usage: npm run data:import -- data/raw/<store>.ndjson [--reconcile-store=<slug> --run-started-at=<ISO timestamp>]");
+  const reconcileStore = argValue("reconcile-store");
+  const runStartedAtValue = argValue("run-started-at");
+  if (Boolean(reconcileStore) !== Boolean(runStartedAtValue)) {
+    throw new Error("--reconcile-store and --run-started-at must be supplied together.");
+  }
+  const runStartedAt = runStartedAtValue ? new Date(runStartedAtValue) : null;
+  if (runStartedAt && Number.isNaN(runStartedAt.getTime())) throw new Error("--run-started-at must be an ISO timestamp.");
 
   const input = createInterface({ input: createReadStream(file, { encoding: "utf-8" }), crlfDelay: Infinity });
   let imported = 0;
@@ -219,6 +290,10 @@ async function main() {
     if (!line.trim()) continue;
     try {
       const item = JSON.parse(line) as RawLine;
+      validateRawItem(item);
+      if (reconcileStore && item.store_slug !== reconcileStore) {
+        throw new Error(`Raw item store '${item.store_slug}' does not match reconciliation store '${reconcileStore}'.`);
+      }
       await importItem(item);
       imported += 1;
       if (imported % 100 === 0) console.log(`Imported ${imported} rows...`);
@@ -228,7 +303,13 @@ async function main() {
     }
   }
 
-  const summary = { file, imported, failed, total: imported + failed, completedAt: new Date().toISOString() };
+  let reconciliation: ReconciliationSummary | null = null;
+  if (reconcileStore && runStartedAt && failed === 0) {
+    reconciliation = await reconcileMissingOffers(reconcileStore, runStartedAt);
+    console.log(`[RECONCILED] ${reconcileStore}: ${reconciliation.offersMarkedOutOfStock} offers marked OUT_OF_STOCK.`);
+  }
+
+  const summary = { file, imported, failed, total: imported + failed, reconciliation, completedAt: new Date().toISOString() };
   console.log(`Done: ${imported} imported, ${failed} failed.`);
   if (process.env.IMPORT_SUMMARY_PATH) {
     writeFileSync(process.env.IMPORT_SUMMARY_PATH, JSON.stringify(summary, null, 2), "utf-8");

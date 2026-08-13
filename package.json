@@ -16,7 +16,8 @@
     "data:status": "tsx scripts/store-health.ts",
     "data:validate-registry": "node scripts/validate-store-registry.mjs",
     "data:geocode-locations": "tsx scripts/geocode-locations.ts",
-    "test:sync-batch": "node --test scripts/sync-verified-stores.test.mjs"
+    "test:sync-batch": "node --test scripts/sync-verified-stores.test.mjs",
+    "test:freshness": "node --import tsx --test lib/freshness.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

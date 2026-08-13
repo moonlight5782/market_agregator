@@ -1,16 +1,11 @@
 import { demoCategories, demoProducts, demoStores, getBestOffer } from "./demo-data";
+import { freshSince } from "./freshness";
 import { haversineKm, parseCoordinate, parseRadiusKm, validCoordinates } from "./geo";
 
 export const isDemoMode = process.env.DEMO_MODE === "true" || !process.env.DATABASE_URL;
 
 const DEFAULT_PAGE_SIZE = 48;
 const MAX_PAGE_SIZE = 100;
-
-function freshSince() {
-  const configured = Number(process.env.OFFER_MAX_AGE_HOURS ?? 48);
-  const hours = Number.isFinite(configured) && configured > 0 ? configured : 48;
-  return new Date(Date.now() - hours * 60 * 60 * 1000);
-}
 
 function availableStatuses() {
   return ["IN_STOCK", "LOW_STOCK", "PREORDER"] as const;
@@ -110,11 +105,16 @@ export type SearchCatalogOptions = {
 
 async function radiusLocations(latitude: number, longitude: number, radiusKm: number) {
   const { prisma } = await import("./prisma");
+  // A cheap bounding box lets PostgreSQL discard distant locations before the
+  // exact Haversine calculation. Moldova does not cross the antimeridian, but
+  // the clamping keeps this prefilter valid for every legal user coordinate.
+  const latitudeDelta = radiusKm / 110.574;
+  const longitudeDelta = radiusKm / Math.max(111.320 * Math.cos((latitude * Math.PI) / 180), 0.01);
   const locations = await prisma.storeLocation.findMany({
     where: {
       active: true,
-      latitude: { not: null },
-      longitude: { not: null },
+      latitude: { gte: Math.max(-90, latitude - latitudeDelta), lte: Math.min(90, latitude + latitudeDelta) },
+      longitude: { gte: Math.max(-180, longitude - longitudeDelta), lte: Math.min(180, longitude + longitudeDelta) },
       store: { active: true, verified: true },
     },
     select: { id: true, latitude: true, longitude: true },

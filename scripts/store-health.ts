@@ -1,12 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { freshSince, offerMaxAgeHours } from "../lib/freshness";
 
 const prisma = new PrismaClient();
-
-function freshSince() {
-  const configured = Number(process.env.OFFER_MAX_AGE_HOURS ?? 48);
-  const hours = Number.isFinite(configured) && configured > 0 ? configured : 48;
-  return new Date(Date.now() - hours * 60 * 60 * 1000);
-}
 
 function ageLabel(date?: Date | null) {
   if (!date) return "never";
@@ -32,14 +27,30 @@ async function main() {
     orderBy: [{ verified: "desc" }, { name: "asc" }],
   });
 
-  const rows = [];
-  for (const store of stores) {
+  const storeIds = stores.map((store) => store.id);
+  const [freshCounts, totalCounts] = await Promise.all([
+    prisma.offer.groupBy({
+      by: ["storeId"],
+      where: { storeId: { in: storeIds }, lastSeenAt: { gte: cutoff } },
+      _count: { _all: true },
+    }),
+    prisma.offer.groupBy({
+      by: ["storeId"],
+      where: { storeId: { in: storeIds } },
+      _count: { _all: true },
+    }),
+  ]);
+  const freshByStore = new Map(freshCounts.map((row) => [row.storeId, row._count._all]));
+  const totalByStore = new Map(totalCounts.map((row) => [row.storeId, row._count._all]));
+
+  const rows = stores.map((store) => {
     const latest = store.scraperRuns[0];
-    const freshOffers = await prisma.offer.count({ where: { storeId: store.id, lastSeenAt: { gte: cutoff } } });
-    const totalOffers = await prisma.offer.count({ where: { storeId: store.id } });
+    const freshOffers = freshByStore.get(store.id) ?? 0;
+    const totalOffers = totalByStore.get(store.id) ?? 0;
     const expectedMinutes = store.sources.length ? Math.min(...store.sources.map((source) => source.crawlFrequency)) : 360;
     const overdueMinutes = Math.max(expectedMinutes * 2, 12 * 60);
     const overdue = !latest?.finishedAt || Date.now() - latest.finishedAt.getTime() > overdueMinutes * 60000;
+    const freshness = totalOffers === 0 ? "NO_OFFERS" : freshOffers === totalOffers ? "FRESH" : "STALE";
     const health = !latest
       ? "NEVER"
       : latest.status === "FAILED"
@@ -47,10 +58,12 @@ async function main() {
         : latest.status === "PARTIAL"
           ? "PARTIAL"
           : overdue
-            ? "STALE"
-            : "OK";
+            ? "STALE_RUN"
+            : freshness !== "FRESH"
+              ? "STALE_CATALOG"
+              : "OK";
 
-    rows.push({
+    return {
       health,
       store: store.slug,
       verified: store.verified ? "yes" : "no",
@@ -61,13 +74,17 @@ async function main() {
       errors: latest?.errors ?? 0,
       freshOffers,
       totalOffers,
-    });
-  }
+      freshness,
+    };
+  });
 
   console.table(rows);
   const unhealthy = rows.filter((row) => row.verified === "yes" && row.health !== "OK");
   if (unhealthy.length) {
-    console.error(`Verified stores requiring attention: ${unhealthy.map((row) => `${row.store}:${row.health}`).join(", ")}`);
+    console.error(
+      `Verified stores requiring attention (offer maximum age: ${offerMaxAgeHours()}h): ` +
+      unhealthy.map((row) => `${row.store}:${row.health}`).join(", "),
+    );
     process.exitCode = 2;
   }
 }
