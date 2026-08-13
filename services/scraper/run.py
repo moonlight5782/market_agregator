@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "data" / "store-registry.json"
 OUT_DIR = ROOT / "data" / "raw"
 REPORT_DIR = ROOT / "data" / "reports"
+PRODUCT_FETCH_CONCURRENCY = 6
 
 
 def load_store(slug: str) -> dict:
@@ -46,6 +47,30 @@ def store_from_url(url: str, slug: str | None = None) -> dict:
     }
 
 
+def _map_raw_category(raw) -> tuple[str | None, float]:
+    source = raw.attributes.get("category_path_source") if isinstance(raw.attributes, dict) else None
+    return map_category(
+        raw.category_path,
+        raw.title,
+        category_path_is_breadcrumb=source != "url",
+    )
+
+
+def _strategy_fetch_concurrency(connector_name: str) -> int:
+    # Playwright is memory-heavy and can trigger many subrequests per page.
+    # Keep browser rendering single-flight even when HTTP detail pages are
+    # fetched concurrently.
+    return 1 if connector_name == "browser-rendered" else PRODUCT_FETCH_CONCURRENCY
+
+
+async def _fetch_batch(connector, urls: list[str]):
+    """Fetch detail pages concurrently while connector-level start-rate limiting remains authoritative."""
+    return await asyncio.gather(
+        *(connector.fetch_product(url) for url in urls),
+        return_exceptions=True,
+    )
+
+
 async def crawl(
     store_slug: str,
     limit: int,
@@ -69,7 +94,7 @@ async def crawl(
         f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
         f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
         f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}; "
-        f"mode={'bounded' if bounded else 'full'}"
+        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -105,46 +130,71 @@ async def crawl(
             duplicates = 0
             strategy_errors = 0
             stopped_by_cap = False
-            print(f"[TRY] priority={choice.priority} connector={choice.name}: {choice.reason}")
+            source_exhausted = False
+            strategy_started = perf_counter()
+            strategy_concurrency = _strategy_fetch_concurrency(choice.name)
+            print(
+                f"[TRY] priority={choice.priority} connector={choice.name}: {choice.reason}; "
+                f"detail_concurrency={strategy_concurrency}"
+            )
 
             try:
-                async for url in choice.connector.discover_product_urls():
+                url_iter = choice.connector.discover_product_urls().__aiter__()
+                while not source_exhausted:
                     if bounded and products_written >= limit:
                         stopped_by_cap = True
                         break
-                    urls_seen += 1
-                    try:
-                        raw = await choice.connector.fetch_product(url)
-                    except Exception as exc:
-                        errors += 1
-                        strategy_errors += 1
-                        print(f"[WARN:{choice.name}] {url}: {exc}")
-                        continue
-                    if raw is None:
-                        continue
 
-                    category_slug, category_confidence = map_category(raw.category_path, raw.title)
-                    item = normalize(raw, category_slug=category_slug)
-                    dedupe_key = item.ean or (f"mpn:{item.normalized_brand}:{item.mpn}" if item.mpn else None) or f"{item.store_slug}:{item.external_id or item.url}"
-                    if dedupe_key in seen_products:
-                        duplicates += 1
-                        continue
-                    seen_products.add(dedupe_key)
+                    remaining = max(1, limit - products_written) if bounded else strategy_concurrency
+                    batch_target = min(strategy_concurrency, remaining)
+                    urls: list[str] = []
+                    for _ in range(batch_target):
+                        try:
+                            urls.append(await anext(url_iter))
+                        except StopAsyncIteration:
+                            source_exhausted = True
+                            break
+                    if not urls:
+                        break
 
-                    payload = item.model_dump(mode="json")
-                    payload["category_confidence"] = category_confidence
-                    payload["source_connector"] = choice.name
-                    payload["source_priority"] = choice.priority
-                    fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
+                    urls_seen += len(urls)
+                    results = await _fetch_batch(choice.connector, urls)
+                    for url, raw_or_exc in zip(urls, results):
+                        if isinstance(raw_or_exc, BaseException):
+                            errors += 1
+                            strategy_errors += 1
+                            print(f"[WARN:{choice.name}] {url}: {raw_or_exc}")
+                            continue
+                        raw = raw_or_exc
+                        if raw is None:
+                            continue
 
-                    products_written += 1
-                    accepted += 1
-                    print(f"[{products_written}] {item.title} — {item.price} {item.currency} — {category_slug or 'unmapped'} [{choice.name}]")
+                        category_slug, category_confidence = _map_raw_category(raw)
+                        item = normalize(raw, category_slug=category_slug)
+                        dedupe_key = item.ean or (f"mpn:{item.normalized_brand}:{item.mpn}" if item.mpn else None) or f"{item.store_slug}:{item.external_id or item.url}"
+                        if dedupe_key in seen_products:
+                            duplicates += 1
+                            continue
+                        seen_products.add(dedupe_key)
+
+                        payload = item.model_dump(mode="json")
+                        payload["category_confidence"] = category_confidence
+                        payload["source_connector"] = choice.name
+                        payload["source_priority"] = choice.priority
+                        fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
+
+                        products_written += 1
+                        accepted += 1
+                        print(f"[{products_written}] {item.title} — {item.price} {item.currency} — {category_slug or 'unmapped'} [{choice.name}]")
+                        if bounded and products_written >= limit:
+                            stopped_by_cap = True
+                            break
             except Exception as exc:
                 errors += 1
                 strategy_errors += 1
                 print(f"[STRATEGY FAIL] {choice.name}: {exc}")
 
+            strategy_duration = round(perf_counter() - strategy_started, 3)
             strategy_stats.append({
                 "connector": choice.name,
                 "priority": choice.priority,
@@ -154,9 +204,14 @@ async def crawl(
                 "duplicates": duplicates,
                 "errors": strategy_errors,
                 "skipped": False,
-                "exhausted": not stopped_by_cap,
+                "exhausted": source_exhausted and not stopped_by_cap,
+                "duration_seconds": strategy_duration,
+                "detail_fetch_concurrency": strategy_concurrency,
             })
-            print(f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, errors={strategy_errors}, exhausted={not stopped_by_cap}")
+            print(
+                f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, "
+                f"errors={strategy_errors}, exhausted={source_exhausted and not stopped_by_cap}, duration={strategy_duration}s"
+            )
 
             if bounded and products_written >= limit:
                 break
@@ -200,7 +255,7 @@ async def crawl(
             if raw is None:
                 continue
 
-            category_slug, category_confidence = map_category(raw.category_path, raw.title)
+            category_slug, category_confidence = _map_raw_category(raw)
             item = normalize(raw, category_slug=category_slug)
             candidate = item.model_dump(mode="json")
             candidate["category_confidence"] = category_confidence
@@ -233,6 +288,7 @@ async def crawl(
             "errors": enrichment_errors,
             "skipped": False,
             "exhausted": True,
+            "detail_fetch_concurrency": 1,
         })
         print(
             f"[RESULT] browser quality enrichment: checked={enrichment_checked}, "
@@ -271,6 +327,8 @@ async def crawl(
         "duration_seconds": duration,
         "limit": limit,
         "crawl_mode": "bounded" if bounded else "full",
+        "http_detail_fetch_concurrency": PRODUCT_FETCH_CONCURRENCY,
+        "browser_detail_fetch_concurrency": 1,
         "outcome": outcome,
         "coverage": {
             "verified": coverage_verified,
