@@ -10,10 +10,9 @@ class CategoryRule:
     keywords: tuple[str, ...]
 
 
-# Canonical rules are intentionally store-agnostic. Category/breadcrumb/URL
-# taxonomy carries more weight than words in a product title so, for example,
-# a frozen chicken pie does not become the canonical "meat" category merely
-# because its title contains "carne/pui".
+# Canonical rules are intentionally store-agnostic. Real merchant taxonomy
+# carries more weight than words in a product title. URL-derived category paths
+# are only hints and must not be trusted like breadcrumbs.
 RULES: tuple[CategoryRule, ...] = (
     CategoryRule("smartphones", ("smartphone", "смартфон", "iphone", "galaxy", "telefon inteligent")),
     CategoryRule("laptops", ("laptop", "notebook", "ноутбук")),
@@ -60,12 +59,16 @@ def _hits(text: str, rule: CategoryRule) -> int:
     return sum(1 for keyword in rule.keywords if _normalize(keyword) in text)
 
 
-def map_category(category_path: list[str], title: str = "") -> tuple[str | None, float]:
+def map_category(
+    category_path: list[str],
+    title: str = "",
+    *,
+    category_path_is_breadcrumb: bool = True,
+) -> tuple[str | None, float]:
     category_text = _normalize(" ".join(category_path))
     title_text = _normalize(title)
 
-    # Taxonomy supplied by breadcrumbs / URL hierarchy wins over title words.
-    if category_text:
+    if category_text and category_path_is_breadcrumb:
         best_slug: str | None = None
         best_hits = 0
         for rule in RULES:
@@ -76,13 +79,16 @@ def map_category(category_path: list[str], title: str = "") -> tuple[str | None,
             confidence = min(0.99, 0.84 + 0.05 * best_hits)
             return best_slug, round(confidence, 2)
 
+    # URL hierarchy is a weak hint, not merchant-provided taxonomy. Combine it
+    # with title evidence and cap confidence below the real-breadcrumb tier.
+    weak_text = " ".join(part for part in (category_text, title_text) if part)
     best_slug = None
     best_hits = 0
     for rule in RULES:
-        hits = _hits(title_text, rule)
+        hits = _hits(weak_text, rule)
         if hits > best_hits:
             best_slug, best_hits = rule.slug, hits
     if not best_slug:
         return None, 0.0
-    confidence = min(0.90, 0.62 + 0.07 * best_hits)
+    confidence = min(0.79 if not category_path_is_breadcrumb else 0.90, 0.62 + 0.07 * best_hits)
     return best_slug, round(confidence, 2)
