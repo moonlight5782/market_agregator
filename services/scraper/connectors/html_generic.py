@@ -79,9 +79,13 @@ class GenericHtmlConnector(StoreConnector):
             sku = self._sku_from_text(page_text)
 
         brand = self._first_text(soup, ['[itemprop="brand"]', '.brand', '.product-brand'])
-        category_path = [x.get_text(" ", strip=True) for x in soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')][1:]
-        if not category_path:
+        breadcrumb_nodes = soup.select('.breadcrumb a, nav[aria-label*="breadcrumb" i] a')
+        if breadcrumb_nodes:
+            category_path = [x.get_text(" ", strip=True) for x in breadcrumb_nodes][1:]
+            category_path_source = "breadcrumb"
+        else:
             category_path = self._category_path_from_url(str(response.url))
+            category_path_source = "url"
         description = self._first_text(soup, ['[itemprop="description"]', '.product-description', '#description', '.description'])
 
         raw = RawProduct(
@@ -99,7 +103,7 @@ class GenericHtmlConnector(StoreConnector):
             quantity=quantity,
             url=url,
             image_url=image,
-            attributes={"source": "html-generic"},
+            attributes={"source": "html-generic", "category_path_source": category_path_source},
         )
         return self.enrich_product(raw, soup, page_text)
 
@@ -177,8 +181,6 @@ class GenericHtmlConnector(StoreConnector):
                         if cls._usable_image_url(candidate):
                             return urljoin(page_url, candidate)
 
-        # Social preview images are frequently global storefront placeholders.
-        # Keep them only when they are not visibly marked as generic/social assets.
         image_meta = (
             soup.find("meta", attrs={"property": "og:image"})
             or soup.find("meta", attrs={"name": "twitter:image"})
@@ -213,7 +215,6 @@ class GenericHtmlConnector(StoreConnector):
             "produse", "produs", "shop", "store", "item", "detail", "p",
         }
         cleaned: list[str] = []
-        # Last segment is normally the product slug. Parent segments carry taxonomy.
         for part in parts[:-1]:
             normalized = re.sub(r"[_-]+", " ", part).strip().lower()
             if not normalized or normalized in ignored or normalized.isdigit():
