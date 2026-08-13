@@ -57,11 +57,15 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         ))
 
     # Universal same-origin catalog traversal works even when the store has no
-    # registry-specific implementation.
+    # registry-specific implementation. Source discovery supplies official
+    # catalog roots first so we do not depend on homepage traversal order.
     plan.append(ConnectorChoice(
         name="catalog-generic",
-        connector=GenericCatalogConnector(context),
-        reason="generic same-origin catalog/category discovery",
+        connector=GenericCatalogConnector(context, seed_urls=profile.catalog_urls),
+        reason=(
+            f"generic same-origin catalog/category discovery; "
+            f"{len(profile.catalog_urls)} official catalog seed(s)"
+        ),
         priority=34,
     ))
 

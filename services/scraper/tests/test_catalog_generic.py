@@ -2,6 +2,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
+from services.scraper.connectors.base import ConnectorContext
 from services.scraper.connectors.catalog_generic import GenericCatalogConnector
 
 
@@ -35,6 +36,32 @@ class GenericCatalogConnectorTests(unittest.TestCase):
         self.assertTrue(GenericCatalogConnector._skip_href("/cart"))
         self.assertTrue(GenericCatalogConnector._skip_href("/account/login"))
         self.assertTrue(GenericCatalogConnector._skip_href("mailto:test@example.com"))
+
+    def test_discovered_catalog_seeds_are_used_before_traversal(self):
+        context = ConnectorContext(store_slug="unknown", base_url="https://shop.md")
+        connector = GenericCatalogConnector(
+            context,
+            seed_urls=[
+                "https://shop.md/ro/catalog",
+                "/ru/catalog",
+                "https://external.example/catalog",
+                "https://shop.md/ro/catalog",
+            ],
+        )
+        self.assertEqual(
+            connector._initial_listing_urls(),
+            [
+                "https://shop.md/",
+                "https://shop.md/ro/catalog",
+                "https://shop.md/ru/catalog",
+            ],
+        )
+
+    def test_listing_cap_is_large_and_observable(self):
+        context = ConnectorContext(store_slug="unknown", base_url="https://shop.md")
+        connector = GenericCatalogConnector(context)
+        self.assertGreaterEqual(connector.max_listing_pages, 1000)
+        self.assertFalse(connector.listing_page_cap_reached)
 
 
 if __name__ == "__main__":
