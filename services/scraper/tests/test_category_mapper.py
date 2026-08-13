@@ -52,18 +52,22 @@ class CategoryMapperTests(unittest.TestCase):
         _, path_confidence = map_category(["lactate"], "Produs X")
         self.assertLess(title_confidence, path_confidence)
 
-    def test_single_url_guess_does_not_classify_unrelated_product(self):
+    def test_single_url_guess_cannot_force_unrelated_category(self):
         cases = [
-            (["mobila", "promo"], "Peste oceanic congelat 500 g"),
-            (["animale", "promo"], "Blocnotes A5 80 file"),
-            (["mobila", "noutati"], "Salata verde buc"),
-            (["bauturi", "promo"], "Flori decorative buchet"),
+            (["mobila", "promo"], "Peste oceanic congelat 500 g", "furniture", "food"),
+            (["animale", "promo"], "Blocnotes A5 80 file", "pets", None),
+            (["mobila", "noutati"], "Salata verde buc", "furniture", None),
+            (["bauturi", "promo"], "Flori decorative buchet", "drinks", None),
         ]
-        for path, title in cases:
+        for path, title, forbidden, expected in cases:
             with self.subTest(path=path, title=title):
                 slug, confidence = map_category(path, title, category_path_is_breadcrumb=False)
-                self.assertIsNone(slug)
-                self.assertEqual(confidence, 0.0)
+                self.assertNotEqual(slug, forbidden)
+                self.assertEqual(slug, expected)
+                if slug is None:
+                    self.assertEqual(confidence, 0.0)
+                else:
+                    self.assertLess(confidence, 0.84)
 
     def test_title_evidence_beats_unrelated_url_guess(self):
         slug, confidence = map_category(
