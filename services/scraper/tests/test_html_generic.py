@@ -23,6 +23,14 @@ class GenericHtmlConnectorTests(unittest.TestCase):
         self.assertEqual(GenericHtmlConnector._stock_status("Товар не в наличии", None), StockStatus.OUT_OF_STOCK)
         self.assertEqual(GenericHtmlConnector._stock_status("Nu este disponibil", None), StockStatus.OUT_OF_STOCK)
 
+    def test_price_parser_deduplicates_repeated_current_price_label(self):
+        self.assertEqual(str(GenericHtmlConnector._decimal("129 900 129 900 EUR")), "129900")
+        self.assertEqual(str(GenericHtmlConnector._decimal("1 299,90 MDL")), "1299.90")
+        self.assertEqual(
+            str(GenericHtmlConnector._decimal("Цена со скидкой: 1299,00 MDL 1299,00 MDL")),
+            "1299.00",
+        )
+
     def test_sku_parsing_multilingual(self):
         cases = {
             "Articol: 261288": "261288",

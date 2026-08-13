@@ -18,6 +18,17 @@ class SourceDiscoveryTests(unittest.TestCase):
         self.assertIn("https://shop.md/ro/catalog/paste", urls)
         self.assertNotIn("https://shop.md/about", urls)
 
+    def test_romanian_katalog_route_is_detected(self):
+        html = '<a href="/ru/katalog">Каталог товаров</a>'
+        self.assertEqual(
+            extract_catalog_urls("https://shop.md/", html),
+            ["https://shop.md/ru/katalog"],
+        )
+
+    def test_cms_news_category_is_not_used_as_catalog_seed(self):
+        html = '<a href="/ru/component/content/category/8-novosti">Catalog news</a>'
+        self.assertEqual(extract_catalog_urls("https://shop.md/", html), [])
+
     def test_external_catalog_link_is_not_used_as_seed(self):
         html = '<a href="https://other.example/catalog">Catalog</a>'
         self.assertEqual(extract_catalog_urls("https://shop.md/", html), [])

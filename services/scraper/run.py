@@ -3,17 +3,18 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from urllib.parse import urlparse
 
-from .catalog_estimate import estimate_catalog_size
+from .catalog_estimate import CatalogEstimate, estimate_catalog_size
 from .category_mapper import map_category
 from .connectors.base import ConnectorContext
 from .connectors.registry import build_connector_plan
-from .normalizer import normalize
+from .normalizer import is_non_product_service, normalize
 from .quality import browser_enrichment_reasons, compute_quality, merge_product_payload, publish_readiness
 from .source_discovery import discover_sources
 
@@ -22,6 +23,30 @@ REGISTRY = ROOT / "data" / "store-registry.json"
 OUT_DIR = ROOT / "data" / "raw"
 REPORT_DIR = ROOT / "data" / "reports"
 PRODUCT_FETCH_CONCURRENCY = 6
+DEFAULT_BOUNDED_STRATEGY_TIMEOUT_SECONDS = 25.0
+DEFAULT_BOUNDED_CRAWL_TIMEOUT_SECONDS = 60.0
+
+
+def _bounded_timeout(raw_value: str | None, default: float) -> float:
+    try:
+        value = float(raw_value) if raw_value is not None else default
+    except (TypeError, ValueError):
+        return default
+    return min(300.0, max(15.0, value))
+
+
+def bounded_crawl_timeout_seconds(raw_value: str | None = None) -> float:
+    raw = raw_value if raw_value is not None else os.getenv("CRAWLER_BOUNDED_CRAWL_TIMEOUT_SECONDS")
+    return _bounded_timeout(raw, DEFAULT_BOUNDED_CRAWL_TIMEOUT_SECONDS)
+
+
+def bounded_strategy_timeout_seconds(raw_value: str | None = None) -> float:
+    raw = raw_value if raw_value is not None else os.getenv("CRAWLER_BOUNDED_STRATEGY_TIMEOUT_SECONDS")
+    try:
+        value = float(raw) if raw is not None else DEFAULT_BOUNDED_STRATEGY_TIMEOUT_SECONDS
+    except (TypeError, ValueError):
+        return DEFAULT_BOUNDED_STRATEGY_TIMEOUT_SECONDS
+    return min(120.0, max(5.0, value))
 
 
 def load_store(slug: str) -> dict:
@@ -82,8 +107,15 @@ async def crawl(
     started = perf_counter()
     store = store_from_url(store_url, store_slug) if store_url else load_store(store_slug)
     store_slug = store["slug"]
+    bounded = limit > 0
+    crawl_timeout = bounded_crawl_timeout_seconds() if bounded else None
+    discovery_budget = min(20.0, max(8.0, crawl_timeout * 0.30)) if crawl_timeout is not None else None
     context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
-    profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
+    profile = await discover_sources(
+        store["domain"],
+        timeout_seconds=context.timeout_seconds,
+        budget_seconds=discovery_budget,
+    )
     context = ConnectorContext(
         store_slug=store_slug,
         base_url=store["domain"],
@@ -91,9 +123,9 @@ async def crawl(
         timeout_seconds=context.timeout_seconds,
         robots_policy=profile.robots_policy,
     )
-    bounded = limit > 0
     browser_trigger_count = max(1, min(limit, int(limit * browser_threshold))) if bounded else 1
     browser_enrichment_limit = max(0, browser_enrichment_limit)
+    strategy_timeout = bounded_strategy_timeout_seconds() if bounded else None
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -136,16 +168,26 @@ async def crawl(
         f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
         f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
         f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; robots={profile.robots_status}; blocked={profile.blocked}; "
-        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}"
+                        f"mode={'bounded' if bounded else 'full'}; http_detail_concurrency={PRODUCT_FETCH_CONCURRENCY}; "
+                f"bounded_strategy_timeout_seconds={strategy_timeout or 'none'}; "
+                f"bounded_crawl_timeout_seconds={crawl_timeout or 'none'}; "
+                f"discovery_budget_seconds={discovery_budget or 'none'}"
+
     )
 
     seen_products: set[str] = set()
     products_written = 0
+    non_product_services_skipped = 0
     errors = 0
     strategy_stats: list[dict] = []
 
+    bounded_budget_exhausted = False
     with output.open("w", encoding="utf-8") as fh:
         for choice in plan:
+            if crawl_timeout is not None and perf_counter() - started >= crawl_timeout:
+                bounded_budget_exhausted = True
+                print(f"[CRAWL TIMEOUT] {store_slug}: bounded crawl budget of {crawl_timeout}s exhausted")
+                break
             if choice.name == "browser-rendered" and bounded and products_written >= browser_trigger_count:
                 strategy_stats.append({
                     "connector": choice.name,
@@ -168,6 +210,7 @@ async def crawl(
             strategy_errors = 0
             stopped_by_cap = False
             source_exhausted = False
+            timed_out = False
             strategy_started = perf_counter()
             strategy_concurrency = _strategy_fetch_concurrency(choice.name)
             print(
@@ -187,7 +230,11 @@ async def crawl(
                     urls: list[str] = []
                     for _ in range(batch_target):
                         try:
-                            urls.append(await anext(url_iter))
+                            if strategy_timeout is None:
+                                urls.append(await anext(url_iter))
+                            else:
+                                remaining_budget = max(0.1, (crawl_timeout or strategy_timeout) - (perf_counter() - started))
+                                urls.append(await asyncio.wait_for(anext(url_iter), timeout=min(strategy_timeout, remaining_budget)))
                         except StopAsyncIteration:
                             source_exhausted = True
                             break
@@ -195,7 +242,14 @@ async def crawl(
                         break
 
                     urls_seen += len(urls)
-                    results = await _fetch_batch(choice.connector, urls)
+                    if strategy_timeout is None:
+                        results = await _fetch_batch(choice.connector, urls)
+                    else:
+                        remaining_budget = max(0.1, (crawl_timeout or strategy_timeout) - (perf_counter() - started))
+                        results = await asyncio.wait_for(
+                            _fetch_batch(choice.connector, urls),
+                            timeout=min(strategy_timeout, remaining_budget),
+                        )
                     for url, raw_or_exc in zip(urls, results):
                         if isinstance(raw_or_exc, BaseException):
                             errors += 1
@@ -204,6 +258,10 @@ async def crawl(
                             continue
                         raw = raw_or_exc
                         if raw is None:
+                            continue
+                        if is_non_product_service(raw):
+                            non_product_services_skipped += 1
+                            print(f"[SKIP NON-PRODUCT] {raw.title} [{choice.name}]")
                             continue
 
                         category_slug, category_confidence = _map_raw_category(raw)
@@ -226,6 +284,11 @@ async def crawl(
                         if bounded and products_written >= limit:
                             stopped_by_cap = True
                             break
+            except asyncio.TimeoutError:
+                errors += 1
+                strategy_errors += 1
+                timed_out = True
+                print(f"[STRATEGY TIMEOUT] {choice.name}: no next product URL within {strategy_timeout}s; moving to fallback connector")
             except Exception as exc:
                 errors += 1
                 strategy_errors += 1
@@ -242,12 +305,14 @@ async def crawl(
                 "errors": strategy_errors,
                 "skipped": False,
                 "exhausted": source_exhausted and not stopped_by_cap,
+                "timed_out": timed_out,
+                "discovery_timeout_seconds": strategy_timeout,
                 "duration_seconds": strategy_duration,
                 "detail_fetch_concurrency": strategy_concurrency,
             })
             print(
                 f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, "
-                f"errors={strategy_errors}, exhausted={source_exhausted and not stopped_by_cap}, duration={strategy_duration}s"
+                f"errors={strategy_errors}, exhausted={source_exhausted and not stopped_by_cap}, timed_out={timed_out}, duration={strategy_duration}s"
             )
 
             if bounded and products_written >= limit:
@@ -335,8 +400,13 @@ async def crawl(
     products_written = len(payloads)
     quality = compute_quality(payloads, limit)
     quality["errors"] = errors
+    quality["bounded_budget_exhausted"] = bounded_budget_exhausted
 
-    estimate = await estimate_catalog_size(store_slug, store["domain"], timeout_seconds=context.timeout_seconds)
+    estimate = (
+        CatalogEstimate(None, "unknown", None, "skipped for bounded diagnostic crawl")
+        if bounded
+        else await estimate_catalog_size(store_slug, store["domain"], timeout_seconds=context.timeout_seconds)
+    )
     cap_reached = bounded and products_written >= limit
     coverage_verified = bool(
         estimate.kind == "exact"
@@ -363,9 +433,14 @@ async def crawl(
         "started_at": started_at.isoformat(),
         "duration_seconds": duration,
         "limit": limit,
+        "bounded_crawl_timeout_seconds": crawl_timeout,
+        "discovery_budget_seconds": discovery_budget,
+        "discovery_budget_exhausted": profile.discovery_budget_exhausted,
+        "bounded_budget_exhausted": bounded_budget_exhausted,
         "crawl_mode": "bounded" if bounded else "full",
         "http_detail_fetch_concurrency": PRODUCT_FETCH_CONCURRENCY,
         "browser_detail_fetch_concurrency": 1,
+        "non_product_services_skipped": non_product_services_skipped,
         "outcome": outcome,
         "coverage": {
             "verified": coverage_verified,

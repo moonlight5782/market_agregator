@@ -48,6 +48,33 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
             priority=20,
         ))
 
+    # Known store-specific connectors are small, predictable accelerators. Run
+    # them before broad sitemap/listing traversal, but retain all generic paths
+    # below so the service does not depend on a hand-written connector.
+    if context.store_slug == "darwin":
+        plan.append(ConnectorChoice(
+            name="darwin-catalog",
+            connector=DarwinConnector(context),
+            reason="store-specific paginated public HTML discovery + branch stock",
+            priority=25,
+        ))
+
+    if context.store_slug == "maximum":
+        plan.append(ConnectorChoice(
+            name="maximum-catalog",
+            connector=MaximumConnector(context),
+            reason="store-specific category traversal with stable numeric product URLs",
+            priority=25,
+        ))
+
+    if context.store_slug == "cactus":
+        plan.append(ConnectorChoice(
+            name="cactus-catalog",
+            connector=CactusConnector(context),
+            reason="store-specific catalogue discovery accelerator",
+            priority=25,
+        ))
+
     if profile.sitemap_urls or profile.product_jsonld or profile.embedded_json:
         plan.append(ConnectorChoice(
             name="sitemap-jsonld",
@@ -68,32 +95,6 @@ def build_connector_plan(context: ConnectorContext, profile: SourceProfile) -> l
         ),
         priority=34,
     ))
-
-    # Optional store-specific accelerators/enrichers. They may improve coverage
-    # or branch-level stock, but an unknown store still has a complete plan.
-    if context.store_slug == "darwin":
-        plan.append(ConnectorChoice(
-            name="darwin-catalog",
-            connector=DarwinConnector(context),
-            reason="optional store-specific paginated public HTML discovery + branch stock",
-            priority=35,
-        ))
-
-    if context.store_slug == "maximum":
-        plan.append(ConnectorChoice(
-            name="maximum-catalog",
-            connector=MaximumConnector(context),
-            reason="optional store-specific category traversal with stable numeric product URLs",
-            priority=35,
-        ))
-
-    if context.store_slug == "cactus":
-        plan.append(ConnectorChoice(
-            name="cactus-catalog",
-            connector=CactusConnector(context),
-            reason="optional store-specific catalogue discovery accelerator",
-            priority=35,
-        ))
 
     plan.append(ConnectorChoice(
         name="html-generic",

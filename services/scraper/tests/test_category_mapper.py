@@ -47,6 +47,29 @@ class CategoryMapperTests(unittest.TestCase):
                 slug, _ = map_category(path, title)
                 self.assertEqual(slug, expected)
 
+    def test_creatine_supplement_maps_to_sport_from_product_title(self):
+        slug, confidence = map_category(
+            ["kreatiny"],
+            "Nutricost Creatine Capsules",
+            category_path_is_breadcrumb=False,
+        )
+        self.assertEqual(slug, "sport")
+        self.assertGreaterEqual(confidence, 0.62)
+
+    def test_transliterated_gainer_url_category_maps_to_sport(self):
+        slug, confidence = map_category(
+            ["katalog", "gejnery"],
+            "Ronnie Coleman King Mass XL",
+            category_path_is_breadcrumb=False,
+        )
+        self.assertEqual(slug, "sport")
+        self.assertEqual(confidence, 0.76)
+
+    def test_gainer_maps_to_sport_from_product_title(self):
+        slug, confidence = map_category([], "Ronnie Coleman King Mass Gainer 2.75 kg")
+        self.assertEqual(slug, "sport")
+        self.assertGreaterEqual(confidence, 0.62)
+
     def test_title_only_has_lower_confidence_than_taxonomy(self):
         _, title_confidence = map_category([], "Lapte UHT 3.5%")
         _, path_confidence = map_category(["lactate"], "Produs X")

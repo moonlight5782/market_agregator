@@ -29,6 +29,7 @@ class SourceProfile:
     robots_reason: str | None = None
     robots_policy: RobotsPolicy | None = None
     discovery_duration_seconds: float = 0.0
+    discovery_budget_exhausted: bool = False
 
 
 API_PATTERNS = (
@@ -46,6 +47,7 @@ COMMON_FEEDS = (
 CATALOG_PATH_TOKENS = (
     "/catalog",
     "/catalogue",
+    "/katalog",
     "/category",
     "/categories",
     "/shop",
@@ -91,7 +93,8 @@ def _finish_profile(profile: SourceProfile, started: float) -> SourceProfile:
         f"[SOURCE-DISCOVERY] duration={profile.discovery_duration_seconds}s; "
         f"pages={len(profile.discovery_pages)}; catalogs={len(profile.catalog_urls)}; "
         f"api={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; "
-        f"sitemaps={len(profile.sitemap_urls)}; robots={profile.robots_status}; blocked={profile.blocked}"
+        f"sitemaps={len(profile.sitemap_urls)}; robots={profile.robots_status}; blocked={profile.blocked}; "
+        f"budget_exhausted={profile.discovery_budget_exhausted}"
     )
     return profile
 
@@ -99,6 +102,10 @@ def _finish_profile(profile: SourceProfile, started: float) -> SourceProfile:
 def _looks_like_catalog_link(anchor: Tag, absolute_url: str) -> bool:
     parsed = urlparse(absolute_url)
     path = parsed.path.lower().rstrip("/")
+    # CMS news sections can have a generic `/category/` URL shape. They must
+    # never seed product discovery simply because a title contains "catalog".
+    if any(token in path for token in ("/component/content/", "/novosti", "/news")):
+        return False
     text = anchor.get_text(" ", strip=True).lower()
     if any(token in text for token in CATALOG_TEXT_TOKENS):
         return True
@@ -211,7 +218,11 @@ def _update_profile_from_html(
             profile.availability_context_hints.append(label)
 
 
-async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> SourceProfile:
+async def discover_sources(
+    base_url: str,
+    timeout_seconds: float = 20.0,
+    budget_seconds: float | None = None,
+) -> SourceProfile:
     """Discover first-party acquisition sources before product crawling.
 
     Discovery deliberately starts from the merchant website and its official
@@ -226,6 +237,7 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
     found_api: set[str] = set()
     found_feed: set[str] = set()
     script_urls: set[str] = set()
+    deadline = started + budget_seconds if budget_seconds and budget_seconds > 0 else None
     probe_timeout = min(timeout_seconds, PROBE_TIMEOUT_SECONDS)
     catalog_timeout = min(timeout_seconds, CATALOG_PROBE_TIMEOUT_SECONDS)
 
@@ -246,14 +258,28 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         async def get_allowed(url: str, **kwargs) -> httpx.Response | None:
             if not policy.can_fetch(url):
                 return None
-            return await client.get(url, **kwargs)
+            requested_timeout = float(kwargs.pop("timeout", timeout_seconds))
+            if deadline is not None:
+                remaining = deadline - perf_counter()
+                if remaining <= 0:
+                    profile.discovery_budget_exhausted = True
+                    return None
+                requested_timeout = min(requested_timeout, remaining)
+            try:
+                return await client.get(url, timeout=requested_timeout, **kwargs)
+            except httpx.TimeoutException:
+                if deadline is not None and perf_counter() >= deadline:
+                    profile.discovery_budget_exhausted = True
+                raise
 
         try:
-            response = await get_allowed(base_url)
+            response = await get_allowed(base_url, timeout=probe_timeout)
         except httpx.HTTPError:
             profile.blocked = True
             return _finish_profile(profile, started)
 
+        if response is None:
+            return _finish_profile(profile, started)
         if response.status_code in (401, 403, 429):
             profile.blocked = True
         if response.is_success:

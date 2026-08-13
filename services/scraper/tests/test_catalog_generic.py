@@ -14,6 +14,25 @@ class GenericCatalogConnectorTests(unittest.TestCase):
         anchor = self._anchor('<a href="/product/coffee-machine-123">Coffee machine</a>')
         self.assertTrue(GenericCatalogConnector._looks_like_product_anchor(anchor, "https://shop.md/product/coffee-machine-123"))
 
+    def test_romanian_katalog_detail_url_is_detected(self):
+        anchor = self._anchor('<a href="/ru/katalog/kreatiny/creatine-capsules-detail">Creatine</a>')
+        self.assertTrue(
+            GenericCatalogConnector._looks_like_product_anchor(
+                anchor,
+                "https://shop.md/ru/katalog/kreatiny/creatine-capsules-detail",
+            )
+        )
+
+    def test_news_content_url_is_not_treated_as_catalog_or_product(self):
+        anchor = self._anchor('<a href="/ru/component/content/category/8-novosti">Catalog news</a>')
+        self.assertTrue(GenericCatalogConnector._skip_href("/ru/component/content/category/8-novosti"))
+        self.assertFalse(
+            GenericCatalogConnector._looks_like_product_anchor(
+                anchor,
+                "https://shop.md/ru/component/content/category/8-novosti",
+            )
+        )
+
     def test_price_near_link_marks_product_card(self):
         soup = BeautifulSoup('<div class="card"><a href="/espresso-123">Espressor</a><span>4 999 MDL</span></div>', "lxml")
         anchor = soup.select_one("a")
@@ -32,9 +51,10 @@ class GenericCatalogConnectorTests(unittest.TestCase):
         anchor = self._anchor('<a href="/about-us">Despre noi</a>')
         self.assertFalse(GenericCatalogConnector._looks_like_listing_link(anchor, "https://shop.md/about-us"))
 
-    def test_cart_and_auth_links_are_skipped(self):
+    def test_cart_auth_and_news_links_are_skipped(self):
         self.assertTrue(GenericCatalogConnector._skip_href("/cart"))
         self.assertTrue(GenericCatalogConnector._skip_href("/account/login"))
+        self.assertTrue(GenericCatalogConnector._skip_href("/ru/8-novosti/new-product"))
         self.assertTrue(GenericCatalogConnector._skip_href("mailto:test@example.com"))
 
     def test_discovered_catalog_seeds_are_used_before_traversal(self):
@@ -51,9 +71,9 @@ class GenericCatalogConnectorTests(unittest.TestCase):
         self.assertEqual(
             connector._initial_listing_urls(),
             [
-                "https://shop.md/",
                 "https://shop.md/ro/catalog",
                 "https://shop.md/ru/catalog",
+                "https://shop.md/",
             ],
         )
 
