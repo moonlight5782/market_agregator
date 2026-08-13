@@ -12,7 +12,7 @@ class CategoryRule:
 
 # Canonical rules are intentionally store-agnostic. Real merchant taxonomy
 # carries more weight than words in a product title. URL-derived category paths
-# are only hints and must not be trusted like breadcrumbs.
+# are only weak hints and must not be trusted like breadcrumbs.
 RULES: tuple[CategoryRule, ...] = (
     CategoryRule("smartphones", ("smartphone", "смартфон", "iphone", "galaxy", "telefon inteligent")),
     CategoryRule("laptops", ("laptop", "notebook", "ноутбук")),
@@ -59,6 +59,16 @@ def _hits(text: str, rule: CategoryRule) -> int:
     return sum(1 for keyword in rule.keywords if _normalize(keyword) in text)
 
 
+def _best_match(text: str) -> tuple[str | None, int]:
+    best_slug: str | None = None
+    best_hits = 0
+    for rule in RULES:
+        hits = _hits(text, rule)
+        if hits > best_hits:
+            best_slug, best_hits = rule.slug, hits
+    return best_slug, best_hits
+
+
 def map_category(
     category_path: list[str],
     title: str = "",
@@ -69,26 +79,23 @@ def map_category(
     title_text = _normalize(title)
 
     if category_text and category_path_is_breadcrumb:
-        best_slug: str | None = None
-        best_hits = 0
-        for rule in RULES:
-            hits = _hits(category_text, rule)
-            if hits > best_hits:
-                best_slug, best_hits = rule.slug, hits
+        best_slug, best_hits = _best_match(category_text)
         if best_slug:
             confidence = min(0.99, 0.84 + 0.05 * best_hits)
             return best_slug, round(confidence, 2)
 
-    # URL hierarchy is a weak hint, not merchant-provided taxonomy. Combine it
-    # with title evidence and cap confidence below the real-breadcrumb tier.
-    weak_text = " ".join(part for part in (category_text, title_text) if part)
-    best_slug = None
-    best_hits = 0
-    for rule in RULES:
-        hits = _hits(weak_text, rule)
-        if hits > best_hits:
-            best_slug, best_hits = rule.slug, hits
-    if not best_slug:
-        return None, 0.0
-    confidence = min(0.79 if not category_path_is_breadcrumb else 0.90, 0.62 + 0.07 * best_hits)
-    return best_slug, round(confidence, 2)
+    # Product title is stronger evidence than a URL hierarchy guess.
+    title_slug, title_hits = _best_match(title_text)
+    if title_slug:
+        confidence = min(0.90, 0.62 + 0.07 * title_hits)
+        return title_slug, round(confidence, 2)
+
+    # URL-derived taxonomy may still help when it has multiple independent
+    # signals, but a single accidental token must never classify the product.
+    if category_text and not category_path_is_breadcrumb:
+        url_slug, url_hits = _best_match(category_text)
+        if url_slug and url_hits >= 2:
+            confidence = min(0.79, 0.62 + 0.07 * url_hits)
+            return url_slug, round(confidence, 2)
+
+    return None, 0.0
