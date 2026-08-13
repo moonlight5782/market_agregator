@@ -48,6 +48,16 @@ if (!Array.isArray(registry)) {
       errors.push(`${store.slug ?? prefix}: unsupported status ${JSON.stringify(store.status)}.`);
     }
 
+    if (store.physicalLocationStockRequired !== undefined && typeof store.physicalLocationStockRequired !== "boolean") {
+      errors.push(`${store.slug ?? prefix}: physicalLocationStockRequired must be boolean when provided.`);
+    }
+    if (store.locationCoverageReport !== undefined && (typeof store.locationCoverageReport !== "string" || !store.locationCoverageReport.trim())) {
+      errors.push(`${store.slug ?? prefix}: locationCoverageReport must be a non-empty string when provided.`);
+    }
+    if (store.locationCoverageReport && store.physicalLocationStockRequired !== true) {
+      errors.push(`${store.slug ?? prefix}: locationCoverageReport is only valid when physicalLocationStockRequired=true.`);
+    }
+
     if (evidenceRequiredStatuses.has(store.status) && (typeof store.statusReason !== "string" || !store.statusReason.trim())) {
       errors.push(`${store.slug ?? prefix}: ${store.status} requires statusReason.`);
     }
@@ -58,6 +68,9 @@ if (!Array.isArray(registry)) {
       }
       if (typeof store.coverageReport !== "string" || !store.coverageReport.trim()) {
         errors.push(`${store.slug ?? prefix}: VERIFIED requires coverageReport evidence.`);
+      }
+      if (store.physicalLocationStockRequired === true && (typeof store.locationCoverageReport !== "string" || !store.locationCoverageReport.trim())) {
+        errors.push(`${store.slug ?? prefix}: VERIFIED physical chain requires locationCoverageReport evidence.`);
       }
     }
   }

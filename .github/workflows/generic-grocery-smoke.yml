@@ -30,7 +30,22 @@ jobs:
             --url https://linella.md/ro \
             --slug linella-generic \
             --limit 25 \
-            --browser-threshold 0.8
+            --browser-threshold 0.8 \
+            --accept-partial
+      - name: Validate smoke semantics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('data/reports/linella-generic.json').read_text())
+          assert report['quality']['unique_products'] > 0
+          assert report['outcome'] in {'PARTIAL', 'OK'}
+          if report['outcome'] == 'OK':
+              assert report['publish_readiness']['ready'] is True
+          else:
+              assert report['publish_readiness']['ready'] is False
+          print('Linella smoke semantics valid:', report['outcome'], report['publish_readiness'])
+          PY
       - name: Upload generic grocery evidence
         if: always()
         uses: actions/upload-artifact@v4

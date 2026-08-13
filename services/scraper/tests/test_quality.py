@@ -1,6 +1,6 @@
 import unittest
 
-from services.scraper.quality import browser_enrichment_reasons, compute_quality, merge_product_payload
+from services.scraper.quality import browser_enrichment_reasons, compute_quality, merge_product_payload, publish_readiness
 
 
 class QualityTests(unittest.TestCase):
@@ -79,6 +79,47 @@ class QualityTests(unittest.TestCase):
         self.assertEqual(merged["category_slug"], "drinks")
         self.assertEqual(merged["description"], "Rendered product description")
         self.assertEqual(merged["enriched_by"], ["browser-rendered"])
+
+    def complete_quality(self):
+        return {
+            "unique_products": 10,
+            "price_complete_pct": 100.0,
+            "category_complete_pct": 100.0,
+            "identity_complete_pct": 100.0,
+            "known_stock_pct": 100.0,
+            "image_complete_pct": 100.0,
+            "max_image_reuse_pct": 10.0,
+        }
+
+    def test_full_quality_requires_verified_coverage(self) -> None:
+        result = publish_readiness(self.complete_quality(), coverage_verified=False)
+        self.assertFalse(result["ready"])
+        self.assertIn("catalog_coverage_unverified", result["blockers"])
+
+    def test_unknown_stock_blocks_publication(self) -> None:
+        quality = self.complete_quality()
+        quality["known_stock_pct"] = 90.0
+        result = publish_readiness(quality, coverage_verified=True)
+        self.assertFalse(result["ready"])
+        self.assertTrue(any(item.startswith("known_stock_pct=90.0%") for item in result["blockers"]))
+
+    def test_complete_verified_catalog_is_ready(self) -> None:
+        result = publish_readiness(self.complete_quality(), coverage_verified=True)
+        self.assertTrue(result["ready"])
+        self.assertEqual(result["blockers"], [])
+
+    def test_uncapped_quality_has_no_fake_target_fill(self) -> None:
+        payload = {
+            "price": "1.00",
+            "stock_status": "IN_STOCK",
+            "image_url": "https://example.test/a.webp",
+            "category_slug": "food",
+            "sku": "ABC",
+            "availabilities": [],
+            "attributes": {},
+        }
+        quality = compute_quality([payload], 0)
+        self.assertIsNone(quality["target_fill_pct"])
 
 
 if __name__ == "__main__":

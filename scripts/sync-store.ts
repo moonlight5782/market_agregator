@@ -5,6 +5,8 @@ import { Prisma, PrismaClient, ScraperRunStatus } from "@prisma/client";
 const prisma = new PrismaClient();
 
 type CrawlReport = {
+  outcome?: string;
+  publish_readiness?: { ready?: boolean; blockers?: string[] };
   quality?: { unique_products?: number; errors?: number; [key: string]: unknown };
   [key: string]: unknown;
 };
@@ -68,9 +70,9 @@ async function finishRun(
 
 async function main() {
   const storeSlug = argValue("store");
-  const limit = argValue("limit", "500")!;
+  const limit = argValue("limit", "0")!;
   const browserThreshold = argValue("browser-threshold", "0.8")!;
-  if (!storeSlug) throw new Error("Usage: npm run data:sync -- --store=darwin [--limit=500] [--browser-threshold=0.8]");
+  if (!storeSlug) throw new Error("Usage: npm run data:sync -- --store=darwin [--limit=0] [--browser-threshold=0.8]. limit=0 means full uncapped crawl.");
 
   const store = await prisma.store.findUnique({ where: { slug: storeSlug }, select: { id: true, name: true } });
   if (!store) throw new Error(`Store '${storeSlug}' is missing from DB. Run npm run db:seed first.`);
@@ -90,9 +92,22 @@ async function main() {
   );
   const report = readJson<CrawlReport>(reportPath);
 
+  if (crawl.status === 2 || report?.outcome === "PARTIAL" || report?.publish_readiness?.ready === false) {
+    const blockers = report?.publish_readiness?.blockers?.join(", ") || "coverage/quality requirements not met";
+    await finishRun(run.id, store.id, ScraperRunStatus.PARTIAL, report, null, blockers);
+    console.error(`[SYNC PARTIAL] ${storeSlug}: not imported because publish readiness failed: ${blockers}`);
+    process.exitCode = 2;
+    return;
+  }
+
   if (crawl.status !== 0) {
     await finishRun(run.id, store.id, ScraperRunStatus.FAILED, report, null, `Crawler exit code ${crawl.status ?? 1}`);
     process.exitCode = crawl.status ?? 1;
+    return;
+  }
+  if (!report?.publish_readiness?.ready) {
+    await finishRun(run.id, store.id, ScraperRunStatus.PARTIAL, report, null, "Crawler did not provide positive publish readiness evidence");
+    process.exitCode = 2;
     return;
   }
   if (!existsSync(rawPath)) {
@@ -108,13 +123,13 @@ async function main() {
   );
   const importSummary = readJson<ImportSummary>(importSummaryPath);
 
-  if (importer.status === 0) {
+  if (importer.status === 0 && importSummary && importSummary.failed === 0 && importSummary.imported === importSummary.total) {
     await finishRun(run.id, store.id, ScraperRunStatus.SUCCESS, report, importSummary);
-    console.log(`[SYNC SUCCESS] ${storeSlug}: found=${report?.quality?.unique_products ?? 0}, imported=${importSummary?.imported ?? 0}`);
+    console.log(`[SYNC SUCCESS] ${storeSlug}: found=${report?.quality?.unique_products ?? 0}, imported=${importSummary.imported}`);
     return;
   }
 
-  if (importer.status === 2 && (importSummary?.imported ?? 0) > 0) {
+  if ((importSummary?.imported ?? 0) > 0) {
     await finishRun(run.id, store.id, ScraperRunStatus.PARTIAL, report, importSummary, `${importSummary?.failed ?? 0} row(s) failed to import`);
     console.error(`[SYNC PARTIAL] ${storeSlug}: imported=${importSummary?.imported ?? 0}, failed=${importSummary?.failed ?? 0}`);
     process.exitCode = 2;

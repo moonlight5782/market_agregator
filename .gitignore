@@ -5,5 +5,6 @@ node_modules/
 __pycache__/
 *.pyc
 data/raw/*.ndjson
+data/geocoding-cache.json
 coverage/
 .DS_Store

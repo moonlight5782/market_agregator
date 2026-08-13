@@ -1,13 +1,6 @@
 name: Store coverage smoke
 
 on:
-  push:
-    branches:
-      - agent/scraper-health
-    paths:
-      - '.github/workflows/store-coverage-smoke.yml'
-      - 'services/scraper/**'
-      - 'data/store-registry.json'
   workflow_dispatch:
     inputs:
       limit:
@@ -35,7 +28,7 @@ jobs:
         run: |
           pip install -r services/scraper/requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Crawl ${{ matrix.store }} with bounded smoke timeout
+      - name: Crawl ${{ matrix.store }} with bounded diagnostic timeout
         shell: bash
         run: |
           set +e
@@ -45,7 +38,8 @@ jobs:
           timeout --signal=TERM 300s python -m services.scraper.run \
             --store "${{ matrix.store }}" \
             --limit "$LIMIT" \
-            --browser-threshold 0.8
+            --browser-threshold 0.8 \
+            --accept-partial
           crawl_code=$?
 
           if [ -f "data/reports/${{ matrix.store }}.json" ]; then
@@ -59,10 +53,10 @@ jobs:
 
           case "$crawl_code" in
             0)
-              echo "${{ matrix.store }} smoke crawl succeeded"
+              echo "${{ matrix.store }} diagnostic crawl completed"
               ;;
             4)
-              echo "::warning title=${{ matrix.store }} origin unavailable::Crawler returned zero products / BLOCKED_BY_ORIGIN. This is retained as a coverage diagnostic and does not fail scraper CI."
+              echo "::warning title=${{ matrix.store }} origin unavailable::Crawler returned zero products / BLOCKED_BY_ORIGIN. Evidence is retained as a diagnostic and the store remains unpublished."
               ;;
             124)
               echo "::error title=${{ matrix.store }} smoke timeout::Crawl exceeded 300 seconds"
@@ -74,13 +68,26 @@ jobs:
               ;;
           esac
 
-          # Coverage audit remains diagnostic in smoke CI. Release/readiness gates
-          # should enforce required-store coverage separately.
           if [ "$audit_code" -ne 0 ]; then
-            echo "::warning title=${{ matrix.store }} coverage audit::Coverage audit exited with code $audit_code; report retained for readiness diagnostics."
+            echo "::warning title=${{ matrix.store }} coverage audit::Coverage audit exited with code $audit_code; evidence retained for readiness diagnostics."
           fi
 
           exit 0
+      - name: Assert bounded smoke cannot masquerade as verified
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "data/reports/${{ matrix.store }}.json" ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          store = "${{ matrix.store }}"
+          report = json.loads(Path(f"data/reports/{store}.json").read_text())
+          if report.get("crawl_mode") == "bounded" and report.get("coverage", {}).get("verified") is not True:
+              assert report.get("publish_readiness", {}).get("ready") is False
+          print(store, report.get("outcome"), report.get("publish_readiness"))
+          PY
+          fi
       - name: Upload ${{ matrix.store }} reports
         if: always()
         uses: actions/upload-artifact@v4
