@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from time import perf_counter
 from urllib.parse import urljoin, urlparse
 import re
 
@@ -21,6 +22,7 @@ class SourceProfile:
     feed_hints: list[str] = field(default_factory=list)
     availability_context_hints: list[str] = field(default_factory=list)
     blocked: bool = False
+    discovery_duration_seconds: float = 0.0
 
 
 API_PATTERNS = (
@@ -75,6 +77,17 @@ CATALOG_PROBE_TIMEOUT_SECONDS = 8.0
 
 def _same_origin(url: str, origin_url: str) -> bool:
     return urlparse(url).netloc.lower() == urlparse(origin_url).netloc.lower()
+
+
+def _finish_profile(profile: SourceProfile, started: float) -> SourceProfile:
+    profile.discovery_duration_seconds = round(perf_counter() - started, 3)
+    print(
+        f"[SOURCE-DISCOVERY] duration={profile.discovery_duration_seconds}s; "
+        f"pages={len(profile.discovery_pages)}; catalogs={len(profile.catalog_urls)}; "
+        f"api={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; "
+        f"sitemaps={len(profile.sitemap_urls)}; blocked={profile.blocked}"
+    )
+    return profile
 
 
 def _looks_like_catalog_link(anchor: Tag, absolute_url: str) -> bool:
@@ -201,6 +214,7 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
     crawl for minutes. Playwright remains the runtime XHR/fetch observer for
     endpoints that only appear interactively.
     """
+    started = perf_counter()
     profile = SourceProfile(base_url=base_url)
     headers = {"User-Agent": "MoldovaCommerceBot/0.4 (+catalog-indexer)"}
     found_api: set[str] = set()
@@ -218,7 +232,7 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
             response = await client.get(base_url)
         except httpx.HTTPError:
             profile.blocked = True
-            return profile
+            return _finish_profile(profile, started)
 
         if response.status_code in (401, 403, 429):
             profile.blocked = True
@@ -340,4 +354,4 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
             value,
         ),
     )[:MAX_CATALOG_URLS]
-    return profile
+    return _finish_profile(profile, started)
