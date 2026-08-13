@@ -28,7 +28,7 @@ class CategoryMapperTests(unittest.TestCase):
         slug, _ = map_category(["Товары для дома", "Посуда"], "Сковорода 28 см")
         self.assertEqual(slug, "home")
 
-    def test_url_taxonomy_wins_over_ingredient_in_title(self):
+    def test_url_taxonomy_wins_over_ingredient_in_title_when_real_breadcrumb(self):
         slug, confidence = map_category(
             ["pizza i patiserie congelate"],
             "Placinte cu carne de pui congelate",
@@ -36,7 +36,7 @@ class CategoryMapperTests(unittest.TestCase):
         self.assertEqual(slug, "food")
         self.assertGreaterEqual(confidence, 0.84)
 
-    def test_grocery_url_categories_map_without_store_specific_rules(self):
+    def test_grocery_categories_map_without_store_specific_rules(self):
         cases = [
             (["vin spumant"], "MOTIV Vin spumant rose", "drinks"),
             (["ingrijire corp"], "Spuma de dus Blooming Citrus", "beauty"),
@@ -51,6 +51,20 @@ class CategoryMapperTests(unittest.TestCase):
         _, title_confidence = map_category([], "Lapte UHT 3.5%")
         _, path_confidence = map_category(["lactate"], "Produs X")
         self.assertLess(title_confidence, path_confidence)
+
+    def test_url_guess_never_receives_breadcrumb_confidence(self):
+        slug, confidence = map_category(
+            ["mobila", "promo"],
+            "Peste oceanic congelat 500 g",
+            category_path_is_breadcrumb=False,
+        )
+        self.assertEqual(slug, "furniture")
+        self.assertLess(confidence, 0.84)
+
+    def test_real_breadcrumb_still_has_high_confidence(self):
+        slug, confidence = map_category(["mobila"], "Canapea extensibila", category_path_is_breadcrumb=True)
+        self.assertEqual(slug, "furniture")
+        self.assertGreaterEqual(confidence, 0.84)
 
 
 if __name__ == "__main__":
