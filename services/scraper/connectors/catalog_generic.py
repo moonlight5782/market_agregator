@@ -7,19 +7,24 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 from bs4 import BeautifulSoup, Tag
 
+from .base import ConnectorContext
 from .html_generic import GenericHtmlConnector
 
 
 class GenericCatalogConnector(GenericHtmlConnector):
-    """Bounded same-origin catalog discovery for previously unknown stores.
+    """Same-origin catalog discovery for previously unknown stores.
 
-    It does not assume a CMS or store name. It traverses likely catalog/category
-    pages, detects product-card links from semantic markup, CSS class hints,
-    URL shapes and nearby price text, then reuses GenericHtmlConnector for the
-    actual product parsing.
+    The connector starts from the merchant root plus catalog entrypoints found by
+    source discovery. It traverses likely catalog/category pages, detects
+    product-card links from semantic markup, CSS class hints, URL shapes and
+    nearby price text, then reuses GenericHtmlConnector for product parsing.
     """
 
-    max_listing_pages = 300
+    # A hard limit still protects against pathological filter/query explosions,
+    # but 300 was too small for real supermarket catalogs with hundreds of
+    # pagination pages plus taxonomy pages. Reaching this cap is exposed so the
+    # run report cannot claim the strategy was fully exhausted.
+    max_listing_pages = 5000
 
     _catalog_tokens = (
         "/catalog", "/catalogue", "/category", "/categories", "/shop", "/store",
@@ -34,19 +39,44 @@ class GenericCatalogConnector(GenericHtmlConnector):
     )
     _price_re = re.compile(r"(?:\d[\d\s.,]{0,12})\s*(?:MDL|LEI|RON|EUR|€|USD|\$)\b", re.I)
 
+    def __init__(self, context: ConnectorContext, seed_urls: list[str] | None = None) -> None:
+        super().__init__(context)
+        self.seed_urls = list(seed_urls or [])
+        self.listing_page_cap_reached = False
+        self.listing_pages_visited = 0
+
+    def _initial_listing_urls(self) -> list[str]:
+        base = self._clean_url(self.context.base_url)
+        host = urlparse(base).netloc.lower()
+        urls: list[str] = []
+        for candidate in [base, *self.seed_urls]:
+            cleaned = self._clean_url(urljoin(base, candidate))
+            if urlparse(cleaned).netloc.lower() != host:
+                continue
+            if cleaned not in urls:
+                urls.append(cleaned)
+        return urls
+
     async def discover_product_urls(self) -> AsyncIterator[str]:
         base = self._clean_url(self.context.base_url)
         host = urlparse(base).netloc.lower()
-        queue: deque[str] = deque([base])
+        queue: deque[str] = deque(self._initial_listing_urls())
         visited: set[str] = set()
         yielded: set[str] = set()
+        self.listing_page_cap_reached = False
+        self.listing_pages_visited = 0
 
         async with self.client() as client:
-            while queue and len(visited) < self.max_listing_pages:
+            while queue:
+                if len(visited) >= self.max_listing_pages:
+                    self.listing_page_cap_reached = True
+                    break
+
                 page_url = queue.popleft()
                 if page_url in visited:
                     continue
                 visited.add(page_url)
+                self.listing_pages_visited = len(visited)
 
                 try:
                     response = await client.get(page_url)
