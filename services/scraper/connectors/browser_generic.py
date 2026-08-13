@@ -27,6 +27,8 @@ class BrowserRenderedConnector(StoreConnector):
     max_json_responses = 30
 
     async def _render(self, url: str) -> tuple[str, str, list[tuple[str, Any]]] | None:
+        if not self.is_url_allowed(url):
+            return None
         try:
             from playwright.async_api import async_playwright
         except ImportError:
@@ -39,6 +41,14 @@ class BrowserRenderedConnector(StoreConnector):
                     user_agent="MoldovaCommerceBot/0.2 (+catalog-indexer)",
                     viewport={"width": 1365, "height": 900},
                 )
+
+                async def enforce_robots(route) -> None:
+                    if self.is_url_allowed(route.request.url):
+                        await route.continue_()
+                    else:
+                        await route.abort()
+
+                await page.route("**/*", enforce_robots)
                 network_json: list[tuple[str, Any]] = []
                 capture_tasks: list[asyncio.Task] = []
 
@@ -94,7 +104,7 @@ class BrowserRenderedConnector(StoreConnector):
                 if not href:
                     continue
                 url = urljoin(base_url, str(href))
-                if url not in seen:
+                if self.is_url_allowed(url) and url not in seen:
                     seen.add(url)
                     yield url
 

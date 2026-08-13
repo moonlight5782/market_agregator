@@ -12,6 +12,19 @@ def normalize_text(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+_NON_PRODUCT_SERVICE_PATTERNS = (
+    r"\bсоставлени[ея]\b.*\b(индивидуальн\w*\s+)?курс\w*\b",
+    r"\b(consultation|consulting|service\s+booking)\b",
+    r"\b(консультаци\w*|запись\s+на\s+услуг\w*)\b",
+)
+
+
+def is_non_product_service(item: RawProduct) -> bool:
+    """Return true only for clearly named services, not physical merchandise."""
+    title = normalize_text(item.title)
+    return any(re.search(pattern, title, flags=re.IGNORECASE) for pattern in _NON_PRODUCT_SERVICE_PATTERNS)
+
+
 def quality_score(item: RawProduct) -> float:
     has_branch_quantity = any(availability.quantity is not None for availability in item.availabilities)
     weighted = {

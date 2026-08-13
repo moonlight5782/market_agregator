@@ -8,6 +8,8 @@ import re
 import httpx
 from bs4 import BeautifulSoup, Tag
 
+from .robots import RobotsPolicy, load_robots_policy
+
 
 @dataclass
 class SourceProfile:
@@ -22,7 +24,12 @@ class SourceProfile:
     feed_hints: list[str] = field(default_factory=list)
     availability_context_hints: list[str] = field(default_factory=list)
     blocked: bool = False
+    robots_status: str = "UNAVAILABLE"
+    robots_url: str | None = None
+    robots_reason: str | None = None
+    robots_policy: RobotsPolicy | None = None
     discovery_duration_seconds: float = 0.0
+    discovery_budget_exhausted: bool = False
 
 
 API_PATTERNS = (
@@ -40,6 +47,7 @@ COMMON_FEEDS = (
 CATALOG_PATH_TOKENS = (
     "/catalog",
     "/catalogue",
+    "/katalog",
     "/category",
     "/categories",
     "/shop",
@@ -85,7 +93,8 @@ def _finish_profile(profile: SourceProfile, started: float) -> SourceProfile:
         f"[SOURCE-DISCOVERY] duration={profile.discovery_duration_seconds}s; "
         f"pages={len(profile.discovery_pages)}; catalogs={len(profile.catalog_urls)}; "
         f"api={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; "
-        f"sitemaps={len(profile.sitemap_urls)}; blocked={profile.blocked}"
+        f"sitemaps={len(profile.sitemap_urls)}; robots={profile.robots_status}; blocked={profile.blocked}; "
+        f"budget_exhausted={profile.discovery_budget_exhausted}"
     )
     return profile
 
@@ -93,6 +102,10 @@ def _finish_profile(profile: SourceProfile, started: float) -> SourceProfile:
 def _looks_like_catalog_link(anchor: Tag, absolute_url: str) -> bool:
     parsed = urlparse(absolute_url)
     path = parsed.path.lower().rstrip("/")
+    # CMS news sections can have a generic `/category/` URL shape. They must
+    # never seed product discovery simply because a title contains "catalog".
+    if any(token in path for token in ("/component/content/", "/novosti", "/news")):
+        return False
     text = anchor.get_text(" ", strip=True).lower()
     if any(token in text for token in CATALOG_TEXT_TOKENS):
         return True
@@ -205,7 +218,11 @@ def _update_profile_from_html(
             profile.availability_context_hints.append(label)
 
 
-async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> SourceProfile:
+async def discover_sources(
+    base_url: str,
+    timeout_seconds: float = 20.0,
+    budget_seconds: float | None = None,
+) -> SourceProfile:
     """Discover first-party acquisition sources before product crawling.
 
     Discovery deliberately starts from the merchant website and its official
@@ -220,6 +237,7 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
     found_api: set[str] = set()
     found_feed: set[str] = set()
     script_urls: set[str] = set()
+    deadline = started + budget_seconds if budget_seconds and budget_seconds > 0 else None
     probe_timeout = min(timeout_seconds, PROBE_TIMEOUT_SECONDS)
     catalog_timeout = min(timeout_seconds, CATALOG_PROBE_TIMEOUT_SECONDS)
 
@@ -228,12 +246,40 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         follow_redirects=True,
         headers=headers,
     ) as client:
+        policy = await load_robots_policy(client, base_url, probe_timeout)
+        profile.robots_policy = policy
+        profile.robots_status = policy.status
+        profile.robots_url = policy.robots_url
+        profile.robots_reason = policy.reason
+        if not policy.base_allowed:
+            profile.blocked = True
+            return _finish_profile(profile, started)
+
+        async def get_allowed(url: str, **kwargs) -> httpx.Response | None:
+            if not policy.can_fetch(url):
+                return None
+            requested_timeout = float(kwargs.pop("timeout", timeout_seconds))
+            if deadline is not None:
+                remaining = deadline - perf_counter()
+                if remaining <= 0:
+                    profile.discovery_budget_exhausted = True
+                    return None
+                requested_timeout = min(requested_timeout, remaining)
+            try:
+                return await client.get(url, timeout=requested_timeout, **kwargs)
+            except httpx.TimeoutException:
+                if deadline is not None and perf_counter() >= deadline:
+                    profile.discovery_budget_exhausted = True
+                raise
+
         try:
-            response = await client.get(base_url)
+            response = await get_allowed(base_url, timeout=probe_timeout)
         except httpx.HTTPError:
             profile.blocked = True
             return _finish_profile(profile, started)
 
+        if response is None:
+            return _finish_profile(profile, started)
         if response.status_code in (401, 403, 429):
             profile.blocked = True
         if response.is_success:
@@ -253,10 +299,10 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
             if candidate in inspected:
                 continue
             try:
-                catalog_response = await client.get(candidate, timeout=catalog_timeout)
+                catalog_response = await get_allowed(candidate, timeout=catalog_timeout)
             except httpx.HTTPError:
                 continue
-            if not catalog_response.is_success:
+            if catalog_response is None or not catalog_response.is_success:
                 continue
             inspected.add(str(catalog_response.url))
             _update_profile_from_html(
@@ -272,10 +318,10 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         # Keep the budget small; browser network observation handles dynamic cases.
         for script_url in sorted(script_urls)[:MAX_SCRIPT_ASSETS]:
             try:
-                script_response = await client.get(script_url, timeout=probe_timeout)
+                script_response = await get_allowed(script_url, timeout=probe_timeout)
             except httpx.HTTPError:
                 continue
-            if not script_response.is_success:
+            if script_response is None or not script_response.is_success:
                 continue
             ctype = script_response.headers.get("content-type", "").lower()
             if "javascript" not in ctype and not script_url.lower().split("?", 1)[0].endswith(".js"):
@@ -288,8 +334,10 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
             for path in COMMON_FEEDS:
                 candidate = urljoin(base_url, path)
                 try:
-                    fr = await client.get(candidate, timeout=probe_timeout)
+                    fr = await get_allowed(candidate, timeout=probe_timeout)
                 except httpx.HTTPError:
+                    continue
+                if fr is None:
                     continue
                 ctype = fr.headers.get("content-type", "").lower()
                 if fr.is_success and (
@@ -305,8 +353,10 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         validated_api: list[str] = []
         for candidate in sorted(found_api)[:MAX_API_VALIDATION]:
             try:
-                ar = await client.get(candidate, timeout=probe_timeout)
+                ar = await get_allowed(candidate, timeout=probe_timeout)
             except httpx.HTTPError:
+                continue
+            if ar is None:
                 continue
             ctype = ar.headers.get("content-type", "").lower()
             if ar.is_success and ("json" in ctype or ar.text.lstrip().startswith(("{", "["))):
@@ -314,27 +364,18 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         profile.api_hints = validated_api[:MAX_API_HINTS]
         profile.feed_hints = sorted(found_feed)[:MAX_FEED_HINTS]
 
-        # Prefer sitemap declarations from robots.txt. If none are advertised,
-        # try the two conventional locations with the short probe timeout.
-        robots = urljoin(base_url, "/robots.txt")
-        robots_sitemaps: list[str] = []
-        try:
-            rr = await client.get(robots, timeout=probe_timeout)
-            if rr.is_success:
-                for line in rr.text.splitlines():
-                    if line.lower().startswith("sitemap:"):
-                        robots_sitemaps.append(line.split(":", 1)[1].strip())
-        except httpx.HTTPError:
-            pass
-
+        # The policy was fetched before discovery. Reuse its declared sitemaps
+        # rather than fetching robots.txt again or treating an unavailable file
+        # as permission to probe additional paths.
+        robots_sitemaps = policy.parser.site_maps() if policy.parser else []
         candidates = robots_sitemaps or [
             urljoin(base_url, "/sitemap.xml"),
             urljoin(base_url, "/sitemap_index.xml"),
         ]
         for candidate in dict.fromkeys(candidates):
             try:
-                sr = await client.get(candidate, timeout=probe_timeout)
-                if sr.is_success and (
+                sr = await get_allowed(candidate, timeout=probe_timeout)
+                if sr is not None and sr.is_success and (
                     "xml" in sr.headers.get("content-type", "").lower()
                     or "<urlset" in sr.text
                     or "<sitemapindex" in sr.text

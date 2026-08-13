@@ -40,7 +40,10 @@ RULES: tuple[CategoryRule, ...] = (
     CategoryRule("fruit-vegetables", ("fruct", "legum", "mere", "rosii", "фрукт", "овощ", "яблок", "помидор")),
     CategoryRule("drinks", ("bautur", "apa", "suc", "cafea", "ceai", "vin", "spumant", "напит", "вода", "сок", "кофе", "чай", "вино")),
     CategoryRule("kids", ("copii", "jucarie", "carucior", "детск", "игруш", "коляск")),
-    CategoryRule("sport", ("sport", "fitness", "biciclet", "туризм", "фитнес", "велосипед")),
+    CategoryRule("sport", (
+        "sport", "fitness", "biciclet", "supliment", "creatina", "creatine", "protein", "whey", "gainer", "gejner",
+        "туризм", "фитнес", "велосипед", "спортивное питание", "креатин", "протеин", "гейнер", "аминокислот",
+    )),
     CategoryRule("auto", ("auto", "anvelop", "ulei motor", "masina", "шина", "автомоб", "масло мотор")),
     CategoryRule("pets", ("animale", "pet", "hrana caini", "hrana pisici", "корм", "зоотовар")),
     CategoryRule("garden", ("gradina", "garden", "seminte", "полив", "сад", "семена")),
@@ -89,6 +92,14 @@ def map_category(
     if title_slug:
         confidence = min(0.90, 0.62 + 0.07 * title_hits)
         return title_slug, round(confidence, 2)
+
+    # A small allowlist accepts unambiguous merchant taxonomy slugs even when
+    # URLs are the only category signal. It intentionally excludes broad terms
+    # such as `mobila` and `promo`, which can misclassify unrelated products.
+    if category_path and not category_path_is_breadcrumb:
+        terminal_slug = _normalize(category_path[-1])
+        if terminal_slug in {"gejnery", "kreatiny", "proteiny", "aminokisloty"}:
+            return "sport", 0.76
 
     # URL-derived taxonomy may still help when it has multiple independent
     # signals, but a single accidental token must never classify the product.

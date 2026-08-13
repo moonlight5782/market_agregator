@@ -224,6 +224,7 @@ model StoreLocation {
   @@unique([storeId, externalId])
   @@index([storeId, city])
   @@index([city, active])
+  @@index([active, latitude, longitude])
 }
 
 model StoreSource {
@@ -323,7 +324,9 @@ model Offer {
   priceHistory    PriceHistory[]
   @@unique([storeId, externalId])
   @@index([productId, price])
+  @@index([productId, lastSeenAt])
   @@index([storeId, stockStatus])
+  @@index([storeId, lastSeenAt])
 }
 
 model OfferAvailability {
@@ -338,6 +341,7 @@ model OfferAvailability {
   location        StoreLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
   @@unique([offerId, locationId])
   @@index([locationId, stockStatus])
+  @@index([locationId, lastSeenAt, stockStatus])
   @@index([offerId, lastSeenAt])
 }
 

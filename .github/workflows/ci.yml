@@ -10,18 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moldova_commerce
+      DEMO_MODE: "true"
+      AUTH_SECRET: "ci-only-build-secret-not-for-production"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: package.json
-      - run: npm install
+          cache-dependency-path: package-lock.json
+      - name: Install reproducible Node dependencies
+        run: npm ci
+      - name: Reject high-severity production dependency findings
+        run: npm audit --omit=dev --audit-level=high
       - run: npm run data:validate-registry
+      - run: npm run test:sync-batch
+      - run: npm run test:freshness
       - run: npm run db:generate
       - run: npx prisma validate
       - run: npx tsc --noEmit
+      - name: Build production storefront in demo mode
+        run: npm run build
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

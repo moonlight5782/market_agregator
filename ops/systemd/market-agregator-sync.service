@@ -1,0 +1,20 @@
+[Unit]
+Description=Moldova Market Agregator verified-store synchronization
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=market-agregator
+Group=market-agregator
+WorkingDirectory=/opt/market_agregator
+EnvironmentFile=/etc/market-agregator/market-agregator.env
+ExecStart=/usr/bin/npm run data:sync:verified -- --statuses=VERIFIED --limit=500 --concurrency=1 --browser-threshold=0.8
+TimeoutStartSec=45min
+Nice=10
+
+# Do not turn an empty or partial registry into a false success.
+SuccessExitStatus=0
+
+[Install]
+WantedBy=multi-user.target

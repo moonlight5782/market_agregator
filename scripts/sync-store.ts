@@ -11,7 +11,12 @@ type CrawlReport = {
   [key: string]: unknown;
 };
 
-type ImportSummary = { imported: number; failed: number; total: number };
+type ImportSummary = {
+  imported: number;
+  failed: number;
+  total: number;
+  reconciliation?: { offersMarkedOutOfStock: number } | null;
+};
 
 function argValue(name: string, fallback?: string) {
   const prefix = `--${name}=`;
@@ -116,16 +121,22 @@ async function main() {
     return;
   }
 
+  const reconciliationArgs = limit === "0"
+    ? ["--reconcile-store", storeSlug, "--run-started-at", run.startedAt.toISOString()]
+    : [];
   const importer = spawnSync(
     process.platform === "win32" ? "npx.cmd" : "npx",
-    ["tsx", "scripts/import-raw.ts", rawPath],
+    ["tsx", "scripts/import-raw.ts", rawPath, ...reconciliationArgs],
     { stdio: "inherit", env: { ...process.env, IMPORT_SUMMARY_PATH: importSummaryPath } },
   );
   const importSummary = readJson<ImportSummary>(importSummaryPath);
 
   if (importer.status === 0 && importSummary && importSummary.failed === 0 && importSummary.imported === importSummary.total) {
     await finishRun(run.id, store.id, ScraperRunStatus.SUCCESS, report, importSummary);
-    console.log(`[SYNC SUCCESS] ${storeSlug}: found=${report?.quality?.unique_products ?? 0}, imported=${importSummary.imported}`);
+    console.log(
+      `[SYNC SUCCESS] ${storeSlug}: found=${report?.quality?.unique_products ?? 0}, ` +
+      `imported=${importSummary.imported}, reconciled_out_of_stock=${importSummary.reconciliation?.offersMarkedOutOfStock ?? 0}`,
+    );
     return;
   }
 

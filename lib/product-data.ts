@@ -1,13 +1,8 @@
 import { demoProducts } from "./demo-data";
+import { freshSince } from "./freshness";
 import { haversineKm, parseCoordinate, parseRadiusKm, validCoordinates } from "./geo";
 
 const isDemoMode = process.env.DEMO_MODE === "true" || !process.env.DATABASE_URL;
-
-function freshSince() {
-  const configured = Number(process.env.OFFER_MAX_AGE_HOURS ?? 48);
-  const hours = Number.isFinite(configured) && configured > 0 ? configured : 48;
-  return new Date(Date.now() - hours * 60 * 60 * 1000);
-}
 
 function isAvailableStatus(status: string) {
   return status === "IN_STOCK" || status === "LOW_STOCK" || status === "PREORDER";

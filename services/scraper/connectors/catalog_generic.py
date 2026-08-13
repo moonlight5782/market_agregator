@@ -27,7 +27,7 @@ class GenericCatalogConnector(GenericHtmlConnector):
     max_listing_pages = 5000
 
     _catalog_tokens = (
-        "/catalog", "/catalogue", "/category", "/categories", "/shop", "/store",
+        "/catalog", "/catalogue", "/katalog", "/category", "/categories", "/shop", "/store",
         "/products", "/produse", "/search", "/collections", "/colectii",
     )
     _product_tokens = (
@@ -35,7 +35,8 @@ class GenericCatalogConnector(GenericHtmlConnector):
     )
     _skip_tokens = (
         "/cart", "/basket", "/checkout", "/login", "/register", "/account", "/wishlist",
-        "/compare", "/contact", "/about", "/blog", "/news", "mailto:", "tel:", "javascript:",
+        "/compare", "/contact", "/about", "/blog", "/news", "/novosti", "/component/content/",
+        "mailto:", "tel:", "javascript:",
     )
     _price_re = re.compile(r"(?:\d[\d\s.,]{0,12})\s*(?:MDL|LEI|RON|EUR|€|USD|\$)\b", re.I)
 
@@ -49,9 +50,14 @@ class GenericCatalogConnector(GenericHtmlConnector):
         base = self._clean_url(self.context.base_url)
         host = urlparse(base).netloc.lower()
         urls: list[str] = []
-        for candidate in [base, *self.seed_urls]:
+        # Source-discovered category pages are usually far more selective than
+        # a merchant homepage. Process them first so a large news-heavy homepage
+        # cannot delay product collection; retain the homepage as a fallback.
+        for candidate in [*self.seed_urls, base]:
             cleaned = self._clean_url(urljoin(base, candidate))
             if urlparse(cleaned).netloc.lower() != host:
+                continue
+            if self._is_product_detail_path(urlparse(cleaned).path.lower()):
                 continue
             if cleaned not in urls:
                 urls.append(cleaned)
@@ -105,9 +111,18 @@ class GenericCatalogConnector(GenericHtmlConnector):
                         queue.append(absolute)
 
     @classmethod
+    def _is_product_detail_path(cls, path: str) -> bool:
+        if any(token in path for token in cls._product_tokens):
+            return True
+        if "/katalog/" in path:
+            segments = [segment for segment in path.split("/") if segment]
+            return path.endswith("-detail") or (len(segments) >= 4 and "detail" in segments[-1])
+        return False
+
+    @classmethod
     def _looks_like_product_anchor(cls, anchor: Tag, url: str) -> bool:
         path = urlparse(url).path.lower()
-        if any(token in path for token in cls._product_tokens):
+        if cls._is_product_detail_path(path):
             return True
 
         node: Tag | None = anchor
@@ -143,7 +158,7 @@ class GenericCatalogConnector(GenericHtmlConnector):
     @classmethod
     def _skip_href(cls, href: str) -> bool:
         lowered = href.lower()
-        return lowered.startswith(("#", "mailto:", "tel:", "javascript:")) or any(
+        return lowered.startswith(("#", "mailto:", "tel:", "javascript:")) or "novosti" in lowered or any(
             token in lowered for token in cls._skip_tokens
         )
 

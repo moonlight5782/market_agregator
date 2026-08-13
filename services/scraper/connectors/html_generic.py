@@ -236,7 +236,26 @@ class GenericHtmlConnector(StoreConnector):
     def _decimal(value) -> Decimal | None:
         if value is None:
             return None
-        cleaned = re.sub(r"[^0-9,.-]", "", str(value)).replace(" ", "")
+        raw_text = str(value)
+        # Prefer the first complete currency-qualified amount. Nested visual
+        # components frequently repeat the same price label, and concatenating
+        # their text would turn "1299,00 MDL 1299,00 MDL" into an invalidly
+        # inflated amount. The recursive parse receives only the one amount.
+        currency_amounts = re.findall(
+            r"(?<!\d)(\d[\d\s.,]*?)\s*(?:MDL|LEI|RON|EUR|€|USD|\$)\b",
+            raw_text,
+            flags=re.IGNORECASE,
+        )
+        if currency_amounts:
+            return GenericHtmlConnector._decimal(currency_amounts[0])
+        cleaned = re.sub(r"[^0-9,.-]", "", raw_text).replace(" ", "")
+        # Some storefront themes render the same current price in nested nodes.
+        # After text extraction this can become e.g. "129900129900". Accept an
+        # exact duplicated integer label as one price, never as a doubled amount.
+        if cleaned.isdigit() and len(cleaned) % 2 == 0:
+            midpoint = len(cleaned) // 2
+            if cleaned[:midpoint] == cleaned[midpoint:]:
+                cleaned = cleaned[:midpoint]
         if cleaned.count(",") == 1 and cleaned.count(".") == 0:
             cleaned = cleaned.replace(",", ".")
         else:
