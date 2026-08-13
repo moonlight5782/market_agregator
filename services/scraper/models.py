@@ -20,6 +20,8 @@ class RawAvailability(BaseModel):
     location_name: str | None = None
     city: str
     address: str | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     stock_status: StockStatus = StockStatus.UNKNOWN
     quantity: int | None = None
 
