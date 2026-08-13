@@ -9,11 +9,12 @@ from pathlib import Path
 from time import perf_counter
 from urllib.parse import urlparse
 
+from .catalog_estimate import estimate_catalog_size
 from .category_mapper import map_category
 from .connectors.base import ConnectorContext
 from .connectors.registry import build_connector_plan
 from .normalizer import normalize
-from .quality import browser_enrichment_reasons, compute_quality, merge_product_payload
+from .quality import browser_enrichment_reasons, compute_quality, merge_product_payload, publish_readiness
 from .source_discovery import discover_sources
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,7 +52,7 @@ async def crawl(
     browser_threshold: float = 0.8,
     browser_enrichment_limit: int = 5,
     store_url: str | None = None,
-) -> int:
+) -> tuple[str, int]:
     started_at = datetime.now(timezone.utc)
     started = perf_counter()
     store = store_from_url(store_url, store_slug) if store_url else load_store(store_slug)
@@ -59,14 +60,16 @@ async def crawl(
     context = ConnectorContext(store_slug=store_slug, base_url=store["domain"], requests_per_second=1.0)
     profile = await discover_sources(store["domain"], timeout_seconds=context.timeout_seconds)
     plan = build_connector_plan(context, profile)
-    browser_trigger_count = max(1, min(limit, int(limit * browser_threshold)))
+    bounded = limit > 0
+    browser_trigger_count = max(1, min(limit, int(limit * browser_threshold))) if bounded else 1
     browser_enrichment_limit = max(0, browser_enrichment_limit)
 
     print(
         f"[DISCOVERY] {store_slug}: strategies={[x.name for x in plan]}; "
         f"sitemaps={len(profile.sitemap_urls)}; jsonld={profile.product_jsonld}; "
         f"embedded_json={profile.embedded_json}; html_hints={profile.html_product_hints}; "
-        f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}"
+        f"api_hints={len(profile.api_hints)}; feeds={len(profile.feed_hints)}; blocked={profile.blocked}; "
+        f"mode={'bounded' if bounded else 'full'}"
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -81,7 +84,7 @@ async def crawl(
 
     with output.open("w", encoding="utf-8") as fh:
         for choice in plan:
-            if choice.name == "browser-rendered" and products_written >= browser_trigger_count:
+            if choice.name == "browser-rendered" and bounded and products_written >= browser_trigger_count:
                 strategy_stats.append({
                     "connector": choice.name,
                     "priority": choice.priority,
@@ -91,20 +94,23 @@ async def crawl(
                     "duplicates": 0,
                     "errors": 0,
                     "skipped": True,
-                    "skip_reason": f"coverage threshold reached ({products_written}/{browser_trigger_count})",
+                    "exhausted": False,
+                    "skip_reason": f"bounded coverage threshold reached ({products_written}/{browser_trigger_count})",
                 })
-                print(f"[SKIP] {choice.name}: coverage threshold reached ({products_written}/{browser_trigger_count})")
+                print(f"[SKIP] {choice.name}: bounded coverage threshold reached ({products_written}/{browser_trigger_count})")
                 continue
 
             urls_seen = 0
             accepted = 0
             duplicates = 0
             strategy_errors = 0
+            stopped_by_cap = False
             print(f"[TRY] priority={choice.priority} connector={choice.name}: {choice.reason}")
 
             try:
                 async for url in choice.connector.discover_product_urls():
-                    if products_written >= limit:
+                    if bounded and products_written >= limit:
+                        stopped_by_cap = True
                         break
                     urls_seen += 1
                     try:
@@ -148,10 +154,11 @@ async def crawl(
                 "duplicates": duplicates,
                 "errors": strategy_errors,
                 "skipped": False,
+                "exhausted": not stopped_by_cap,
             })
-            print(f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, errors={strategy_errors}")
+            print(f"[RESULT] {choice.name}: checked={urls_seen}, accepted={accepted}, duplicates={duplicates}, errors={strategy_errors}, exhausted={not stopped_by_cap}")
 
-            if products_written >= limit:
+            if bounded and products_written >= limit:
                 break
 
     payloads = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -225,6 +232,7 @@ async def crawl(
             "enriched": enriched_products,
             "errors": enrichment_errors,
             "skipped": False,
+            "exhausted": True,
         })
         print(
             f"[RESULT] browser quality enrichment: checked={enrichment_checked}, "
@@ -235,8 +243,25 @@ async def crawl(
     quality = compute_quality(payloads, limit)
     quality["errors"] = errors
 
+    estimate = await estimate_catalog_size(store_slug, store["domain"], timeout_seconds=context.timeout_seconds)
+    cap_reached = bounded and products_written >= limit
+    coverage_verified = bool(
+        estimate.kind == "exact"
+        and estimate.value
+        and products_written >= estimate.value
+        and (not bounded or limit >= estimate.value)
+        and errors == 0
+    )
+    readiness = publish_readiness(quality, coverage_verified=coverage_verified, require_stock=True)
+
     duration = round(perf_counter() - started, 3)
-    outcome = "OK" if products_written > 0 else ("BLOCKED_BY_ORIGIN" if profile.blocked else "NO_PRODUCTS")
+    if products_written == 0:
+        outcome = "BLOCKED_BY_ORIGIN" if profile.blocked else "NO_PRODUCTS"
+    elif readiness["ready"]:
+        outcome = "OK"
+    else:
+        outcome = "PARTIAL"
+
     report = {
         "store_slug": store_slug,
         "store_name": store.get("name"),
@@ -245,10 +270,21 @@ async def crawl(
         "started_at": started_at.isoformat(),
         "duration_seconds": duration,
         "limit": limit,
+        "crawl_mode": "bounded" if bounded else "full",
         "outcome": outcome,
+        "coverage": {
+            "verified": coverage_verified,
+            "catalog_estimate": estimate.value,
+            "catalog_estimate_kind": estimate.kind,
+            "catalog_estimate_method": estimate.method,
+            "catalog_estimate_source": estimate.source_url,
+            "bounded": bounded,
+            "cap_reached": cap_reached,
+        },
+        "publish_readiness": readiness,
         "browser_fallback": {
             "threshold_ratio": browser_threshold,
-            "trigger_below_products": browser_trigger_count,
+            "trigger_below_products": browser_trigger_count if bounded else None,
             "quality_enrichment_limit": browser_enrichment_limit,
             "quality_trigger_reasons": enrichment_reasons,
             "quality_enrichment_attempted": enrichment_attempted,
@@ -278,8 +314,9 @@ async def crawl(
         f"category={quality['category_complete_pct']}%, identity={quality['identity_complete_pct']}%, "
         f"branch_stock={quality['branch_availability_product_pct']}%."
     )
+    print(f"Coverage verified={coverage_verified}; publish_ready={readiness['ready']}; blockers={readiness['blockers']}")
     print(f"Report: {report_path}")
-    return products_written
+    return outcome, products_written
 
 
 def main() -> None:
@@ -288,12 +325,12 @@ def main() -> None:
     source.add_argument("--store", help="Store slug from data/store-registry.json")
     source.add_argument("--url", help="Arbitrary storefront URL; no registry entry required")
     parser.add_argument("--slug", help="Optional slug when using --url")
-    parser.add_argument("--limit", type=int, default=100, help="Maximum unique products to collect")
+    parser.add_argument("--limit", type=int, default=0, help="Maximum unique products to collect; 0 means full uncapped crawl")
     parser.add_argument(
         "--browser-threshold",
         type=float,
         default=0.8,
-        help="Use browser fallback when earlier strategies collect less than this fraction of --limit (0..1)",
+        help="For bounded diagnostics, use browser fallback below this fraction of --limit (0..1)",
     )
     parser.add_argument(
         "--browser-enrichment-limit",
@@ -301,31 +338,40 @@ def main() -> None:
         default=5,
         help="Maximum existing product pages to re-render when the quality gate detects weak fields",
     )
+    parser.add_argument(
+        "--accept-partial",
+        action="store_true",
+        help="Diagnostic/smoke mode: keep exit code 0 for PARTIAL while the report still records PARTIAL",
+    )
     args = parser.parse_args()
     threshold = min(1.0, max(0.0, args.browser_threshold))
     enrichment_limit = max(0, args.browser_enrichment_limit)
+    limit = max(0, args.limit)
     if args.url:
         temp = store_from_url(args.url, args.slug)
-        products = asyncio.run(
+        outcome, products = asyncio.run(
             crawl(
                 temp["slug"],
-                max(1, args.limit),
+                limit,
                 browser_threshold=threshold,
                 browser_enrichment_limit=enrichment_limit,
                 store_url=args.url,
             )
         )
     else:
-        products = asyncio.run(
+        outcome, products = asyncio.run(
             crawl(
                 args.store,
-                max(1, args.limit),
+                limit,
                 browser_threshold=threshold,
                 browser_enrichment_limit=enrichment_limit,
             )
         )
+
     if products == 0:
         raise SystemExit(4)
+    if outcome == "PARTIAL" and not args.accept_partial:
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":
