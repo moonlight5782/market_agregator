@@ -14,7 +14,8 @@
     "data:sync": "tsx scripts/sync-store.ts",
     "data:sync:verified": "node scripts/sync-verified-stores.mjs",
     "data:status": "tsx scripts/store-health.ts",
-    "data:validate-registry": "node scripts/validate-store-registry.mjs"
+    "data:validate-registry": "node scripts/validate-store-registry.mjs",
+    "data:geocode-locations": "tsx scripts/geocode-locations.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
