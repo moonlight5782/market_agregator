@@ -34,10 +34,6 @@ COMMON_FEEDS = (
     "/catalog.json",
     "/feed.xml",
     "/products.xml",
-    "/catalog.xml",
-    "/feed.csv",
-    "/products.csv",
-    "/yml.xml",
 )
 CATALOG_PATH_TOKENS = (
     "/catalog",
@@ -67,11 +63,14 @@ AVAILABILITY_CONTEXT_PATTERNS: tuple[tuple[str, str], ...] = (
     ("delivery-context", r"\b(?:delivery|livrare|достав\w*)\b"),
     ("store-selector", r"\b(?:choose store|select store|alege(?:ți|ti)? magazin|выберите магазин)\b"),
 )
-MAX_DISCOVERY_CATALOG_PAGES = 3
+MAX_DISCOVERY_CATALOG_PAGES = 1
 MAX_CATALOG_URLS = 20
-MAX_SCRIPT_ASSETS = 4
+MAX_SCRIPT_ASSETS = 2
 MAX_API_HINTS = 20
+MAX_API_VALIDATION = 10
 MAX_FEED_HINTS = 20
+PROBE_TIMEOUT_SECONDS = 4.0
+CATALOG_PROBE_TIMEOUT_SECONDS = 8.0
 
 
 def _same_origin(url: str, origin_url: str) -> bool:
@@ -197,16 +196,18 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
     """Discover first-party acquisition sources before product crawling.
 
     Discovery deliberately starts from the merchant website and its official
-    catalog entrypoints. A small bounded sample of catalog pages and first-party
-    JS assets is then inspected for structured/API hints. This keeps the logic
-    store-agnostic while avoiding the old failure mode where only the homepage
-    was examined before falling back to scraping.
+    catalog entrypoint. Expensive speculative probes use a much shorter timeout
+    than actual product acquisition, so an absent feed/API cannot stall every
+    crawl for minutes. Playwright remains the runtime XHR/fetch observer for
+    endpoints that only appear interactively.
     """
     profile = SourceProfile(base_url=base_url)
     headers = {"User-Agent": "MoldovaCommerceBot/0.4 (+catalog-indexer)"}
     found_api: set[str] = set()
     found_feed: set[str] = set()
     script_urls: set[str] = set()
+    probe_timeout = min(timeout_seconds, PROBE_TIMEOUT_SECONDS)
+    catalog_timeout = min(timeout_seconds, CATALOG_PROBE_TIMEOUT_SECONDS)
 
     async with httpx.AsyncClient(
         timeout=timeout_seconds,
@@ -231,14 +232,14 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
                 script_urls,
             )
 
-        # Inspect a few official catalog roots before selecting a connector.
-        # Top-level catalog pages are preferred by extract_catalog_urls().
+        # One top-level official catalog root is enough to expose the taxonomy
+        # and scripts without turning discovery itself into a catalog crawl.
         inspected = set(profile.discovery_pages)
         for candidate in list(profile.catalog_urls)[:MAX_DISCOVERY_CATALOG_PAGES]:
             if candidate in inspected:
                 continue
             try:
-                catalog_response = await client.get(candidate)
+                catalog_response = await client.get(candidate, timeout=catalog_timeout)
             except httpx.HTTPError:
                 continue
             if not catalog_response.is_success:
@@ -253,12 +254,11 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
                 script_urls,
             )
 
-        # First-party bundles often reveal the public JSON endpoint used by the
-        # storefront. Keep this intentionally small; Playwright remains the
-        # runtime XHR/fetch observer for endpoints that only appear interactively.
+        # First-party bundles can reveal the JSON endpoint used by the storefront.
+        # Keep the budget small; browser network observation handles dynamic cases.
         for script_url in sorted(script_urls)[:MAX_SCRIPT_ASSETS]:
             try:
-                script_response = await client.get(script_url)
+                script_response = await client.get(script_url, timeout=probe_timeout)
             except httpx.HTTPError:
                 continue
             if not script_response.is_success:
@@ -268,30 +268,30 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
                 continue
             found_api.update(_extract_api_candidates(script_url, script_response.text))
 
-        # Probe a few common public feeds once. Only successful structured
-        # responses are retained.
-        for path in COMMON_FEEDS:
-            candidate = urljoin(base_url, path)
-            try:
-                fr = await client.get(candidate)
-            except httpx.HTTPError:
-                continue
-            ctype = fr.headers.get("content-type", "").lower()
-            if fr.is_success and (
-                "json" in ctype
-                or "xml" in ctype
-                or "csv" in ctype
-                or fr.text.lstrip().startswith(("{", "[", "<?xml", "<yml_catalog"))
-            ):
-                found_feed.add(str(fr.url))
+        # Linked feeds have already been captured above. Brute-force only a few
+        # common feed names when the site gave us no stronger first-party source.
+        if not found_feed and not found_api and not profile.catalog_urls:
+            for path in COMMON_FEEDS:
+                candidate = urljoin(base_url, path)
+                try:
+                    fr = await client.get(candidate, timeout=probe_timeout)
+                except httpx.HTTPError:
+                    continue
+                ctype = fr.headers.get("content-type", "").lower()
+                if fr.is_success and (
+                    "json" in ctype
+                    or "xml" in ctype
+                    or "csv" in ctype
+                    or fr.text.lstrip().startswith(("{", "[", "<?xml", "<yml_catalog"))
+                ):
+                    found_feed.add(str(fr.url))
 
-        # Validate API hints enough to avoid wasting crawl time on obvious
-        # HTML/static endpoints. Do not persist endpoints that need unknown
-        # request bodies/authentication as usable acquisition sources.
+        # Validate only a bounded number of discovered API hints. An endpoint
+        # requiring a body/auth is not treated as a usable GET acquisition source.
         validated_api: list[str] = []
-        for candidate in sorted(found_api)[:30]:
+        for candidate in sorted(found_api)[:MAX_API_VALIDATION]:
             try:
-                ar = await client.get(candidate)
+                ar = await client.get(candidate, timeout=probe_timeout)
             except httpx.HTTPError:
                 continue
             ctype = ar.headers.get("content-type", "").lower()
@@ -300,24 +300,26 @@ async def discover_sources(base_url: str, timeout_seconds: float = 20.0) -> Sour
         profile.api_hints = validated_api[:MAX_API_HINTS]
         profile.feed_hints = sorted(found_feed)[:MAX_FEED_HINTS]
 
-        candidates = [
-            urljoin(base_url, "/sitemap.xml"),
-            urljoin(base_url, "/sitemap_index.xml"),
-            urljoin(base_url, "/sitemap-index.xml"),
-        ]
+        # Prefer sitemap declarations from robots.txt. If none are advertised,
+        # try the two conventional locations with the short probe timeout.
         robots = urljoin(base_url, "/robots.txt")
+        robots_sitemaps: list[str] = []
         try:
-            rr = await client.get(robots)
+            rr = await client.get(robots, timeout=probe_timeout)
             if rr.is_success:
                 for line in rr.text.splitlines():
                     if line.lower().startswith("sitemap:"):
-                        candidates.append(line.split(":", 1)[1].strip())
+                        robots_sitemaps.append(line.split(":", 1)[1].strip())
         except httpx.HTTPError:
             pass
 
+        candidates = robots_sitemaps or [
+            urljoin(base_url, "/sitemap.xml"),
+            urljoin(base_url, "/sitemap_index.xml"),
+        ]
         for candidate in dict.fromkeys(candidates):
             try:
-                sr = await client.get(candidate)
+                sr = await client.get(candidate, timeout=probe_timeout)
                 if sr.is_success and (
                     "xml" in sr.headers.get("content-type", "").lower()
                     or "<urlset" in sr.text
