@@ -7,15 +7,30 @@ function isAvailable(status: string) {
   return status === "IN_STOCK" || status === "LOW_STOCK" || status === "PREORDER";
 }
 
-export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ city?: string }> }) {
-  const [{ slug }, { city = "" }, locale] = await Promise.all([params, searchParams, getLocale()]);
+type ProductQuery = { city?: string; lat?: string; lon?: string; radius?: string };
+
+function backHref(query: ProductQuery) {
+  const params = new URLSearchParams();
+  if (query.city) params.set("city", query.city);
+  if (query.lat) params.set("lat", query.lat);
+  if (query.lon) params.set("lon", query.lon);
+  if (query.radius) params.set("radius", query.radius);
+  if (query.lat && query.lon) params.set("sort", "nearest");
+  return params.size ? `/search?${params.toString()}` : "/";
+}
+
+export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<ProductQuery> }) {
+  const [{ slug }, query, locale] = await Promise.all([params, searchParams, getLocale()]);
+  const { city = "", lat = "", lon = "", radius = "10" } = query;
   const t = getDictionary(locale);
-  const result = await getProductBySlug(slug, city);
+  const result = await getProductBySlug(slug, query);
   if (!result) notFound();
 
   const product: any = result.product;
-  const offers = [...product.offers].sort((a: any, b: any) => Number(a.price) - Number(b.price));
-  const best = offers[0];
+  const offers = [...product.offers];
+  const best = result.hasGeo
+    ? [...offers].sort((a: any, b: any) => Number(a.price) - Number(b.price))[0]
+    : offers[0];
   const imageUrl = product.imageUrl || best?.imageUrl;
   const categoryName = result.mode === "demo"
     ? demoCategoryName(product.categorySlug, locale, product.categoryName)
@@ -23,13 +38,12 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const brandName = result.mode === "demo" ? product.brand : product.brand?.name;
   const availableOffers = offers.filter((offer: any) => {
     if (offer.availabilities?.length) return offer.availabilities.some((item: any) => isAvailable(item.stockStatus));
-    if (city && !offer.location) return false;
     return isAvailable(offer.stockStatus);
   });
 
   return (
     <main className="page-shell" style={{ paddingTop: 72 }}>
-      <a href={city ? `/search?city=${encodeURIComponent(city)}` : "/"} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.home}</a>
+      <a href={backHref(query)} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.search}</a>
       <div className="product-hero">
         <div className="product-hero__image">
           {imageUrl ? <img src={imageUrl} alt={product.title} style={{ objectFit: result.mode === "demo" ? "cover" : "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
@@ -42,6 +56,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
               <div style={{ color: "#666", fontSize: 14 }}>{t.bestPrice}{city ? ` · ${city}` : ""}</div>
               <div style={{ fontSize: "clamp(28px,8vw,34px)", fontWeight: 900, marginTop: 3 }}>{t.from} {Number(best.price).toLocaleString(numberLocale(locale))} {best.currency}</div>
               <div style={{ color: "#666", marginTop: 7 }}>{offers.length} {t.offersShort} · {availableOffers.length} {t.confirmedStock}</div>
+              {result.hasGeo && offers[0]?.distanceKm != null && (
+                <div style={{ marginTop: 7, color: "#555" }}>{t.nearestStore}: {formatMessage(t.distanceAway, { distance: Number(offers[0].distanceKm).toFixed(1) })}</div>
+              )}
             </div>
           ) : (
             <div style={{ border: "1px solid #e5e5e5", borderRadius: 18, padding: 20, marginBottom: 22, color: "#666" }}>{t.noCurrentOffers}{city ? ` · ${city}` : ""}.</div>
@@ -65,18 +82,17 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           {offers.map((offer: any) => {
             const branches = offer.availabilities ?? [];
             const selectedBranch = branches[0];
-            const cityStockUnverified = Boolean(city && !selectedBranch && !offer.location);
-            const status = cityStockUnverified ? "UNKNOWN" : (selectedBranch?.stockStatus ?? offer.stockStatus);
-            const quantity = cityStockUnverified ? null : (selectedBranch?.quantity ?? offer.quantity);
+            const location = offer.nearestLocation ?? selectedBranch?.location ?? offer.location;
+            const status = selectedBranch?.stockStatus ?? offer.stockStatus;
+            const quantity = selectedBranch?.quantity ?? offer.quantity;
             const branchAvailableCount = branches.filter((item: any) => isAvailable(item.stockStatus)).length;
             return (
               <div key={offer.id} className="offer-row">
                 <div>
                   <b style={{ fontSize: 17 }}>{offer.store.name}</b>
-                  {selectedBranch?.location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{selectedBranch.location.city}{selectedBranch.location.address ? ` · ${selectedBranch.location.address}` : ""}</div>}
-                  {!city && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{formatMessage(t.availableInBranches, { available: branchAvailableCount, total: branches.length })}</div>}
-                  {!selectedBranch && offer.location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{offer.location.city}{offer.location.address ? ` · ${offer.location.address}` : ""}</div>}
-                  {cityStockUnverified && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{city} · {t.branchStockUnknown}</div>}
+                  {location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{location.city}{location.address ? ` · ${location.address}` : ""}</div>}
+                  {offer.distanceKm != null && <div style={{ color: "#555", fontSize: 13, marginTop: 3 }}>{t.nearestStore}: {formatMessage(t.distanceAway, { distance: Number(offer.distanceKm).toFixed(1) })}</div>}
+                  {!city && !result.hasGeo && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{formatMessage(t.availableInBranches, { available: branchAvailableCount, total: branches.length })}</div>}
                 </div>
                 <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString(numberLocale(locale))} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString(numberLocale(locale))} {offer.currency}</div></div>
                 <div style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333" }}>{stockLabel(status, quantity, locale)}</div>
