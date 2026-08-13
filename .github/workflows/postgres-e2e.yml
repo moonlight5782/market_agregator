@@ -4,16 +4,22 @@ on:
   pull_request:
     paths:
       - "prisma/**"
+      - "auth.ts"
+      - "lib/loyalty-*.ts"
       - "scripts/import-raw.ts"
       - "scripts/verify-postgres-e2e.ts"
+      - "scripts/verify-loyalty-wallet-e2e.ts"
       - "data/fixtures/postgres-e2e.ndjson"
       - ".github/workflows/postgres-e2e.yml"
   push:
     branches: [main]
     paths:
       - "prisma/**"
+      - "auth.ts"
+      - "lib/loyalty-*.ts"
       - "scripts/import-raw.ts"
       - "scripts/verify-postgres-e2e.ts"
+      - "scripts/verify-loyalty-wallet-e2e.ts"
       - "data/fixtures/postgres-e2e.ndjson"
       - ".github/workflows/postgres-e2e.yml"
 
@@ -37,6 +43,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moldova_commerce
       SEED_SAMPLE_PRODUCTS: "false"
+      AUTH_SECRET: "ci-only-loyalty-wallet-secret-not-for-production"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,3 +61,5 @@ jobs:
         run: npm run data:import -- data/fixtures/postgres-e2e.ndjson
       - name: Verify Product/Offer matching, history and branch stock
         run: npx tsx scripts/verify-postgres-e2e.ts
+      - name: Verify OAuth wallet persistence, encryption and ownership
+        run: npx tsx scripts/verify-loyalty-wallet-e2e.ts

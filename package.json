@@ -18,8 +18,11 @@
     "data:geocode-locations": "tsx scripts/geocode-locations.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.3",
+    "@bwip-js/node": "^4.11.2",
     "@prisma/client": "^6.13.0",
     "next": "^15.4.0",
+    "next-auth": "5.0.0-beta.32",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

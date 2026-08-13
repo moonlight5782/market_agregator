@@ -1,4 +1,5 @@
 import { ProductCard } from "../components/ProductCard";
+import { AccountNav } from "../components/AccountNav";
 import { getHomeData } from "../lib/catalog-data";
 import { getLocale } from "../lib/get-locale";
 import { demoCategoryName, getDictionary } from "../lib/i18n";
@@ -9,9 +10,9 @@ export default async function Home() {
 
   return (
     <main style={{ maxWidth: 1220, margin: "0 auto", padding: "72px 20px 56px", fontFamily: "system-ui" }}>
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 34, paddingRight: 110 }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 34, paddingRight: 110, flexWrap: "wrap" }}>
         <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: ".04em" }}>MOLDOVA COMMERCE</div>
-        <div style={{ color: "#666", fontSize: 14 }}>Chișinău · 25 km</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}><div style={{ color: "#666", fontSize: 14 }}>Chișinău · 25 km</div><AccountNav /></div>
       </nav>
 
       <section style={{ background: "linear-gradient(135deg,#f6f6f6,#ececec)", borderRadius: 28, padding: "46px 34px", marginBottom: 34 }}>
@@ -30,9 +31,7 @@ export default async function Home() {
       <section style={{ marginBottom: 40 }}>
         <h2 style={{ fontSize: 28 }}>{t.categories}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{data.categories.map((category: any) => {
-          const name = data.mode === "demo"
-            ? demoCategoryName(category.slug, locale, category.nameRu)
-            : (locale === "ro" ? category.nameRo || category.nameRu : category.nameRu);
+          const name = data.mode === "demo" ? demoCategoryName(category.slug, locale, category.nameRu) : (locale === "ro" ? category.nameRo || category.nameRu : category.nameRu);
           return <a href={`/category/${category.slug}`} key={category.slug} style={{ padding: "12px 16px", background: "#f3f3f3", borderRadius: 999, color: "#111", textDecoration: "none", fontWeight: 650 }}>{name}</a>;
         })}</div>
       </section>
