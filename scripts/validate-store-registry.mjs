@@ -51,6 +51,12 @@ if (!Array.isArray(registry)) {
     if (store.physicalLocationStockRequired !== undefined && typeof store.physicalLocationStockRequired !== "boolean") {
       errors.push(`${store.slug ?? prefix}: physicalLocationStockRequired must be boolean when provided.`);
     }
+    if (store.locationCoverageReport !== undefined && (typeof store.locationCoverageReport !== "string" || !store.locationCoverageReport.trim())) {
+      errors.push(`${store.slug ?? prefix}: locationCoverageReport must be a non-empty string when provided.`);
+    }
+    if (store.locationCoverageReport && store.physicalLocationStockRequired !== true) {
+      errors.push(`${store.slug ?? prefix}: locationCoverageReport is only valid when physicalLocationStockRequired=true.`);
+    }
 
     if (evidenceRequiredStatuses.has(store.status) && (typeof store.statusReason !== "string" || !store.statusReason.trim())) {
       errors.push(`${store.slug ?? prefix}: ${store.status} requires statusReason.`);
