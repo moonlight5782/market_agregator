@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import StoreHours from "../../../components/StoreHours";
 import { getLocale } from "../../../lib/get-locale";
 import { demoCategoryName, formatMessage, getDictionary, numberLocale, stockLabel } from "../../../lib/i18n";
 import { getProductBySlug } from "../../../lib/product-data";
@@ -91,6 +92,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
                 <div>
                   <b style={{ fontSize: 17 }}>{offer.store.name}</b>
                   {location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{location.city}{location.address ? ` · ${location.address}` : ""}</div>}
+                  <StoreHours openingHours={location?.openingHours ?? (result.mode === "demo" ? offer.store.openingHours : null)} locale={locale} t={t} />
                   {offer.distanceKm != null && <div style={{ color: "#555", fontSize: 13, marginTop: 3 }}>{t.nearestStore}: {formatMessage(t.distanceAway, { distance: Number(offer.distanceKm).toFixed(1) })}</div>}
                   {!city && !result.hasGeo && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{formatMessage(t.availableInBranches, { available: branchAvailableCount, total: branches.length })}</div>}
                 </div>

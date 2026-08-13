@@ -1,4 +1,5 @@
 import LocationFilter from "../../components/LocationFilter";
+import StoreHours from "../../components/StoreHours";
 import { getAvailableCities, getAvailableStores, searchCatalog } from "../../lib/catalog-data";
 import { getLocale } from "../../lib/get-locale";
 import { demoCategoryName, formatMessage, getDictionary, numberLocale, stockLabel } from "../../lib/i18n";
@@ -102,6 +103,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                         <div>
                           <b>{offer.store.name}</b>
                           {location && <div style={{ color: "#666", fontSize: 13 }}>{location.city}{location.address ? `, ${location.address}` : ""}</div>}
+                          <StoreHours openingHours={location?.openingHours ?? (result.mode === "demo" ? offer.store.openingHours : null)} locale={locale} t={t} />
                           {offer.distanceKm != null && <div style={{ color: "#555", fontSize: 13 }}>{t.nearestStore}: {formatMessage(t.distanceAway, { distance: Number(offer.distanceKm).toFixed(1) })}</div>}
                         </div>
                         <div style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333", fontSize: 14 }}>{stockLabel(status, quantity, locale)}</div>

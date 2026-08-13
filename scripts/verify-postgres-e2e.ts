@@ -41,6 +41,7 @@ async function main() {
   assert(availability.location.city === "Chișinău", `expected Chișinău branch, got ${availability.location.city}`);
   assert(availability.quantity === 7, `expected branch quantity 7, got ${availability.quantity}`);
   assert(availability.stockStatus === "LOW_STOCK", `expected LOW_STOCK branch status, got ${availability.stockStatus}`);
+  assert(availability.location.openingHours != null, "Darwin branch opening hours should be imported");
 
   const category = await prisma.category.findUnique({ where: { slug: "home-appliances" } });
   assert(category?.nameRu === "Бытовая техника" && category.nameRo === "Electrocasnice", "RU/RO canonical category seed is missing");
