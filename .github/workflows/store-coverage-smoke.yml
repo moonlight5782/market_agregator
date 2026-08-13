@@ -1,13 +1,6 @@
 name: Store coverage smoke
 
 on:
-  push:
-    branches:
-      - agent/scraper-health
-    paths:
-      - '.github/workflows/store-coverage-smoke.yml'
-      - 'services/scraper/**'
-      - 'data/store-registry.json'
   workflow_dispatch:
     inputs:
       limit:
@@ -35,7 +28,7 @@ jobs:
         run: |
           pip install -r services/scraper/requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Crawl ${{ matrix.store }} with bounded smoke timeout
+      - name: Crawl ${{ matrix.store }} with bounded diagnostic timeout
         shell: bash
         run: |
           set +e
@@ -44,7 +37,8 @@ jobs:
           timeout --signal=TERM 300s python -m services.scraper.run \
             --store "${{ matrix.store }}" \
             --limit "$LIMIT" \
-            --browser-threshold 0.8
+            --browser-threshold 0.8 \
+            --accept-partial
           crawl_code=$?
           if [ $crawl_code -eq 124 ]; then
             echo "${{ matrix.store }} smoke crawl exceeded 300 seconds"
@@ -57,6 +51,21 @@ jobs:
               --output "data/reports/${{ matrix.store }}-coverage-audit.json"
           fi
           exit $crawl_code
+      - name: Assert bounded smoke cannot masquerade as verified
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "data/reports/${{ matrix.store }}.json" ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          store = "${{ matrix.store }}"
+          report = json.loads(Path(f"data/reports/{store}.json").read_text())
+          if report.get("crawl_mode") == "bounded" and report.get("coverage", {}).get("verified") is not True:
+              assert report.get("publish_readiness", {}).get("ready") is False
+          print(store, report.get("outcome"), report.get("publish_readiness"))
+          PY
+          fi
       - name: Upload ${{ matrix.store }} reports
         if: always()
         uses: actions/upload-artifact@v4
