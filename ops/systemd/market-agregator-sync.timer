@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule Moldova Market Agregator verified-store synchronization
+
+[Timer]
+OnCalendar=*-*-* 02:30,14:30:00
+Persistent=true
+RandomizedDelaySec=15min
+Unit=market-agregator-sync.service
+
+[Install]
+WantedBy=timers.target
