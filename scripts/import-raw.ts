@@ -10,6 +10,8 @@ type RawAvailability = {
   location_name?: string | null;
   city: string;
   address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   stock_status?: string;
   quantity?: number | null;
 };
@@ -79,18 +81,27 @@ async function resolveLocation(storeId: string, availability: RawAvailability) {
   const city = availability.city.trim();
   const name = availability.location_name?.trim() || availability.address?.trim() || city;
   const address = availability.address?.trim() || null;
+  const coordinates = {
+    ...(availability.latitude != null ? { latitude: availability.latitude } : {}),
+    ...(availability.longitude != null ? { longitude: availability.longitude } : {}),
+  };
 
   if (externalId) {
     return prisma.storeLocation.upsert({
       where: { storeId_externalId: { storeId, externalId } },
-      update: { name, address, city, active: true },
-      create: { storeId, externalId, name, address, city, active: true },
+      update: { name, address, city, ...coordinates, active: true },
+      create: { storeId, externalId, name, address, city, ...coordinates, active: true },
     });
   }
 
   const existing = await prisma.storeLocation.findFirst({ where: { storeId, city, name, address } });
-  if (existing) return existing;
-  return prisma.storeLocation.create({ data: { storeId, name, address, city, active: true } });
+  if (existing) {
+    if (Object.keys(coordinates).length) {
+      return prisma.storeLocation.update({ where: { id: existing.id }, data: coordinates });
+    }
+    return existing;
+  }
+  return prisma.storeLocation.create({ data: { storeId, name, address, city, ...coordinates, active: true } });
 }
 
 async function importAvailabilities(offerId: string, storeId: string, availabilities: RawAvailability[]) {
