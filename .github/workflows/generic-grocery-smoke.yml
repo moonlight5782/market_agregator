@@ -1,18 +1,31 @@
-name: Generic grocery smoke
+name: Generic multi-store smoke
 
 on:
   pull_request:
     paths:
       - "services/scraper/**"
+      - "data/store-registry.json"
       - ".github/workflows/generic-grocery-smoke.yml"
   push:
     branches: [main]
     paths:
       - "services/scraper/**"
+      - "data/store-registry.json"
       - ".github/workflows/generic-grocery-smoke.yml"
+  workflow_dispatch:
 
 jobs:
-  linella-generic:
+  generic-store:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linella
+            slug: linella-generic
+            url: https://linella.md/ro
+          - name: Cactus
+            slug: cactus-generic
+            url: https://www.cactus.md
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -24,35 +37,37 @@ jobs:
         run: |
           pip install -r services/scraper/requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Crawl Linella using only generic unknown-store path
+      - name: Crawl ${{ matrix.name }} using only generic unknown-store path
         run: |
           timeout 360s python -m services.scraper.run \
-            --url https://linella.md/ro \
-            --slug linella-generic \
+            --url "${{ matrix.url }}" \
+            --slug "${{ matrix.slug }}" \
             --limit 25 \
             --browser-threshold 0.8 \
             --accept-partial
-      - name: Validate smoke semantics
+      - name: Validate multi-store smoke semantics
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          report = json.loads(Path('data/reports/linella-generic.json').read_text())
-          assert report['quality']['unique_products'] > 0
+
+          slug = "${{ matrix.slug }}"
+          report = json.loads(Path(f"data/reports/{slug}.json").read_text())
+          assert report['quality']['unique_products'] > 0, f"{slug}: no products discovered"
           assert report['outcome'] in {'PARTIAL', 'OK'}
           if report['outcome'] == 'OK':
               assert report['publish_readiness']['ready'] is True
           else:
               assert report['publish_readiness']['ready'] is False
-          print('Linella smoke semantics valid:', report['outcome'], report['publish_readiness'])
+          print(slug, 'generic smoke valid:', report['outcome'], report['publish_readiness'])
           PY
-      - name: Upload generic grocery evidence
+      - name: Upload ${{ matrix.name }} generic evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: linella-generic-report
+          name: generic-${{ matrix.slug }}-report
           path: |
-            data/reports/linella-generic.json
-            data/raw/linella-generic.ndjson
+            data/reports/${{ matrix.slug }}.json
+            data/raw/${{ matrix.slug }}.ndjson
           if-no-files-found: warn
           retention-days: 7
