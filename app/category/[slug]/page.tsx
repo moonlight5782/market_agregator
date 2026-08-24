@@ -16,13 +16,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     : (locale === "ro" ? category.nameRo || category.nameRu : category.nameRu);
 
   return (
-    <main style={{ maxWidth: 1180, margin: "0 auto", padding: "72px 20px 56px", fontFamily: "system-ui" }}>
-      <a href="/" style={{ color: "#111", textDecoration: "none" }}>← {t.home}</a>
+    <main className="page-shell category-page">
+      <Link href="/" style={{ color: "#111", textDecoration: "none" }}>← {t.home}</Link>
       <h1 style={{ fontSize: 40, marginBottom: 8 }}>{categoryName}</h1>
       <p style={{ color: "#666", marginTop: 0 }}>{result.total} {t.itemsInCategory} {result.mode === "demo" ? `· ${t.demoData}` : ""}</p>
       {category.children.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 28 }}>{category.children.map((child: any) => {
         const childName = locale === "ro" ? child.nameRo || child.nameRu : child.nameRu;
-        return <a key={child.id} href={`/category/${child.slug}`} style={{ padding: "10px 14px", background: "#f3f3f3", borderRadius: 999, color: "#111", textDecoration: "none" }}>{childName}</a>;
+        return <Link key={child.id} href={`/category/${child.slug}`} style={{ padding: "10px 14px", background: "#f3f3f3", borderRadius: 999, color: "#111", textDecoration: "none" }}>{childName}</Link>;
       })}</div>}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 18, marginTop: 28 }}>
@@ -31,11 +31,12 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
       {result.totalPages > 1 && (
         <nav aria-label="Pagination" style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", marginTop: 32 }}>
-          {result.page > 1 ? <a href={`/category/${slug}?page=${result.page - 1}`}>{t.previousPage}</a> : <span />}
+          {result.page > 1 ? <Link href={`/category/${slug}?page=${result.page - 1}`}>{t.previousPage}</Link> : <span />}
           <span>{formatMessage(t.pageOf, { page: result.page, pages: result.totalPages })}</span>
-          {result.page < result.totalPages ? <a href={`/category/${slug}?page=${result.page + 1}`}>{t.nextPage}</a> : <span />}
+          {result.page < result.totalPages ? <Link href={`/category/${slug}?page=${result.page + 1}`}>{t.nextPage}</Link> : <span />}
         </nav>
       )}
     </main>
   );
 }
+import Link from "next/link";

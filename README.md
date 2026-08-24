@@ -19,6 +19,19 @@ Data pipeline:
 
 `Store -> Source Discovery -> prioritized connectors -> RawProduct -> Normalizer -> CategoryMapper -> ProductMatcher -> Product/Offer -> Next.js`
 
+## Aggregator MVP scope
+
+The current product is a mobile-first comparison aggregator. Checkout remains on
+the merchant website. The UI supports global sorting by each product's minimum
+current price, brand/store/city/price filters, branch stock, and optional
+distance-based ranking after the user grants browser location access. The last
+approved coordinates are kept locally on the device so users do not need to
+repeat the location flow on every visit.
+
+Marketplace primitives are intentionally limited to forward-compatible domain
+fields such as `CheckoutType`. Cart, payment, delivery and seller-order flows
+must not be presented as available until a later marketplace phase.
+
 Acquisition priority:
 
 1. Public API / JSON / GraphQL hints

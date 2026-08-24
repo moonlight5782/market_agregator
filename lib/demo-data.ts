@@ -6,6 +6,9 @@ export type DemoStore = {
   slug: string;
   city: string;
   openingHours: OpeningHours;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
 };
 
 export type DemoOffer = {
@@ -50,12 +53,12 @@ function weeklySchedule(weekdays: [string, string], saturday: [string, string], 
 }
 
 export const demoStores: DemoStore[] = [
-  { id: "enter", name: "Enter", slug: "enter", city: "Chișinău", openingHours: everyDay("09:00", "20:00") },
-  { id: "darwin", name: "Darwin", slug: "darwin", city: "Chișinău", openingHours: everyDay("09:00", "20:00") },
-  { id: "maximum", name: "Maximum", slug: "maximum", city: "Chișinău", openingHours: weeklySchedule(["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "19:00"]) },
-  { id: "linella", name: "Linella", slug: "linella", city: "Chișinău", openingHours: everyDay("08:00", "22:00") },
-  { id: "metro", name: "METRO", slug: "metro", city: "Chișinău", openingHours: everyDay("08:00", "21:00") },
-  { id: "supraten", name: "Supraten", slug: "supraten", city: "Chișinău", openingHours: weeklySchedule(["08:00", "19:00"], ["08:00", "17:00"], ["10:00", "15:00"]) },
+  { id: "enter", name: "Enter", slug: "enter", city: "Chișinău", address: "bd. Ștefan cel Mare", latitude: 47.0247, longitude: 28.8322, openingHours: everyDay("09:00", "20:00") },
+  { id: "darwin", name: "Darwin", slug: "darwin", city: "Chișinău", address: "str. Arborilor", latitude: 47.0105, longitude: 28.8352, openingHours: everyDay("09:00", "20:00") },
+  { id: "maximum", name: "Maximum", slug: "maximum", city: "Chișinău", address: "str. Ion Creangă", latitude: 47.0397, longitude: 28.8038, openingHours: weeklySchedule(["09:00", "20:00"], ["09:00", "20:00"], ["09:00", "19:00"]) },
+  { id: "linella", name: "Linella", slug: "linella", city: "Chișinău", address: "str. Independenței", latitude: 46.9918, longitude: 28.8592, openingHours: everyDay("08:00", "22:00") },
+  { id: "metro", name: "METRO", slug: "metro", city: "Chișinău", address: "bd. Dacia", latitude: 46.9759, longitude: 28.8868, openingHours: everyDay("08:00", "21:00") },
+  { id: "supraten", name: "Supraten", slug: "supraten", city: "Chișinău", address: "str. Petricani 84", latitude: 47.0587, longitude: 28.8372, openingHours: weeklySchedule(["08:00", "19:00"], ["08:00", "17:00"], ["10:00", "15:00"]) },
 ];
 
 export const demoCategories = [

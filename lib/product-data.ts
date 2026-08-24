@@ -26,10 +26,22 @@ export async function getProductBySlug(slug: string, options: ProductLocationOpt
   if (isDemoMode) {
     const product = demoProducts.find((item) => item.slug === slug);
     if (!product) return null;
-    const offers = selectedCity
+    const cityOffers = selectedCity
       ? product.offers.filter((offer) => offer.store.city.toLocaleLowerCase() === selectedCity.toLocaleLowerCase())
       : product.offers;
-    return { mode: "demo" as const, product: { ...product, offers }, hasGeo: false, radiusKm };
+    const origin = hasGeo ? { latitude: latitude!, longitude: longitude! } : null;
+    const offers = cityOffers
+      .map((offer) => {
+        const distanceKm = origin && validCoordinates(offer.store.latitude, offer.store.longitude)
+          ? haversineKm(origin, { latitude: offer.store.latitude!, longitude: offer.store.longitude! })
+          : null;
+        return { ...offer, distanceKm, nearestLocation: offer.store };
+      })
+      .filter((offer) => !hasGeo || (offer.distanceKm != null && offer.distanceKm <= radiusKm))
+      .sort((a, b) => hasGeo
+        ? (a.distanceKm ?? Number.MAX_VALUE) - (b.distanceKm ?? Number.MAX_VALUE)
+        : a.price - b.price);
+    return { mode: "demo" as const, product: { ...product, offers }, hasGeo, radiusKm };
   }
 
   const { prisma } = await import("./prisma");

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
+
+const STORAGE_KEY = "moldova-commerce-location";
 
 type Props = {
   latitude?: string;
@@ -12,6 +14,7 @@ type Props = {
     locationReady: string;
     locationError: string;
     radius: string;
+    clearLocation: string;
   };
 };
 
@@ -20,7 +23,25 @@ export default function LocationFilter({ latitude = "", longitude = "", radius =
   const [lon, setLon] = useState(longitude);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(latitude && longitude ? "ready" : "idle");
 
-  function locate() {
+  useEffect(() => {
+    if (latitude && longitude) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lat: latitude, lon: longitude }));
+      return;
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved?.lat && saved?.lon) {
+        setLat(String(saved.lat));
+        setLon(String(saved.lon));
+        setStatus("ready");
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [latitude, longitude]);
+
+  function locate(event: MouseEvent<HTMLButtonElement>) {
+    const form = event.currentTarget.closest("form");
     if (!navigator.geolocation) {
       setStatus("error");
       return;
@@ -30,20 +51,35 @@ export default function LocationFilter({ latitude = "", longitude = "", radius =
       (position) => {
         setLat(position.coords.latitude.toFixed(6));
         setLon(position.coords.longitude.toFixed(6));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          lat: position.coords.latitude.toFixed(6),
+          lon: position.coords.longitude.toFixed(6),
+        }));
         setStatus("ready");
+        window.setTimeout(() => form?.requestSubmit(), 0);
       },
       () => setStatus("error"),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
   }
 
+  function clearLocation() {
+    setLat("");
+    setLon("");
+    setStatus("idle");
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <input type="hidden" name="lat" value={lat} />
       <input type="hidden" name="lon" value={lon} />
-      <button type="button" onClick={locate} className="touch-target" style={{ padding: "0 14px", border: "1px solid #ccc", borderRadius: 12, background: "white", fontWeight: 700 }}>
-        {status === "loading" ? labels.locating : status === "ready" ? labels.locationReady : labels.useLocation}
-      </button>
+      <div className="location-actions">
+        <button type="button" onClick={locate} className="touch-target location-button">
+          <span aria-hidden="true">⌖</span> {status === "loading" ? labels.locating : status === "ready" ? labels.locationReady : labels.useLocation}
+        </button>
+        {status === "ready" && <button type="button" onClick={clearLocation} className="location-clear" aria-label={labels.clearLocation}>×</button>}
+      </div>
       {status === "error" && <span style={{ color: "#a33", fontSize: 12 }}>{labels.locationError}</span>}
       <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#555" }}>
         {labels.radius}

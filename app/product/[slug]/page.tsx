@@ -43,8 +43,8 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   });
 
   return (
-    <main className="page-shell" style={{ paddingTop: 72 }}>
-      <a href={backHref(query)} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.search}</a>
+    <main className="page-shell product-page">
+      <Link href={backHref(query)} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.search}</Link>
       <div className="product-hero">
         <div className="product-hero__image">
           {imageUrl ? <img src={imageUrl} alt={product.title} style={{ objectFit: result.mode === "demo" ? "cover" : "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
@@ -53,7 +53,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           <div style={{ color: "#777", fontSize: 14 }}>{categoryName ?? t.noCategory}{brandName ? ` · ${brandName}` : ""}{city ? ` · ${city}` : ""}</div>
           <h1 className="product-title">{product.title}</h1>
           {best ? (
-            <div style={{ border: "1px solid #e5e5e5", borderRadius: 18, padding: 20, marginBottom: 22 }}>
+            <div className="best-price-card">
               <div style={{ color: "#666", fontSize: 14 }}>{t.bestPrice}{city ? ` · ${city}` : ""}</div>
               <div style={{ fontSize: "clamp(28px,8vw,34px)", fontWeight: 900, marginTop: 3 }}>{t.from} {Number(best.price).toLocaleString(numberLocale(locale))} {best.currency}</div>
               <div style={{ color: "#666", marginTop: 7 }}>{offers.length} {t.offersShort} · {availableOffers.length} {t.confirmedStock}</div>
@@ -79,6 +79,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       <section style={{ marginTop: 44 }}>
         <h2 style={{ fontSize: 28, marginBottom: 6 }}>{t.storeOffers}</h2>
         <p style={{ marginTop: 0, color: "#666" }}>{t.offerExplanation}</p>
+        <p className="external-checkout-note">{t.externalCheckout}</p>
         <div className="offer-list">
           {offers.map((offer: any) => {
             const branches = offer.availabilities ?? [];
@@ -107,3 +108,4 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
     </main>
   );
 }
+import Link from "next/link";

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import React from "react";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { SiteHeader } from "../components/SiteHeader";
 import { getLocale } from "../lib/get-locale";
-import { getDictionary } from "../lib/i18n";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,14 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
-  const t = getDictionary(locale);
-
   return (
     <html lang={locale}>
       <body>
-        <div style={{ position: "fixed", top: 14, right: 14, zIndex: 1000 }}>
-          <LanguageSwitcher locale={locale} label={t.language} />
-        </div>
+        <SiteHeader />
         {children}
       </body>
     </html>

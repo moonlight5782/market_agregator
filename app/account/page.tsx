@@ -25,7 +25,7 @@ export default async function AccountPage() {
   ]);
 
   return (
-    <main className="page-shell" style={{ paddingTop: 72 }}>
+    <main className="page-shell account-page">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <div><a href="/" style={{ color: "#111", textDecoration: "none" }}>← {t.home}</a><h1 style={{ marginBottom: 4 }}>{t.account}</h1><div style={{ color: "#666" }}>{session.user.name || session.user.email}</div></div>
         <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><button className="touch-target" style={{ padding: "12px 18px", border: "1px solid #ccc", borderRadius: 12, background: "white" }}>{t.signOut}</button></form>
