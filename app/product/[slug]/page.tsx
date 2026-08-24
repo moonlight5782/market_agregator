@@ -114,7 +114,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
                   {!city && !result.hasGeo && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{formatMessage(t.availableInBranches, { available: branchAvailableCount, total: branches.length })}</div>}
                 </div>
                 <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString(numberLocale(locale))} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString(numberLocale(locale))} {offer.currency}</div></div>
-                <div style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333" }}>{stockLabel(status, quantity, locale)}</div>
+                <div className="stock-stack" style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333" }}><span>{stockLabel(status, quantity, locale)}</span>{quantity == null && <small className="availability-note">{locale === "ro" ? "verificați în magazin" : "уточняйте в магазине"}</small>}</div>
                 <a href={offer.externalUrl} target="_blank" rel="noreferrer" className="offer-row__cta touch-target">{t.toStore}</a>
               </div>
             );
