@@ -28,6 +28,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <div><p className="eyebrow">{t.catalog}</p><h1>{q || t.searchAllProducts}</h1><p>{result.total} {t.results}{city ? ` · ${city}` : ""}{result.mode === "demo" ? ` · ${t.demoData}` : ""}</p></div>
       </div>
 
+      <nav className="store-filter-strip" aria-label={t.store}>
+        <Link href={`/search?${new URLSearchParams({ ...(q ? { q } : {}), ...(sort ? { sort } : {}) }).toString()}`} className={!store ? "is-active" : ""}>{t.allStores}</Link>
+        {stores.map((item) => {
+          const next = new URLSearchParams();
+          if (q) next.set("q", q);
+          if (sort) next.set("sort", sort);
+          next.set("store", item.slug);
+          return <Link key={item.slug} href={`/search?${next.toString()}`} className={store === item.slug ? "is-active" : ""}>{item.name}</Link>;
+        })}
+      </nav>
+
       <form className="catalog-controls">
         <div className="catalog-search">
           <label className="search-input-wrap"><span aria-hidden="true">⌕</span><input name="q" defaultValue={q} placeholder={t.searchPlaceholder} /></label>

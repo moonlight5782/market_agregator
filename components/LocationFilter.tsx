@@ -71,7 +71,7 @@ export default function LocationFilter({ latitude = "", longitude = "", radius =
   }
 
   return (
-    <div style={{ display: "grid", gap: 8 }}>
+    <div className="location-filter">
       <input type="hidden" name="lat" value={lat} />
       <input type="hidden" name="lon" value={lon} />
       <div className="location-actions">
@@ -80,10 +80,10 @@ export default function LocationFilter({ latitude = "", longitude = "", radius =
         </button>
         {status === "ready" && <button type="button" onClick={clearLocation} className="location-clear" aria-label={labels.clearLocation}>×</button>}
       </div>
-      {status === "error" && <span style={{ color: "#a33", fontSize: 12 }}>{labels.locationError}</span>}
-      <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#555" }}>
+      {status === "error" && <span className="location-error">{labels.locationError}</span>}
+      <label className="radius-control">
         {labels.radius}
-        <select name="radius" defaultValue={radius} style={{ padding: 7, border: "1px solid #ccc", borderRadius: 9, background: "white" }}>
+        <select name="radius" defaultValue={radius}>
           {[2, 5, 10, 25, 50, 100].map((value) => <option key={value} value={value}>{value} km</option>)}
         </select>
       </label>

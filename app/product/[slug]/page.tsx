@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import StoreHours from "../../../components/StoreHours";
 import { getLocale } from "../../../lib/get-locale";
@@ -9,6 +10,21 @@ function isAvailable(status: string) {
 }
 
 type ProductQuery = { city?: string; lat?: string; lon?: string; radius?: string };
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const result = await getProductBySlug(slug);
+  if (!result) return { title: "BUN PREȚ" };
+  const product: any = result.product;
+  const best = [...(product.offers ?? [])].sort((a: any, b: any) => Number(a.price) - Number(b.price))[0];
+  const imageUrl = product.imageUrl || best?.imageUrl;
+  const description = best ? `Сравните цены от ${Number(best.price).toLocaleString("ru-RU")} ${best.currency} в магазинах Молдовы.` : "Сравните цены в магазинах Молдовы.";
+  return {
+    title: `${product.title} — цены | BUN PREȚ`, description,
+    openGraph: { title: product.title, description, images: imageUrl ? [{ url: imageUrl }] : [] },
+    twitter: { card: imageUrl ? "summary_large_image" : "summary", title: product.title, description, images: imageUrl ? [imageUrl] : [] },
+  };
+}
 
 function backHref(query: ProductQuery) {
   const params = new URLSearchParams();

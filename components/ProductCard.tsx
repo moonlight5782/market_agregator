@@ -1,10 +1,7 @@
+import Link from "next/link";
 import { demoCategoryName, getDictionary, numberLocale, type Locale } from "../lib/i18n";
 
-type ProductCardProps = {
-  product: any;
-  mode: "demo" | "db";
-  locale: Locale;
-};
+type ProductCardProps = { product: any; mode: "demo" | "db"; locale: Locale };
 
 export function ProductCard({ product, mode, locale }: ProductCardProps) {
   const t = getDictionary(locale);
@@ -22,25 +19,29 @@ export function ProductCard({ product, mode, locale }: ProductCardProps) {
 
   return (
     <article className="product-card">
-      <Link href={`/product/${product.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
+      <Link href={`/product/${product.slug}`} className="product-card__link">
         <div className="product-card__image">
-          {discount > 0 && <span className="discount-badge">−{discount}%</span>}
-          {imageUrl ? <img src={imageUrl} alt={product.title} style={{ width: "100%", height: "100%", objectFit: mode === "demo" ? "cover" : "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
+          <div className="product-card__badges">
+            {discount > 0 && <span className="discount-badge">−{discount}%</span>}
+            {inStock > 0 && <span className="stock-badge">● {t.inStock}</span>}
+          </div>
+          {imageUrl ? <img src={imageUrl} alt={product.title} /> : <span className="no-image">{t.noImage}</span>}
         </div>
         <div className="product-card__body">
-          <div style={{ fontSize: 13, color: "#777" }}>{category ?? t.noCategory}{brand ? ` • ${brand}` : ""}</div>
+          <div className="product-card__kicker">{brand || category || t.noCategory}</div>
           <h3 className="product-card__title">{product.title}</h3>
-          {best ? <>
-            <div className="product-card__price"><small>{t.from}</small> {Number(best.price).toLocaleString(numberLocale(locale))} <small>{best.currency}</small></div>
-            {best.oldPrice && Number(best.oldPrice) > Number(best.price) && <div className="old-price">{Number(best.oldPrice).toLocaleString(numberLocale(locale))} {best.currency}</div>}
-            <div className="product-card__meta"><b>{best.store?.name}</b><span>{offers.length} {t.offersShort} · {inStock} {t.inStock}</span></div>
-          </> : <div style={{ color: "#777" }}>{t.noOffers}</div>}
+          {best ? (
+            <>
+              <div className="product-card__price-row">
+                <div className="product-card__price"><small>{t.from}</small>{Number(best.price).toLocaleString(numberLocale(locale))}<em>{best.currency}</em></div>
+                {best.oldPrice && Number(best.oldPrice) > Number(best.price) && <span className="old-price">{Number(best.oldPrice).toLocaleString(numberLocale(locale))}</span>}
+              </div>
+              <div className="product-card__meta"><span>{offers.length} {t.offersShort}</span><b>{best.store?.name}</b></div>
+            </>
+          ) : <div className="no-offers">{t.noOffers}</div>}
         </div>
       </Link>
-      <div className="product-card__footer">
-        <Link href={`/product/${product.slug}`} className="product-card__cta touch-target">{t.compareOffers}</Link>
-      </div>
+      <div className="product-card__footer"><Link href={`/product/${product.slug}`} className="product-card__cta">{t.compareOffers}<span>↗</span></Link></div>
     </article>
   );
 }
-import Link from "next/link";

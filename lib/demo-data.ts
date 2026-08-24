@@ -78,9 +78,9 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Электроника",
     imageUrl: "https://images.unsplash.com/photo-1592286927505-1def25115558?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o1", store: demoStores[0], price: 16999, oldPrice: 17999, currency: "MDL", stockStatus: "IN_STOCK", quantity: 8, externalUrl: "https://enter.online/" },
-      { id: "o2", store: demoStores[1], price: 17499, currency: "MDL", stockStatus: "IN_STOCK", quantity: 5, externalUrl: "https://darwin.md/" },
-      { id: "o3", store: demoStores[2], price: 17999, currency: "MDL", stockStatus: "LOW_STOCK", quantity: 2, externalUrl: "https://maximum.md/" },
+      { id: "o1", store: demoStores[0], price: 16999, oldPrice: 17999, currency: "MDL", stockStatus: "IN_STOCK", quantity: 8, externalUrl: "https://enter.online/search?query=Apple%20iPhone%2016%20128GB" },
+      { id: "o2", store: demoStores[1], price: 17499, currency: "MDL", stockStatus: "IN_STOCK", quantity: 5, externalUrl: "https://darwin.md/ru/search?q=Apple%20iPhone%2016%20128GB" },
+      { id: "o3", store: demoStores[2], price: 17999, currency: "MDL", stockStatus: "LOW_STOCK", quantity: 2, externalUrl: "https://maximum.md/ru/search?query=Apple%20iPhone%2016%20128GB" },
     ],
   },
   {
@@ -92,8 +92,8 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Электроника",
     imageUrl: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o4", store: demoStores[1], price: 14999, oldPrice: 15999, currency: "MDL", stockStatus: "IN_STOCK", quantity: 6, externalUrl: "https://darwin.md/" },
-      { id: "o5", store: demoStores[0], price: 15249, currency: "MDL", stockStatus: "IN_STOCK", quantity: 3, externalUrl: "https://enter.online/" },
+      { id: "o4", store: demoStores[1], price: 14999, oldPrice: 15999, currency: "MDL", stockStatus: "IN_STOCK", quantity: 6, externalUrl: "https://darwin.md/ru/search?q=Samsung%20Galaxy%20S25%20256GB" },
+      { id: "o5", store: demoStores[0], price: 15249, currency: "MDL", stockStatus: "IN_STOCK", quantity: 3, externalUrl: "https://enter.online/search?query=Samsung%20Galaxy%20S25%20256GB" },
     ],
   },
   {
@@ -105,8 +105,8 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Продукты",
     imageUrl: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o6", store: demoStores[3], price: 28.49, oldPrice: 31.99, currency: "MDL", stockStatus: "IN_STOCK", quantity: 30, externalUrl: "https://linella.md/" },
-      { id: "o7", store: demoStores[4], price: 29.95, currency: "MDL", stockStatus: "IN_STOCK", quantity: 54, externalUrl: "https://metro.zakaz.md/" },
+      { id: "o6", store: demoStores[3], price: 28.49, oldPrice: 31.99, currency: "MDL", stockStatus: "IN_STOCK", quantity: 30, externalUrl: "https://linella.md/ro/catalog" },
+      { id: "o7", store: demoStores[4], price: 29.95, currency: "MDL", stockStatus: "IN_STOCK", quantity: 54, externalUrl: "https://metro.zakaz.md/ru/search/?q=Coca-Cola%202L" },
     ],
   },
   {
@@ -118,8 +118,8 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Продукты",
     imageUrl: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o8", store: demoStores[4], price: 279.9, oldPrice: 319.9, currency: "MDL", stockStatus: "IN_STOCK", quantity: 14, externalUrl: "https://metro.zakaz.md/" },
-      { id: "o9", store: demoStores[3], price: 289.99, currency: "MDL", stockStatus: "IN_STOCK", quantity: 9, externalUrl: "https://linella.md/" },
+      { id: "o8", store: demoStores[4], price: 279.9, oldPrice: 319.9, currency: "MDL", stockStatus: "IN_STOCK", quantity: 14, externalUrl: "https://metro.zakaz.md/ru/search/?q=Lavazza%20Crema%20e%20Gusto%201kg" },
+      { id: "o9", store: demoStores[3], price: 289.99, currency: "MDL", stockStatus: "IN_STOCK", quantity: 9, externalUrl: "https://linella.md/ro/catalog" },
     ],
   },
   {
@@ -131,7 +131,7 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Строительство",
     imageUrl: "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o10", store: demoStores[5], price: 1499, oldPrice: 1699, currency: "MDL", stockStatus: "IN_STOCK", quantity: 4, externalUrl: "https://supraten.md/" },
+      { id: "o10", store: demoStores[5], price: 1499, oldPrice: 1699, currency: "MDL", stockStatus: "IN_STOCK", quantity: 4, externalUrl: "https://supraten.md/search?query=Bosch%20GSB%2013%20RE" },
     ],
   },
   {
@@ -143,8 +143,8 @@ export const demoProducts: DemoProduct[] = [
     categoryName: "Дом и быт",
     imageUrl: "https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=900&q=80",
     offers: [
-      { id: "o11", store: demoStores[2], price: 2499, currency: "MDL", stockStatus: "IN_STOCK", quantity: 7, externalUrl: "https://maximum.md/" },
-      { id: "o12", store: demoStores[0], price: 2599, currency: "MDL", stockStatus: "UNKNOWN", externalUrl: "https://enter.online/" },
+      { id: "o11", store: demoStores[2], price: 2499, currency: "MDL", stockStatus: "IN_STOCK", quantity: 7, externalUrl: "https://maximum.md/ru/search?query=Philips%20PowerPro%20Compact" },
+      { id: "o12", store: demoStores[0], price: 2599, currency: "MDL", stockStatus: "UNKNOWN", externalUrl: "https://enter.online/search?query=Philips%20PowerPro%20Compact" },
     ],
   },
 ];
