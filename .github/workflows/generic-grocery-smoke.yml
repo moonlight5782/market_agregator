@@ -14,7 +14,7 @@ on:
 jobs:
   linella-generic:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,27 +24,27 @@ jobs:
         run: |
           pip install -r services/scraper/requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Crawl Linella using only generic unknown-store path
+      - name: Crawl full Linella catalog using only generic unknown-store path
         run: |
-          timeout 360s python -m services.scraper.run \
+          timeout 2400s python -m services.scraper.run \
             --url https://linella.md/ro \
             --slug linella-generic \
-            --limit 25 \
+            --limit 0 \
             --browser-threshold 0.8 \
             --accept-partial
-      - name: Validate smoke semantics
+      - name: Validate full-crawl semantics
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           report = json.loads(Path('data/reports/linella-generic.json').read_text())
-          assert report['quality']['unique_products'] > 0
+          assert report['quality']['unique_products'] > 25, report['quality']
           assert report['outcome'] in {'PARTIAL', 'OK'}
           if report['outcome'] == 'OK':
               assert report['publish_readiness']['ready'] is True
           else:
               assert report['publish_readiness']['ready'] is False
-          print('Linella smoke semantics valid:', report['outcome'], report['publish_readiness'])
+          print('Linella full crawl:', report['quality']['unique_products'], report['outcome'], report['publish_readiness'])
           PY
       - name: Upload generic grocery evidence
         if: always()
