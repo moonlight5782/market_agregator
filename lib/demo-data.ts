@@ -15,6 +15,17 @@ export type DemoStore = {
 
 const officialStoreUrls: Record<string, string> = {
   "cip-market": "https://www.cipmarket.md/ru/",
+  "metro": "https://www.metro.md/",
+  "linella": "https://linella.md/ru/home",
+  "kaufland": "https://www.kaufland.md/ru/",
+  "nr1": "https://nr1.md/ru/",
+  "alcomarket": "https://alcomarket.md/ru",
+  "local-discounter": "https://mylocal.md/ru/",
+  "rogob": "https://rogob.md/",
+  "jysk": "https://jysk.md/",
+  "maximum": "https://maximum.md/",
+  "ocean-fish": "https://oceanfish.md/",
+  "drinkstock": "https://drinkstock.md/",
 };
 
 export function getOfficialStoreUrl(store: Pick<DemoStore, "slug" | "websiteUrl">) {
@@ -46,7 +57,33 @@ export type DemoProduct = {
   categoryName: string;
   imageUrl: string;
   offers: DemoOffer[];
+  aliases?: string[];
 };
+
+function comparisonKey(product: DemoProduct) {
+  const normalizedTitle = product.title
+    .toLocaleLowerCase("ru")
+    .normalize("NFKC")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, " ")
+    .trim();
+  return `${product.categorySlug}:${normalizedTitle}`;
+}
+
+export function consolidateDemoProducts(products: DemoProduct[]) {
+  const groups = new Map<string, DemoProduct>();
+  for (const product of products) {
+    const key = comparisonKey(product);
+    const current = groups.get(key);
+    if (!current) {
+      groups.set(key, { ...product, offers: [...product.offers], aliases: [...(product.aliases ?? [])] });
+      continue;
+    }
+    const knownOfferIds = new Set(current.offers.map((offer) => offer.id));
+    current.offers.push(...product.offers.filter((offer) => !knownOfferIds.has(offer.id)));
+    current.aliases = [...new Set([...(current.aliases ?? []), product.slug, ...(product.aliases ?? [])])];
+  }
+  return [...groups.values()];
+}
 
 function everyDay(open: string, close: string): OpeningHours {
   return {
@@ -83,6 +120,13 @@ export const demoCategories = [
   { slug: "construction", nameRu: "Строительство" },
   { slug: "beauty", nameRu: "Красота и уход" },
   { slug: "pets", nameRu: "Зоотовары" },
+  { slug: "baby", nameRu: "Детские товары" },
+  { slug: "produce", nameRu: "Овощи и фрукты" },
+  { slug: "meat-fish", nameRu: "Мясо и рыба" },
+  { slug: "dairy", nameRu: "Молочные продукты" },
+  { slug: "drinks", nameRu: "Напитки" },
+  { slug: "alcohol", nameRu: "Алкоголь" },
+  { slug: "sweets", nameRu: "Сладости" },
 ];
 
 export const demoProducts: DemoProduct[] = [
@@ -166,7 +210,7 @@ export const demoProducts: DemoProduct[] = [
   },
 ];
 
-demoProducts.push(...(crocoSnapshot.products as unknown as DemoProduct[]));
+demoProducts.push(...consolidateDemoProducts(crocoSnapshot.products as unknown as DemoProduct[]));
 
 export const allDemoStores = [...new Map(
   demoProducts.flatMap((product) => product.offers.map((offer) => offer.store)).map((store) => [store.slug, store]),

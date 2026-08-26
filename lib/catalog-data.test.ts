@@ -44,4 +44,20 @@ test("product pages resolve URL-encoded Cyrillic slugs", async () => {
 test("CIP Market brochure offers resolve to the official store website", async () => {
   const { getOfficialStoreUrl } = await import("./demo-data");
   assert.equal(getOfficialStoreUrl({ slug: "cip-market" }), "https://www.cipmarket.md/ru/");
+  assert.equal(getOfficialStoreUrl({ slug: "metro" }), "https://www.metro.md/");
+  assert.equal(getOfficialStoreUrl({ slug: "jysk" }), "https://jysk.md/");
+  assert.equal(getOfficialStoreUrl({ slug: "jardi" }), null);
+});
+
+test("exact brochure matches become one comparison with backward-compatible links", async () => {
+  const [{ demoProducts }, { getProductBySlug }] = await Promise.all([
+    import("./demo-data"),
+    import("./product-data"),
+  ]);
+  const comparison = demoProducts.find((product) => product.title.toLocaleLowerCase("ru").startsWith("bucovina минеральная вода"));
+  assert.ok(comparison);
+  assert.equal(new Set(comparison.offers.map((offer) => offer.store.slug)).size, 2);
+  assert.ok(comparison.aliases?.length);
+  const aliasResult = await getProductBySlug(comparison.aliases![0]);
+  assert.equal(aliasResult?.product.id, comparison.id);
 });

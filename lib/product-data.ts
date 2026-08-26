@@ -33,7 +33,7 @@ export async function getProductBySlug(slug: string, options: ProductLocationOpt
   const radiusKm = parseRadiusKm(params.radius, 10);
 
   if (isDemoMode) {
-    const product = demoProducts.find((item) => item.slug === routeSlug);
+    const product = demoProducts.find((item) => item.slug === routeSlug || item.aliases?.includes(routeSlug));
     if (!product) return null;
     const cityOffers = selectedCity
       ? product.offers.filter((offer) => offer.store.city.toLocaleLowerCase() === selectedCity.toLocaleLowerCase())

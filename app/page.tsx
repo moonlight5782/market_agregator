@@ -9,6 +9,7 @@ const categoryIcons: Record<string, string> = {
   electronics: "⌁", groceries: "◒", food: "◒", home: "⌂", construction: "◇",
   "home-appliances": "▣", fashion: "♢", beauty: "✦", kids: "☺", sport: "○",
   auto: "◉", pets: "♧", garden: "❋", office: "□", "books-hobby": "▤",
+  baby: "☺", produce: "◒", "meat-fish": "◇", dairy: "◉", drinks: "◌", alcohol: "♢", sweets: "✦",
 };
 
 export default async function Home() {

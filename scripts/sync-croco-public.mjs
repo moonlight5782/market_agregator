@@ -7,6 +7,17 @@ const OUTPUT_URL = new URL("../data/croco-products.json", import.meta.url);
 const USER_AGENT = "BunPretCatalogIndexer/1.0 (+https://market-agregator-md.moonlight-5782.chatgpt.site)";
 const OFFICIAL_STORE_URLS = {
   "cip-market": "https://www.cipmarket.md/ru/",
+  "metro": "https://www.metro.md/",
+  "linella": "https://linella.md/ru/home",
+  "kaufland": "https://www.kaufland.md/ru/",
+  "nr1": "https://nr1.md/ru/",
+  "alcomarket": "https://alcomarket.md/ru",
+  "local-discounter": "https://mylocal.md/ru/",
+  "rogob": "https://rogob.md/",
+  "jysk": "https://jysk.md/",
+  "maximum": "https://maximum.md/",
+  "ocean-fish": "https://oceanfish.md/",
+  "drinkstock": "https://drinkstock.md/",
 };
 
 function absoluteUrl(value) {
@@ -49,8 +60,15 @@ export function classifyProduct(title) {
   if (/телефон|смартфон|ноутбук|телевизор|наушник|заряд|пылесос|холодильник|стиральн|iphone|samsung galaxy/.test(value)) return ["electronics", "Электроника"];
   if (/дрель|шурупов|цемент|штукатур|краск|шпакл|инструмент|ламинат|плитк|клей строитель/.test(value)) return ["construction", "Строительство"];
   if (/шампун|крем |маска|помад|дезодорант|парфюм|зубн|космет/.test(value)) return ["beauty", "Красота и уход"];
-  if (/порошок|гель для стир|чистк|мойк|салфет|туалетн|освежител|губк/.test(value)) return ["home", "Дом и быт"];
+  if (/порошок|гель для стир|чистк|мойк|салфет|туалетн|освежител|губк|стол|стул|кресл|шкаф|комод|кроват|матрас|подуш|одеял|полотенц|мебел|зеркал|штор|ковр|полк|корзин/.test(value)) return ["home", "Дом и быт"];
   if (/корм|лакомств.*кош|лакомств.*собак|наполнитель/.test(value)) return ["pets", "Зоотовары"];
+  if (/подгуз|детск.*питан|пюре дет|молочн.*смесь|pampers|huggies/.test(value)) return ["baby", "Детские товары"];
+  if (/помидор|томат свеж|огурц|яблок|банан|апельсин|овощ|фрукт|картоф|морков/.test(value)) return ["produce", "Овощи и фрукты"];
+  if (/пиво|вино|водк|виски|коньяк|дивин|бренди|ром\b|джин|ликер|аперитив|просекко|игрист/.test(value)) return ["alcohol", "Алкоголь"];
+  if (/вода|напиток|сок|нектар|кофе|чай|лимонад|квас|энергетик/.test(value)) return ["drinks", "Напитки"];
+  if (/мяс|колбас|сосиск|ветчин|рыб|куриц|свинин|говядин|филе|фарш|пельмен/.test(value)) return ["meat-fish", "Мясо и рыба"];
+  if (/молок|сыр|творог|сметан|йогурт|кефир|масло слив|сливк|яйц/.test(value)) return ["dairy", "Молочные продукты"];
+  if (/шоколад|конфет|печень|торт|морожен|вафл|батончик|мармелад|круассан/.test(value)) return ["sweets", "Сладости"];
   return ["groceries", "Продукты"];
 }
 
@@ -121,6 +139,7 @@ export async function buildSnapshot({ maxCatalogs = 40, maxProducts = 1800, maxP
     try {
       const html = await fetchText(url);
       const metadata = jsonLdFromHtml(html);
+      if (metadata?.startDate && metadata.startDate > today) continue;
       if (metadata?.endDate && metadata.endDate < today) continue;
       const items = extractJsonArray(html, "catalogProducts");
       const normalized = items.map((item) => normalizeCatalogProduct(item, metadata, url)).filter(Boolean).slice(0, maxProductsPerCatalog);
