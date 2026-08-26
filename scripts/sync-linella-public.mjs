@@ -41,7 +41,9 @@ export function extractLinellaProducts(html) {
     if (!sku || !title || !price || !productLink?.[1]) continue;
     const oldPrice = numberFrom(chunk.match(/price-products-catalog-content__old">\s*([\d.,]+)/)?.[1]);
     const imagePath = chunk.match(/class="head-products-catalog-content__image">[\s\S]*?<img src="([^"]+)"/)?.[1];
-    const [categorySlug, categoryName] = classifyProduct(title);
+    const productUrl = absoluteUrl(productLink[1]);
+    const sourceCategory = new URL(productUrl).pathname.split("/")[3] || "";
+    const [categorySlug, categoryName] = classifyProduct(title, sourceCategory);
     products.set(sku, {
       id: `linella-${sku}`,
       slug: `linella-${sku}`,
@@ -65,7 +67,7 @@ export function extractLinellaProducts(html) {
         oldPrice: oldPrice && oldPrice > price ? oldPrice : undefined,
         currency: "MDL",
         stockStatus: "IN_STOCK",
-        externalUrl: absoluteUrl(productLink[1]),
+        externalUrl: productUrl,
       }],
     });
   }

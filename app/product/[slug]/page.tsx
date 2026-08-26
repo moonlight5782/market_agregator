@@ -72,7 +72,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       <Link href={backHref(query)} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.search}</Link>
       <div className="product-hero">
         <div className="product-hero__image">
-          {imageUrl ? <img src={imageUrl} alt={product.title} style={{ objectFit: "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
+          {imageUrl ? <img src={imageUrl} alt={product.title} loading="eager" decoding="async" /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
         </div>
         <section>
           <div style={{ color: "#777", fontSize: 14 }}>{categoryName ?? t.noCategory}{brandName ? ` · ${brandName}` : ""}{city ? ` · ${city}` : ""}</div>

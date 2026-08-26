@@ -25,7 +25,7 @@ export function ProductCard({ product, mode, locale }: ProductCardProps) {
             {discount > 0 && <span className="discount-badge">−{discount}%</span>}
             {inStock > 0 && <span className="stock-badge">● {t.inStock}</span>}
           </div>
-          {imageUrl ? <img src={imageUrl} alt={product.title} /> : <span className="no-image">{t.noImage}</span>}
+          {imageUrl ? <img src={imageUrl} alt={product.title} loading="lazy" decoding="async" /> : <span className="no-image">{t.noImage}</span>}
         </div>
         <div className="product-card__body">
           <div className="product-card__kicker">{brand || category || t.noCategory}</div>

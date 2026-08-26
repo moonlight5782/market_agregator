@@ -71,7 +71,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           const productUrl = `/product/${product.slug}${productQuery.size ? `?${productQuery.toString()}` : ""}`;
           return (
             <article key={product.id} className="search-result">
-              <Link href={productUrl} className="search-result__image">{imageUrl ? <img src={imageUrl} alt={product.title} /> : <span>{t.noImage}</span>}</Link>
+              <Link href={productUrl} className="search-result__image">{imageUrl ? <img src={imageUrl} alt={product.title} loading="lazy" decoding="async" /> : <span>{t.noImage}</span>}</Link>
               <div className="search-result__content">
                 <div className="product-kicker">{category ?? t.noCategory}{brandName ? ` · ${brandName}` : ""}</div>
                 <h2><Link href={productUrl}>{product.title}</Link></h2>

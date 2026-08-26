@@ -55,26 +55,51 @@ function stripMarkup(value) {
   return String(value || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-export function classifyProduct(title) {
-  const value = title.toLocaleLowerCase("ru");
-  if (/телефон|смартфон|ноутбук|телевизор|наушник|заряд|пылесос|холодильник|стиральн|iphone|samsung galaxy/.test(value)) return ["electronics", "Электроника"];
-  if (/дрель|шурупов|цемент|штукатур|краск|шпакл|инструмент|ламинат|плитк|клей строитель/.test(value)) return ["construction", "Строительство"];
-  if (/книг|буквар|сказан|умные карточки|энциклопед|роман\b|эксмо|росмэн|махаон/.test(value)) return ["books-hobby", "Книги и хобби"];
-  if (/игруш|кукл|конструктор|набор.*песк|водян.*пистолет|машинка дет|настольн.*игр/.test(value)) return ["kids", "Игрушки"];
-  if (/для плаван|гантел|фитнес|спортив|мяч\b|ракетк|коврик.*йог/.test(value)) return ["sport", "Спорт"];
+export function classifyProduct(title, sourceCategory = "") {
+  const value = title.toLocaleLowerCase("ru").replaceAll("ё", "е");
+  const source = sourceCategory.toLocaleLowerCase("ru").replaceAll("ё", "е");
+  const sourceRules = [
+    ["beauty", "Красота и уход", /космет|gigien|gigienyi|макияж|uhod_|parfyum|dezodor|sredstva_dlya_volos|uhod_za_telom|solnechnaya_seriya/],
+    ["electronics", "Электроника", /byitovyie_priboryi|elektronik|telefonyi|kompyuter|audio|video/],
+    ["construction", "Строительство", /stroitel|instrument|remont|kraski|shtukatur|cement/],
+    ["kids", "Игрушки", /igrush|detskie_igryi|aksessuaryi_dlya_prazdnikov/],
+    ["baby", "Детские товары", /detskoe_pitanie|podguz|tovaryi_dlya_malyishey/],
+    ["sport", "Спорт", /sport|plavani|turizm|kemping/],
+    ["auto", "Автотовары", /avtotovar|avtomobil/],
+    ["garden", "Сад и огород", /sad_|ogorod|rasteniya|udobren/],
+    ["fashion", "Одежда и обувь", /odejda|obuv|aksessuaryi_odejdyi/],
+    ["books-hobby", "Книги и хобби", /knigi|kantselyar|tvorchestv|literatura|roman|detektiv|vyimyisel|filosofiya|vospominaniya|aksessuaryi_dlya_risovaniya/],
+    ["pets", "Зоотовары", /zootovar|korm_dlya/],
+    ["alcohol", "Алкоголь", /(^|_)(vino|pivo|vodka|viski|konyak|divin|igristoe_vino)(_|$)/],
+    ["drinks", "Напитки", /napitki|voda_|soki|kofe|chay/],
+    ["meat-fish", "Мясо и рыба", /myaso|ryiba|kolbasa|kolbasyi|sosiski|parizer|vetchina|moreproduktyi/],
+    ["dairy", "Молочные продукты", /molochnyie|syir|tvorog|smetana|yogurt|yaytsa/],
+    ["sweets", "Сладости", /konditerskie|shokolad|konfetyi|morojenoe|pechene|tortyi|deserturi|desertyi|vafli|biscuiti/],
+    ["produce", "Овощи и фрукты", /(^|_)(ovoschi|fruktyi)(_|$)|svejie_(ovoschi|fruktyi)|fruktyi_i_yagodyi|salatyi_i_zelen/],
+    ["home", "Дом и быт", /hranenie|byitovaya_himiya|posuda|tekstil|tovaryi_dlya_doma|dekor|sredstva_dlya_stirki|moyuschie_i_chistyaschie|hozyaystvennyiy_inventar|bumajnaya_produktsiya|vse_dlya_uborki|vlajnyie_salfetki/],
+    ["groceries", "Продукты", /solenya|konservyi|spetsii|uksus_i_maslo|sousyi_i_zapravki|pitstsa|zamoroj|fast_food|fel_principal|platsindyi|salate|gribyi|maslo_i_margarin|mamalyiga/],
+  ];
+  for (const [slug, name, pattern] of sourceRules) {
+    if (pattern.test(source)) return [slug, name];
+  }
+  if (/телефон|смартфон|ноутбук|телевизор|наушник|зарядн|пылесос|холодильник|стиральн(?:ая|ую|ые)?\s+машин|iphone|samsung galaxy|увлажнител|ламинатор|батарейк/.test(value)) return ["electronics", "Электроника"];
+  if (/дрель|шурупов|цемент|штукатур|шпакл|строительн.*инструмент|ламинат(?:\s|$)|клей\s+строитель|краск.*(?:стен|фасад|интерьер|эмаль)|(?:керамическ|настенн|напольн|тротуарн).*плитк/.test(value)) return ["construction", "Строительство"];
+  if (/книг|буквар|сказан|умные карточки|энциклопед|роман\b|эксмо|росмэн|махаон|тетрад|дневник ученика|альбом для рисован|канцеляр|шариковая ручка|гелевая ручка|карандаш|фломастер|бумаг.*(?:а4|копирован|фото)|обложк.*тетрад/.test(value)) return ["books-hobby", "Книги и хобби"];
+  if (/игруш|кукл|конструктор|набор.*песк|набор-ведер|водян.*пистолет|машинка дет|настольн.*игр|надувн.*(?:круг|жилет|бассейн)|бассейн.*надувн|пляжн.*мяч/.test(value)) return ["kids", "Игрушки"];
+  if (/для плаван|гантел|фитнес|спортив|мяч\b|ракетк|коврик.*йог|карты игральн/.test(value)) return ["sport", "Спорт"];
   if (/автомоб|масло мотор|омыват|автошампун|щетк.*стекл/.test(value)) return ["auto", "Автотовары"];
-  if (/растени|горшок|кашпо|садов|семена|удобрени|шланг/.test(value)) return ["garden", "Сад и огород"];
-  if (/одежд|обув|тапоч|футболк|носк|колгот|шлепан/.test(value)) return ["fashion", "Одежда и обувь"];
-  if (/шампун|крем |маска|помад|дезодорант|парфюм|зубн|космет/.test(value)) return ["beauty", "Красота и уход"];
-  if (/порошок|гель для стир|чистк|мойк|салфет|туалетн|освежител|губк|стол|стул|кресл|шкаф|комод|кроват|матрас|подуш|одеял|полотенц|мебел|зеркал|штор|ковр|полк|корзин/.test(value)) return ["home", "Дом и быт"];
+  if (/растени|горшок|кашпо|садов|семена\s+(?:цвет|овощ|газон|для посад)|удобрени|шланг|орхиде|роза\s+в\s+(?:горш|стакан)/.test(value)) return ["garden", "Сад и огород"];
+  if (!/вешалк/.test(value) && /одежд|обув|тапоч|футболк|носк|колгот|шлепан|рюкзак|сумк/.test(value)) return ["fashion", "Одежда и обувь"];
+  if (/шампун|крем(?:\s|$)|маска\s+(?:для|лица|волос)|помад|дезодорант|парфюм|зубн|космет|краск.*волос|гель\s+для\s+душ|для\s+брить|после\s+брить|кассет.*брить/.test(value)) return ["beauty", "Красота и уход"];
+  if (/порошок|гель\s+для\s+стир|(?:капсул|средств|кондиционер).*(?:стир|бель)|чистк|мойк|моющ|салфет|туалетн(?:ая|ую|ой)?\s+(?:бумаг|вода)|освежител|губк|стол(?:\s|$)|столик|стул|кресл|шкаф|комод|кроват|матрас|подуш|одеял|полотенц|мебел|зеркал|штор|ковр|полк|корзин|емкост.*хранен|упаковк.*подар|удален.*накип|тарелк|чашк|ведро|контейнер|вешалк/.test(value)) return ["home", "Дом и быт"];
   if (/корм|лакомств.*кош|лакомств.*собак|наполнитель/.test(value)) return ["pets", "Зоотовары"];
   if (/подгуз|детск.*питан|пюре дет|молочн.*смесь|pampers|huggies/.test(value)) return ["baby", "Детские товары"];
-  if (/помидор|томат свеж|огурц|яблок|банан|апельсин|овощ|фрукт|картоф|морков/.test(value)) return ["produce", "Овощи и фрукты"];
-  if (/пиво|вино|водк|виски|коньяк|дивин|бренди|ром\b|джин|ликер|аперитив|просекко|игрист/.test(value)) return ["alcohol", "Алкоголь"];
+  if (!/марин|сол|консерв|пюре|напит|йогурт|шоколад|вода|сок|со вкусом/.test(value) && /помидор|томат\s+свеж|огурц|яблок|банан|апельсин|овощ|фрукт|картоф|морков/.test(value)) return ["produce", "Овощи и фрукты"];
+  if (/(?:^|\s)(?:пиво|вино|водка|виски|коньяк|дивин|бренди|ром|джин|ликер|аперитив|просекко)(?:\s|,|$)|игристое\s+вино/.test(value)) return ["alcohol", "Алкоголь"];
   if (/вода|напиток|сок|нектар|кофе|чай|лимонад|квас|энергетик/.test(value)) return ["drinks", "Напитки"];
-  if (/мяс|колбас|сосиск|ветчин|рыб|куриц|свинин|говядин|филе|фарш|пельмен/.test(value)) return ["meat-fish", "Мясо и рыба"];
-  if (/молок|сыр|творог|сметан|йогурт|кефир|масло слив|сливк|яйц/.test(value)) return ["dairy", "Молочные продукты"];
-  if (/шоколад|конфет|печень|торт|морожен|вафл|батончик|мармелад|круассан/.test(value)) return ["sweets", "Сладости"];
+  if (/мяс|колбас|сосиск|ветчин|рыб|куриц|свинин|говядин|филе|фарш|пельмен|балык/.test(value)) return ["meat-fish", "Мясо и рыба"];
+  if (/шоколад|конфет|печенье|торт|морожен|вафл|батончик|мармелад|круассан/.test(value)) return ["sweets", "Сладости"];
+  if (!/майонез/.test(value) && /молок|сыр|творог|сметан|йогурт|кефир|масло слив|сливк|яйц|маскарпон/.test(value)) return ["dairy", "Молочные продукты"];
   return ["groceries", "Продукты"];
 }
 

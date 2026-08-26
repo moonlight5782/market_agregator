@@ -1,104 +1,20 @@
 {
-  "generatedAt": "2026-08-26T11:38:40.283Z",
+  "generatedAt": "2026-08-26T12:25:53.841Z",
   "source": "https://linella.md/ru/home",
   "categoryPages": 9,
   "products": [
     {
-      "id": "linella-246910",
-      "slug": "linella-246910",
-      "title": "Malizia Туалетная вода Miami Pop 50мл",
-      "brand": null,
-      "categorySlug": "home",
-      "categoryName": "Дом и быт",
-      "imageUrl": "https://linella.md/public/products/e5f9c99738828c04f0de321530919a2e.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-246910",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 53.05,
-          "oldPrice": 88.4,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/kosmetika_gigiena_zaschita/malizia_tualetnaya_voda_miami_pop_50ml?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-218028",
-      "slug": "linella-218028",
-      "title": "CRICOVA Вино Игристое Сладкое Розовое LACRIMA DULCE 750мл",
-      "brand": null,
-      "categorySlug": "alcohol",
-      "categoryName": "Алкоголь",
-      "imageUrl": "https://linella.md/public/products/6cc1fd419ae32a6519af75b7e406f943.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-218028",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 62.99,
-          "oldPrice": 89.99,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/igristoe_vino/cricova_vino_igristoe_sladkoe_rozovoe_lacrima_dulce_750ml?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-406333",
-      "slug": "linella-406333",
-      "title": "Увлажнитель воздуха с подсветкой Slim",
-      "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/024acf86fed245618cbcf70f2573e3a7.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-406333",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 168.75,
-          "oldPrice": 225,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/byitovyie_priboryi/uvlajnitel_vozduha_s_podsvetkoy_slim?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-2006746",
-      "slug": "linella-2006746",
-      "title": "VASILINE Вазелин косметический 50мл",
+      "id": "linella-392354",
+      "slug": "linella-392354",
+      "title": "SMART Средство для чистки спортивной обуви 125мл",
       "brand": null,
       "categorySlug": "beauty",
       "categoryName": "Красота и уход",
-      "imageUrl": "https://linella.md/public/products/8cc1bc2d88d2ec856665f44af8ccde32.webp",
+      "imageUrl": "https://linella.md/public/products/9af321d564d38aa28a28f6f5d850451f.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
         {
-          "id": "linella-direct-2006746",
+          "id": "linella-direct-392354",
           "store": {
             "id": "linella-direct-store",
             "name": "Linella",
@@ -107,26 +23,26 @@
             "openingHours": null,
             "websiteUrl": "https://linella.md/ru/home"
           },
-          "price": 37.59,
-          "oldPrice": 42.9,
+          "price": 103.2,
+          "oldPrice": 129,
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/sredstva_dlya_makiyaja/vasiline_vazelin_kosmeticheskiy_50ml?from=OFFERS"
+          "externalUrl": "https://linella.md/ru/catalog/uhod_i_hranenie/smart_sredstvo_dlya_chistki__sportivnoy_obuvi_125ml?from=OFFERS"
         }
       ]
     },
     {
-      "id": "linella-145907",
-      "slug": "linella-145907",
-      "title": "LACRIMĂ DE AUR Масло из виноградных косточек, рафинированное 250мл",
+      "id": "linella-225610",
+      "slug": "linella-225610",
+      "title": "ЧЕРНОГОЛОВКА Газированный напиток Лимонад Буратино 0.5л",
       "brand": null,
-      "categorySlug": "alcohol",
-      "categoryName": "Алкоголь",
-      "imageUrl": "https://linella.md/public/products/18bda3787c117601a3a0f93b8c17b3ca.webp",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
+      "imageUrl": "https://linella.md/public/products/b850aba3c4502d10dca56527cfb5c49c.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
         {
-          "id": "linella-direct-145907",
+          "id": "linella-direct-225610",
           "store": {
             "id": "linella-direct-store",
             "name": "Linella",
@@ -135,138 +51,26 @@
             "openingHours": null,
             "websiteUrl": "https://linella.md/ru/home"
           },
-          "price": 52.59,
-          "oldPrice": 59.99,
+          "price": 19.5,
+          "oldPrice": 25.89,
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/uksus_i_maslo/lacrima_de_aur_maslo_iz_vinogradnyih_kostochek__rafinirovannoe_250ml?from=OFFERS"
+          "externalUrl": "https://linella.md/ru/catalog/napitki_ohlajdayuschie/_chernogolovka_gazirovannyiy_napitok_limonad_buratino_05l?from=OFFERS"
         }
       ]
     },
     {
-      "id": "linella-433862",
-      "slug": "linella-433862",
-      "title": "MTM Емкость для сыпучих продуктов 1л",
-      "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/0d00be42110fa76964b98d4d1ec27a07.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-433862",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 86.05,
-          "oldPrice": 90.6,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/hranenie_produktov/mtm_emkost_dlya_syipuchih_produktov_1l?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-37230",
-      "slug": "linella-37230",
-      "title": "STIP Кукла КСЮША 40см",
-      "brand": null,
-      "categorySlug": "kids",
-      "categoryName": "Игрушки",
-      "imageUrl": "https://linella.md/public/products/f5700b8dadee9f91a69b949248b1c7b3.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-37230",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 142.8,
-          "oldPrice": 168,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/igrushki/stip_kukla_ksyusha_40sm?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-2013040",
-      "slug": "linella-2013040",
-      "title": "SOTI NATURAL Bubble Tea Cup Апельсин 80г",
-      "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
-      "imageUrl": "https://linella.md/public/products/d40ff69394f6df3268c505aa7c4b4069.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-2013040",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 29.99,
-          "oldPrice": 39.99,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/napitki_ohlajdayuschie/soti_natural_bubble_tea_cup_apelsin_80g?from=PROMOTION"
-        }
-      ]
-    },
-    {
-      "id": "linella-347632",
-      "slug": "linella-347632",
-      "title": "BIG BOB Арахис в корочке со вкусом сыра 90г",
-      "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
-      "imageUrl": "https://linella.md/public/products/93a622ad2ec4f84388ed711dd889982e.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-347632",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 12.99,
-          "oldPrice": 16.99,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/arahis_fistashki_i_smes_semechek/big_bob_arahis_v_korochke_so_vkusom_syira_90g?from=OFFERS"
-        }
-      ]
-    },
-    {
-      "id": "linella-413578",
-      "slug": "linella-413578",
-      "title": "Скрипка, Декоративная подарочная упаковка для бутылки вина 35см",
+      "id": "linella-463489",
+      "slug": "linella-463489",
+      "title": "VENITA Веганское мыло для укладки и окрашивания бровей. Прозрачное 25г",
       "brand": null,
       "categorySlug": "groceries",
       "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/a310aaae05fb44a676ac1a31d943ca9f.webp",
+      "imageUrl": "https://linella.md/public/products/7784942426926fd23067dbbcd5aa2c89.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
         {
-          "id": "linella-direct-413578",
+          "id": "linella-direct-463489",
           "store": {
             "id": "linella-direct-store",
             "name": "Linella",
@@ -275,11 +79,207 @@
             "openingHours": null,
             "websiteUrl": "https://linella.md/ru/home"
           },
-          "price": 117.3,
-          "oldPrice": 138,
+          "price": 59.55,
+          "oldPrice": 79.4,
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/dekorativnyie_yaschiki__korobki__paketyi_dlya_oformleniya_podarkov/skripka__dekorativnaya_podarochnaya_upakovka_dlya_butyilki_vina_35sm?from=CATALOGUE"
+          "externalUrl": "https://linella.md/ru/catalog/sredstva_dlya_makiyaja/venita_veganskoe_myilo_dlya_ukladki_i_okrashivaniya_brovey_prozrachnoe_25g?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-468395",
+      "slug": "linella-468395",
+      "title": "MONARCH Кофе 3в1 Мягкий 13,5гр",
+      "brand": null,
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
+      "imageUrl": "https://linella.md/public/products/3c256aad0ab45ba590ead3a4b121d6cf.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-468395",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 5.59,
+          "oldPrice": 8.09,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/kofe/_monarch_kofe_3v1_myagkiy_13_5gr?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-397321",
+      "slug": "linella-397321",
+      "title": "CALGON Таблетки от накипи 3in1, 15шт",
+      "brand": null,
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
+      "imageUrl": "https://linella.md/public/products/96600ba71a764362e5bc4b779cba8ef4.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-397321",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 157.9,
+          "oldPrice": 185.8,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/sredstva_dlya_posudomoechnyih_mashin/calgon_tabletki_ot_nakipi_3in1___15sht?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-11537",
+      "slug": "linella-11537",
+      "title": "ALWAYS Прокладки Ultra Duo 20шт",
+      "brand": null,
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
+      "imageUrl": "https://linella.md/public/products/8e91a625c073f9ca404f4823713d191f.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-11537",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 60.59,
+          "oldPrice": 68.1,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/sredstva_lichnoy_gigienyi/always_prokladki__ultra_duo_20sht?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-13019",
+      "slug": "linella-13019",
+      "title": "MTM Емкости для холодильника, круглые 4шт",
+      "brand": null,
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
+      "imageUrl": "https://linella.md/public/products/56efd8ca79054684b687f79d5e1f94ea.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-13019",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 142.5,
+          "oldPrice": 150,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/hranenie_produktov/mtm_emkosti_dlya_holodilnika__kruglyie_4sht?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-227415",
+      "slug": "linella-227415",
+      "title": "SPRING Подарочный пакет, квадратный/пестрый, 33*26*12",
+      "brand": null,
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
+      "imageUrl": "https://linella.md/public/products/b76db437f058c23549cf77dd80c80649.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-227415",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 20.4,
+          "oldPrice": 24,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/dekorativnyie_yaschiki__korobki__paketyi_dlya_oformleniya_podarkov/spring_podarochnyiy_paket__kvadratnyiy-pestryiy__33_26_12?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-4179",
+      "slug": "linella-4179",
+      "title": "ЖОКЕЙ Кофе молотый 250г",
+      "brand": null,
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
+      "imageUrl": "https://linella.md/public/products/cdf25d2bf3165db048547f9b16cd24c3.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-4179",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 108.59,
+          "oldPrice": 148.99,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/molotyiy_kofe_/jokey_kofe_molotyiy_250g?from=OFFERS"
+        }
+      ]
+    },
+    {
+      "id": "linella-2007166",
+      "slug": "linella-2007166",
+      "title": "ДОШИРАК Бульон куриный 90г",
+      "brand": null,
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
+      "imageUrl": "https://linella.md/public/products/ec16b67e83e00b8cfa2c03a27842c176.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-2007166",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 11.79,
+          "oldPrice": 13.39,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/spetsii/doshirak_bulon_kurinyiy_90g?from=PROMOTION"
         }
       ]
     },
@@ -369,8 +369,8 @@
       "slug": "linella-2013002",
       "title": "GURA CAINARULUI Лимонад Облепиха-Апельсин 0.33л ж/б",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/c12bb213c9478df34858eb6010660b07.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -396,8 +396,8 @@
       "slug": "linella-2012486",
       "title": "CARMEZ Маринованная свиная шея без кости, охлаждённая, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/47ffd5fda3233f38e61fce72cc76636c.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -424,8 +424,8 @@
       "slug": "linella-2012485",
       "title": "CARMEZ Маринованная свиная корейка на кости, охлаждённая, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/bd33e93bb5cc353e6280f581ce33ea00.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -451,8 +451,8 @@
       "slug": "linella-2010156",
       "title": "COSMEPLANT Пена для душа Blooming Citrus 500мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/281f2c766a7179fff8e8b482dd1568a0.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -770,7 +770,7 @@
           "oldPrice": 39.99,
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/ovoschnyie_konservyi/vis_tomatyi_marinovannyie_cherri_670g_?from=PRODUS%20ACASA"
+          "externalUrl": "https://linella.md/ru/catalog/ovoschnyie_konservyi/vis_tomatyi_marinovannyie_cherri_670g_?from=%D0%9C%D0%B5%D1%81%D1%82%D0%BD%D1%8B%D0%B5%20%D0%A2%D0%BE%D0%B2%D0%B0%D1%80%D1%8B"
         }
       ]
     },
@@ -862,8 +862,8 @@
       "slug": "linella-2011879",
       "title": "DELICE Увлажняющая пенка после загара 150мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/f7e88a757644ffaddbbd2b9eb59d971f.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -890,8 +890,8 @@
       "slug": "linella-420841",
       "title": "GERBER Пюре яблоко-персик 150g",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/a0760ec5a321853209b55c7dcf24b942.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -972,8 +972,8 @@
       "slug": "linella-2010695",
       "title": "LACTERRA Сырок глазированный клубника 20%, 40г",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "sweets",
+      "categoryName": "Сладости",
       "imageUrl": "https://linella.md/public/products/69067473aebd21862203c2936f810588.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1027,8 +1027,8 @@
       "slug": "linella-2004491",
       "title": "CARMEZ Шашлык свиной в красном маринаде, охлажденный, кг",
       "brand": null,
-      "categorySlug": "alcohol",
-      "categoryName": "Алкоголь",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/ade2ddfc693f099cf3cc7186b71fd63c.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1082,8 +1082,8 @@
       "slug": "linella-386734",
       "title": "CASUTA MEA Моцарелла PERLINE 250г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "dairy",
+      "categoryName": "Молочные продукты",
       "imageUrl": "https://linella.md/public/products/a03f732b1b89cc3af8e5c9cad2141c14.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1192,8 +1192,8 @@
       "slug": "linella-503560",
       "title": "SEMANA Ополаскиватель Extra Fresh Sensitive 1.5л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/a3375ad0c9bcb644d65cc766dc5e741e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1220,8 +1220,8 @@
       "slug": "linella-224501",
       "title": "SEMANA Кондиционер для белья Extra Fresh Blue 250мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/57d251710004dc3d4873d46b4b7e07d0.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1248,8 +1248,8 @@
       "slug": "linella-2012632",
       "title": "ON LINE Гель для интимной гигиены. Успокаивающий 390мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/3737cf139231ea9f28bea9fe9d494a4d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1276,8 +1276,8 @@
       "slug": "linella-2012631",
       "title": "ON LINE Гель для интимной гигиены 390мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/a8b3be6beb28a5b57743a18fb1ff289d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1304,8 +1304,8 @@
       "slug": "linella-2012630",
       "title": "ON LINE Пенка для интимной гигиены 9+ 160мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/5444b5ebc0ea212a9a52dda7cd6b9e85.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1332,8 +1332,8 @@
       "slug": "linella-2004058",
       "title": "GERBER ORGANIC Снеки пшеница-кукуруза-банан 28г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/efafe6ee9addf3fd9078ede429cd42f7.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1360,8 +1360,8 @@
       "slug": "linella-290533",
       "title": "GERBER Пюре груша, манго и 3 злака 190г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/437dd2715fe751ed9bed91cf68878053.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1387,8 +1387,8 @@
       "slug": "linella-473010",
       "title": "GERBER Пюре банан-клубника-малина, овсяные хлопья 190г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/67b33b23ee5bda4496db22c579788bb1.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1414,8 +1414,8 @@
       "slug": "linella-385063",
       "title": "GERBER Пюре яблочное Organic 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/e7c8bd7eb359f44021a579c5724cccc6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1442,8 +1442,8 @@
       "slug": "linella-473005",
       "title": "GERBER Суп-пюре овощи & индейка 190г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "baby",
+      "categoryName": "Детские товары",
       "imageUrl": "https://linella.md/public/products/1d147eb5d89adbea1ff030ae3bca7cf0.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1685,8 +1685,8 @@
       "slug": "linella-138581",
       "title": "Набор дудочек DISNEY 6шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/62409a1ffd5418ff29ea87ba57da46e8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1712,8 +1712,8 @@
       "slug": "linella-138571",
       "title": "Набор воздушных шаров для Мальчиков 10шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/936f84409e12abc5f1f4cd7003f080e7.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1739,8 +1739,8 @@
       "slug": "linella-500795",
       "title": "PAW Пакет подарочный MAXI 54x44x16см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/9dd6a3ddcc278e78e3317dfa06bf9684.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1767,8 +1767,8 @@
       "slug": "linella-500794",
       "title": "PAW Пакет подарочный SQ 17x17x6см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/820e4aed5db36f5d151d505ccec7ceb2.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1795,8 +1795,8 @@
       "slug": "linella-500793",
       "title": "PAW Пакет подарочный Для Бутылки 12x37x10см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/9265321569b333392960a9bdea51e751.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1823,8 +1823,8 @@
       "slug": "linella-500792",
       "title": "PAW Пакет подарочный MEDIUM 20x25x10см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/098c3cccec7824a7eee05bdd3d57c05d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1851,8 +1851,8 @@
       "slug": "linella-500791",
       "title": "PAW Пакет подарочный LARGE 26,5x33,5x13см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/58e86bd4d84c974dae31d65e35ed951e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1879,8 +1879,8 @@
       "slug": "linella-500790",
       "title": "PAW Пакет подарочный BIG 30x41x12см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/31665013740d84d856a19c86f801c5b8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -1907,8 +1907,8 @@
       "slug": "linella-2001269",
       "title": "Набор-ведерко с принадлежностями",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/619c03c39b0140b02bbace199e3ab0b3.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2099,8 +2099,8 @@
       "slug": "linella-41006",
       "title": "Карты игральные атласные 54шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "sport",
+      "categoryName": "Спорт",
       "imageUrl": "https://linella.md/public/products/1e3c3aa6581032f2e39d95f2f1730142.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2127,8 +2127,8 @@
       "slug": "linella-447771",
       "title": "ACRISOR Огурцы солeные, kg",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/62d420c79358bc4d4e3deabc95d58a69.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2154,8 +2154,8 @@
       "slug": "linella-39381",
       "title": "GUTAROM Листья виноградные, солёные 200г",
       "brand": null,
-      "categorySlug": "alcohol",
-      "categoryName": "Алкоголь",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/b14dea0b5f3a05a037378629634c4e75.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2181,8 +2181,8 @@
       "slug": "linella-452882",
       "title": "GUTAROM Огурцы корнишоны пикантные, 200г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/d77edfdbd77512d6dfa13126f86d893b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2208,8 +2208,8 @@
       "slug": "linella-8667",
       "title": "Баклажаны Круглые фиолетовые, Moldova, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/6236840c2c9e61cddad1d4bc5891bcfc.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2235,8 +2235,8 @@
       "slug": "linella-19439",
       "title": "Клубника, кг Молдова",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/7324753118b32243a7a8e917e8a38df4.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2262,8 +2262,8 @@
       "slug": "linella-417796",
       "title": "Грибы Шампиньоны Молдова 300г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/f1176c21147dee7485954ca96249bcba.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2281,33 +2281,6 @@
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
           "externalUrl": "https://linella.md/ru/catalog/ovoschi/gribyi_shampinonyi_moldova_300g?from=CATALOGUE"
-        }
-      ]
-    },
-    {
-      "id": "linella-292735",
-      "slug": "linella-292735",
-      "title": "Базилик зеленый фасованный, 50 гр",
-      "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/49e8b7c032bdf920937e830159e29cd6.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-292735",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 14.99,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/salatyi_i_zelen/bazilik_zelenyiy_fasovannyiy__50_gr?from=CATALOGUE"
         }
       ]
     },
@@ -2335,6 +2308,33 @@
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
           "externalUrl": "https://linella.md/ru/catalog/solenya/gutarom_assorti_iz_ostroy_kapustyi_400g?from=CATALOGUE"
+        }
+      ]
+    },
+    {
+      "id": "linella-134362",
+      "slug": "linella-134362",
+      "title": "Плоские Персики, кг",
+      "brand": null,
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
+      "imageUrl": "https://linella.md/public/products/eb66b46f1e29c43fcf4b6b59f389a987.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-134362",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 9.3,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/fruktyi/ploskie_persiki__kg?from=CATALOGUE"
         }
       ]
     },
@@ -2370,8 +2370,8 @@
       "slug": "linella-117171",
       "title": "LINELLA Перец Жареный с помидорами, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/2dda72885afd12a93a119bf203d952d8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2425,8 +2425,8 @@
       "slug": "linella-117275",
       "title": "LINELLA Перец Фаршированный с Овощами, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/ed95bcb8fa19cb1617456c7023754869.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2452,8 +2452,8 @@
       "slug": "linella-117186",
       "title": "LINELLA Печень Куриная с луком, kг",
       "brand": null,
-      "categorySlug": "sweets",
-      "categoryName": "Сладости",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/a32ead4c9998385fc59500cc935e128f.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2506,8 +2506,8 @@
       "slug": "linella-160164",
       "title": "LINELLA Салат с Ветчиной и Сыром, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/927e60edadb9d1b590149bdeae4bd2d9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2533,8 +2533,8 @@
       "slug": "linella-127059",
       "title": "LINELLA Картофель По-Домашнему, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/a3ed58f3602e0d8930b8ea9ae1ae7ea9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2753,8 +2753,8 @@
       "slug": "linella-516646",
       "title": "ELPOZO Хамон SERRANO, 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/ca501a83be0f2f68c8f31b5132b6ba6b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2780,8 +2780,8 @@
       "slug": "linella-387194",
       "title": "WELLAFLEX Мусс Экстра сильной фиксации 200мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/290e27bfad8fda36d37a90c9a25a2bd8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2808,8 +2808,8 @@
       "slug": "linella-387193",
       "title": "WELLAFLEX Мусс Экстра сильной фиксации 200мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/89735e22d32b080442558923bd110b75.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2864,8 +2864,8 @@
       "slug": "linella-387155",
       "title": "ACE Отбеливатель Профессиональный 4л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/c9a3ddf619e50dc9add76f666fd3da58.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -2948,8 +2948,8 @@
       "slug": "linella-390582",
       "title": "SANO Универсальное чистящее средство c уксусом JET Universal 1.5л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/5357eff8bf2a5ed8f6ca6dbf476f5967.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3028,34 +3028,6 @@
       ]
     },
     {
-      "id": "linella-2007166",
-      "slug": "linella-2007166",
-      "title": "ДОШИРАК Бульон куриный 90г",
-      "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/ec16b67e83e00b8cfa2c03a27842c176.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-2007166",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 11.79,
-          "oldPrice": 13.39,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/spetsii/doshirak_bulon_kurinyiy_90g?from=PROMOTION"
-        }
-      ]
-    },
-    {
       "id": "linella-2008810",
       "slug": "linella-2008810",
       "title": "FRIGO Мороженое с черной смородиной. туб 500г",
@@ -3116,8 +3088,8 @@
       "slug": "linella-2012213",
       "title": "Карандаши цветные 12цв. HL-25022-12",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/98dad9c1fe57e9b0089276f49aeee468.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3144,8 +3116,8 @@
       "slug": "linella-2012214",
       "title": "FLAIR Фломастеры Мини Kitty FA 8019 12цв",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/708c9a13e899335b78cb2c3af13d5361.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3172,8 +3144,8 @@
       "slug": "linella-2013043",
       "title": "SOTI NATURAL Bubble Tea Cup Сакура 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/19102395016acc4f190fc6d2d6c41ff2.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3200,8 +3172,8 @@
       "slug": "linella-2013042",
       "title": "SOTI NATURAL Bubble Tea Cup Арбуз 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/56e94a801860ed31d4bb4c35b8a2a1b9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3228,8 +3200,8 @@
       "slug": "linella-2013041",
       "title": "SOTI NATURAL Bubble Tea Cup Личи 160г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/a50cb4f26bb9e2b4af621bc3e4fbcb0e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3252,12 +3224,40 @@
       ]
     },
     {
+      "id": "linella-2013040",
+      "slug": "linella-2013040",
+      "title": "SOTI NATURAL Bubble Tea Cup Апельсин 80г",
+      "brand": null,
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
+      "imageUrl": "https://linella.md/public/products/d40ff69394f6df3268c505aa7c4b4069.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-2013040",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 29.99,
+          "oldPrice": 39.99,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/napitki_ohlajdayuschie/soti_natural_bubble_tea_cup_apelsin_80g?from=PROMOTION"
+        }
+      ]
+    },
+    {
       "id": "linella-2011936",
       "slug": "linella-2011936",
       "title": "PRORASO Защитная пена для бритья 300мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/e7942245d8b7857ca1363dcc76cfa053.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3284,8 +3284,8 @@
       "slug": "linella-2011935",
       "title": "PRORASO Бальзам после бритья защитный 100мл",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/7e8d64460cdefeb44a0c562db27be423.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3368,8 +3368,8 @@
       "slug": "linella-494560",
       "title": "DOVE Гель для душа/ Фруктовое питание 720мл",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/840651d779910d90dc599f90843ba3b4.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3480,8 +3480,8 @@
       "slug": "linella-2012260",
       "title": "BIZIM TARLA Компот из Айвы 1л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/f1b25210e8cefa965ce64f645bac5f13.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3508,8 +3508,8 @@
       "slug": "linella-2012261",
       "title": "BIZIM TARLA Компот из Кизила 1л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/e2e6e6819f270bc0b3404c4c063687aa.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3536,8 +3536,8 @@
       "slug": "linella-234370",
       "title": "BIZIM TARLA Компот из Фейхоа 1л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "drinks",
+      "categoryName": "Напитки",
       "imageUrl": "https://linella.md/public/products/700a058c5d3af0ca96dda86368e087c8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3699,39 +3699,12 @@
       ]
     },
     {
-      "id": "linella-516056",
-      "slug": "linella-516056",
-      "title": "JLC Сметана 15%, 325г",
-      "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
-      "imageUrl": "https://linella.md/public/products/b3be96a9e3c1ab59dc5195413e4a4575.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-516056",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 21.99,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/smetana/jlc_smetana_15__325g_?from=%D0%9C%D0%B5%D1%81%D1%82%D0%BD%D1%8B%D0%B5%20%D0%A2%D0%BE%D0%B2%D0%B0%D1%80%D1%8B"
-        }
-      ]
-    },
-    {
       "id": "linella-459783",
       "slug": "linella-459783",
       "title": "O! PRET MIC Пицца 4 сыра 350г",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/829f3ec1cc7a2d6dc525f5e069ef9f72.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3784,8 +3757,8 @@
       "slug": "linella-2005839",
       "title": "Антуан де Сент-Экзюпери Маленький принц",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/2627b599bd0cc20395cc4eb65e7541e6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -3811,8 +3784,8 @@
       "slug": "linella-2005838",
       "title": "АЗБУКА Колобок. Мы читаем по слогам",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/e35cf58ab3c4c9f7cb49628c4db5a50a.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4054,8 +4027,8 @@
       "slug": "linella-2005825",
       "title": "СИНДБАД Вторая жизнь Уве",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/77d586727a4be1675152c3a86cd2a0ed.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4135,8 +4108,8 @@
       "slug": "linella-2005820",
       "title": "КАЙ УМАНСКИ Ведьма Пачкуля и конкурс Колдовидение.",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/f8be008b2d3348c682547555e72ad0e2.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4162,8 +4135,8 @@
       "slug": "linella-2005819",
       "title": "ПИТЕР Атомные привычки",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/7c870a0a9ae5086cb71713978d803f43.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4189,8 +4162,8 @@
       "slug": "linella-2005817",
       "title": "СИНДБАД Homo Deus. Краткая история будущего",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/c54db35a0136a08664e4a52a286361a9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4216,8 +4189,8 @@
       "slug": "linella-509927",
       "title": "Ева Мозес Кор, Лиза Рожани Буччери. Близнецы из Освенцима",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/e79de89ea02a00353b6c5ea980a17a36.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4243,8 +4216,8 @@
       "slug": "linella-509926",
       "title": "Михаил Друмеш. Семиклассник Дима.",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/cdd2192ab2c1dffac5d6452bdc62021a.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4270,8 +4243,8 @@
       "slug": "linella-509925",
       "title": "Михаил Друмеш. Приглашение на вальс",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/9cc079315ee83857c5a6df245b74cdfd.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4297,8 +4270,8 @@
       "slug": "linella-509924",
       "title": "Михаил Друмеш. Любовное письмо",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/5468201eb0592a6babf58461820a7755.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4324,8 +4297,8 @@
       "slug": "linella-509923",
       "title": "Лейл Лаундес. Как общаться с кем угодно",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/aa5bb2b46ef339a04cc12e872117b114.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4351,8 +4324,8 @@
       "slug": "linella-509922",
       "title": "Ана Хуанг. Извращенная ложь",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/ef9b9449721d53e04fa0dd786affc407.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4378,8 +4351,8 @@
       "slug": "linella-509921",
       "title": "Коллин Гувер. Раньше это было идеально",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/eb5c4b56e32e41e0487acf87e7c62239.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4405,8 +4378,8 @@
       "slug": "linella-509919",
       "title": "Ана Хуанг. Перевернутые игры. Его любой ценой",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/e801624ec5341ee0b16ae746a6b679a6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4432,8 +4405,8 @@
       "slug": "linella-509918",
       "title": "Анна Хуанг. Извращенная ненависть. Враги с выгодой",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/e2991640ccdb165a57257e5b704437f1.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4459,8 +4432,8 @@
       "slug": "linella-509917",
       "title": "Гэри Чепмен. Пять языков любви",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/14255cdb95d5bfe2627d9e19f8b6b592.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4486,8 +4459,8 @@
       "slug": "linella-509916",
       "title": "Виктор Франкл. Человек в поисках смысла жизни",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/7b1472b698f13bc1c9286d27f1de1a70.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4513,8 +4486,8 @@
       "slug": "linella-509915",
       "title": "Саймон Синек. Лидеры едят последними",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/f15ed2720a38813f52e1ad0449004080.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4540,8 +4513,8 @@
       "slug": "linella-509914",
       "title": "Стефани Шталь. Исцеление внутреннего ребенка. Практическое руководство",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/ed94c210a98c276243951ae6eb7b8f1a.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4567,8 +4540,8 @@
       "slug": "linella-509913",
       "title": "Я учусь и играю. Иллюстрированный алфавит",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/fe0f2de056a8c40ef3a33cdad56e05cf.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4594,8 +4567,8 @@
       "slug": "linella-509912",
       "title": "Первое 101 слово с животными со всего мира",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/1ca3013d6d987dabfd6fe48901cf641c.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4621,8 +4594,8 @@
       "slug": "linella-509911",
       "title": "Животные. Библиотека умного ребенка",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "books-hobby",
+      "categoryName": "Книги и хобби",
       "imageUrl": "https://linella.md/public/products/e65cb1ea0aec93147a9d1dece97dc240.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4704,8 +4677,8 @@
       "slug": "linella-495134",
       "title": "ON LINE Подарочный Набор Загадай желание - Mыло для рук + Гель для душа. Янтарь & Миндаль",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "beauty",
+      "categoryName": "Красота и уход",
       "imageUrl": "https://linella.md/public/products/7fb861fd5f8fdd2e1e769291c46327f1.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4732,8 +4705,8 @@
       "slug": "linella-190611",
       "title": "Хлопушка 50см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/b8d4eb6fb061dab441cfa2b1c8ea9095.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4759,8 +4732,8 @@
       "slug": "linella-190610",
       "title": "Хлопушка конфети 40 см",
       "brand": null,
-      "categorySlug": "sweets",
-      "categoryName": "Сладости",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/7abda15fcc1241269cb5e8d996c6e9d1.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4786,8 +4759,8 @@
       "slug": "linella-155177",
       "title": "Хлопушка 28см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/4f7fd832a5eae707365f799f94ad1887.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4813,8 +4786,8 @@
       "slug": "linella-139782",
       "title": "Набор латексных шариков MARMORA 10 шт.",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/9d1008ee072a0e63f3fd057d16f9b526.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4840,8 +4813,8 @@
       "slug": "linella-432083",
       "title": "O! PRET MIC Стаканы для вечеринок 250мл * 25шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/a1debd90607a169535ceeae10d6e4640.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4867,8 +4840,8 @@
       "slug": "linella-420206",
       "title": "SPRING Свечи для торта цветочки 8см, 6шт",
       "brand": null,
-      "categorySlug": "sweets",
-      "categoryName": "Сладости",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/7deea07252d88f56c014d9d691ef54e7.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4894,8 +4867,8 @@
       "slug": "linella-337206",
       "title": "SPRING Шарик сердце алюминиевая пленка D32см 45см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/e69a35b1ea6f0f7b7cac566593c371fa.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4922,8 +4895,8 @@
       "slug": "linella-420204",
       "title": "SPRING Шарик Happy Birthday алюминиевая пленка D35см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/3fd0fd5119bebbaf81cec01f2bbcc674.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4949,8 +4922,8 @@
       "slug": "linella-420203",
       "title": "SPRING Насос для шариков",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/2ff79fdd76791d97726fcc8bbf8e29c6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -4976,8 +4949,8 @@
       "slug": "linella-339570",
       "title": "SPRING Коробка подарочная 22x22см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/8851141176978738d7b06771a608c473.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5004,8 +4977,8 @@
       "slug": "linella-347901",
       "title": "SPRING Коробка подарочная 15x15см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/07465f65cb20a7ae149b5e2bb900bfb2.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5032,8 +5005,8 @@
       "slug": "linella-347900",
       "title": "SPRING Коробка подарочная 10x10см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/5ae79e5536da0ba930f54e698f60d288.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5060,8 +5033,8 @@
       "slug": "linella-420201",
       "title": "SPRING Стаканы картон 10шт мультфильмы",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/6ef35db44625df4c15d45aed98fbc9a0.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5087,8 +5060,8 @@
       "slug": "linella-354807",
       "title": "SPRING Фонарик небесный 38x70x102см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/0c83df6ef3d7012d041e2aad36849807.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5115,8 +5088,8 @@
       "slug": "linella-413574",
       "title": "Ящик декор - фольклор с ручками 20х30х10см 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/a7f5b7d64e0f7364c53abf54ec413ae1.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5142,8 +5115,8 @@
       "slug": "linella-413579",
       "title": "Декоративная подарочная упаковка для бутылки вина - Гитарa 35см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/873c4dac80e6c663e47299a65d904ac8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5166,12 +5139,40 @@
       ]
     },
     {
+      "id": "linella-413578",
+      "slug": "linella-413578",
+      "title": "Скрипка, Декоративная подарочная упаковка для бутылки вина 35см",
+      "brand": null,
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
+      "imageUrl": "https://linella.md/public/products/a310aaae05fb44a676ac1a31d943ca9f.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-413578",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 117.3,
+          "oldPrice": 138,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/dekorativnyie_yaschiki__korobki__paketyi_dlya_oformleniya_podarkov/skripka__dekorativnaya_podarochnaya_upakovka_dlya_butyilki_vina_35sm?from=CATALOGUE"
+        }
+      ]
+    },
+    {
       "id": "linella-413576",
       "slug": "linella-413576",
       "title": "Ящик для подарков декорированный 27x10x24см",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/87b6fe7c0fcdd8042bdb99871fde6201.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5197,8 +5198,8 @@
       "slug": "linella-413573",
       "title": "Ящик 30x30x10см с ручками 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/3be1d9411da7d9f70647f83fcb5d93f9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5224,8 +5225,8 @@
       "slug": "linella-413572",
       "title": "Ящик 20x35x10см с ручками 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/c23eb8f3115bdb168211df8fedc712f6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5251,8 +5252,8 @@
       "slug": "linella-413571",
       "title": "Ящик 30х30х10см деревянный 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/3fa18f97212578533a04f6ac98b37d1e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -5278,8 +5279,8 @@
       "slug": "linella-413570",
       "title": "Ящик 25x35x10см деревянный 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "home",
+      "categoryName": "Дом и быт",
       "imageUrl": "https://linella.md/public/products/57de1de25a17c13a8088279cf12b7c7f.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6088,8 +6089,8 @@
       "slug": "linella-312876",
       "title": "INTEX Детский надувной круг 3 вида 76см, 8+ 59266",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/77c104bfed3b40dbfa939674e203e921.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6144,8 +6145,8 @@
       "slug": "linella-234955",
       "title": "INTEX Надувной круг 91см.9+ 59256",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/742fae87cefdecd331132a7563d1ffe5.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6228,8 +6229,8 @@
       "slug": "linella-127452",
       "title": "INTEX Детский надувной круг d51cm 3-6 лет",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/cd01b13234541e9c64d41caeb531313e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6312,8 +6313,8 @@
       "slug": "linella-127435",
       "title": "INTEX Бассейн надувной 183см*51см 886л",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "kids",
+      "categoryName": "Игрушки",
       "imageUrl": "https://linella.md/public/products/994daed43c087b16573751ec691ac176.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6392,33 +6393,6 @@
       ]
     },
     {
-      "id": "linella-134362",
-      "slug": "linella-134362",
-      "title": "Плоские Персики, кг",
-      "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
-      "imageUrl": "https://linella.md/public/products/eb66b46f1e29c43fcf4b6b59f389a987.webp",
-      "source": "LINELLA_DIRECT",
-      "offers": [
-        {
-          "id": "linella-direct-134362",
-          "store": {
-            "id": "linella-direct-store",
-            "name": "Linella",
-            "slug": "linella",
-            "city": "Moldova",
-            "openingHours": null,
-            "websiteUrl": "https://linella.md/ru/home"
-          },
-          "price": 9.3,
-          "currency": "MDL",
-          "stockStatus": "IN_STOCK",
-          "externalUrl": "https://linella.md/ru/catalog/fruktyi/ploskie_persiki__kg?from=CATALOGUE"
-        }
-      ]
-    },
-    {
       "id": "linella-193249",
       "slug": "linella-193249",
       "title": "Помидоры Черри 500 г",
@@ -6450,8 +6424,8 @@
       "slug": "linella-222307",
       "title": "Сливы Black Amber",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/139c8276669584c45ce4791a7661c240.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6478,8 +6452,8 @@
       "slug": "linella-58143",
       "title": "Белый виноград",
       "brand": null,
-      "categorySlug": "alcohol",
-      "categoryName": "Алкоголь",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/dbd93e7f0e32d51663c5cb9b93b9ab4b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6505,8 +6479,8 @@
       "slug": "linella-8689",
       "title": "Нектарины, кг",
       "brand": null,
-      "categorySlug": "drinks",
-      "categoryName": "Напитки",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/173222c9274b8fd6371b86c52cd9b1fb.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6532,8 +6506,8 @@
       "slug": "linella-15703",
       "title": "Лайм",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/7cbe4bb44216c31487b0ac74e6013996.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6559,8 +6533,8 @@
       "slug": "linella-8683",
       "title": "Лимон",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/2ce5d37c0e3eb3a3ec24ffadd4b96859.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6587,8 +6561,8 @@
       "slug": "linella-167270",
       "title": "Голубика фасованная 125г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/07b7169cd10aea6d6dad5f9b96e91461.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6668,8 +6642,8 @@
       "slug": "linella-127673",
       "title": "GUTAROM Острая морковь 400g",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/3ddc4327b9b3925ede71231e93903575.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6722,8 +6696,8 @@
       "slug": "linella-39379",
       "title": "GUTAROM Огурцы соленные вакуум 500г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/d133825cf34d33f3f747a4907affce07.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6803,8 +6777,8 @@
       "slug": "linella-32863",
       "title": "GUTAROM Морковь пикантная 400г",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/7e485eff666cb72d8e736a06a30f027b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6830,8 +6804,8 @@
       "slug": "linella-107174",
       "title": "Тыква",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/2ccba101a456eae200d5940ee0fe2b7b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6857,8 +6831,8 @@
       "slug": "linella-218778",
       "title": "Голубика 250г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/276304d988df1b4f1c5a1d7a9749ffa8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6884,8 +6858,8 @@
       "slug": "linella-280413",
       "title": "Сладкая Кукуруза 1шт",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/fe354ad3509f39c7432484869e86923b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6938,8 +6912,8 @@
       "slug": "linella-19940",
       "title": "Абрикосы, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/2c1fc9c89f64a7f0e6cffa55fb9eb42e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6965,8 +6939,8 @@
       "slug": "linella-300139",
       "title": "Листья салата 200г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/4c0677746d0bf3e7fa361dcedb4957d5.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -6992,8 +6966,8 @@
       "slug": "linella-299712",
       "title": "Mură'n Gură Свекла вареная на пару. очищенная 450г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/3cc16350194ef01eade1dad789e36c59.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7019,8 +6993,8 @@
       "slug": "linella-271258",
       "title": "Редис красный 500г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/bbdd443afeddb7b7fec2117a81c50ef4.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7046,8 +7020,8 @@
       "slug": "linella-202634",
       "title": "Розмарин 30г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/f4a10575eebe8f5acd81203f80285140.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7127,8 +7101,8 @@
       "slug": "linella-126135",
       "title": "Капуста",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/e6a5cbab0144b942f4b0ead65e6fbfa8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7154,8 +7128,8 @@
       "slug": "linella-8684",
       "title": "Лук Белый",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/28fbe7d97071df3401ad2539d276daf4.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7181,8 +7155,8 @@
       "slug": "linella-8666",
       "title": "Арбуз, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/a6645b91c93c8e632af7a405856a007d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7208,8 +7182,8 @@
       "slug": "linella-178973",
       "title": "Мята 50г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/5c8f0d43939e9c70283120e60e7a44c9.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7235,8 +7209,8 @@
       "slug": "linella-292994",
       "title": "Грибы Шампиньоны 400г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
       "imageUrl": "https://linella.md/public/products/ab98e12af69402976e65f3a08d6f0854.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7254,6 +7228,33 @@
           "currency": "MDL",
           "stockStatus": "IN_STOCK",
           "externalUrl": "https://linella.md/ru/catalog/ovoschi/gribyi_shampinonyi__400g?from=CATALOGUE"
+        }
+      ]
+    },
+    {
+      "id": "linella-42557",
+      "slug": "linella-42557",
+      "title": "Огурцы",
+      "brand": null,
+      "categorySlug": "produce",
+      "categoryName": "Овощи и фрукты",
+      "imageUrl": "https://linella.md/public/products/0e6e9f1458fdd65a69aa3f7a25d86aa4.webp",
+      "source": "LINELLA_DIRECT",
+      "offers": [
+        {
+          "id": "linella-direct-42557",
+          "store": {
+            "id": "linella-direct-store",
+            "name": "Linella",
+            "slug": "linella",
+            "city": "Moldova",
+            "openingHours": null,
+            "websiteUrl": "https://linella.md/ru/home"
+          },
+          "price": 9.5,
+          "currency": "MDL",
+          "stockStatus": "IN_STOCK",
+          "externalUrl": "https://linella.md/ru/catalog/ovoschi/ogurtsyi_?from=CATALOGUE"
         }
       ]
     },
@@ -7317,8 +7318,8 @@
       "slug": "linella-117185",
       "title": "LINELLA Куриные огурчики с сыром, кг",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/6abf65d3b5393f07cb7e6798b87cf819.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7344,8 +7345,8 @@
       "slug": "linella-117868",
       "title": "LINELLA Филе Куриное Запечённое c Овощами, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/2254ba6e32b06391bab35a8af143087d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7399,8 +7400,8 @@
       "slug": "linella-117177",
       "title": "LINELLA Голубцы с куриным мясом",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/5c4a8a29ebe1cd68935c7e78a6f8a12c.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7426,8 +7427,8 @@
       "slug": "linella-175932",
       "title": "7 SPICE Вертута с творогом из вытяжного теста, кг",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/e7766f0d9d26bbeff8e8fa95016709a5.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7453,8 +7454,8 @@
       "slug": "linella-117282",
       "title": "LINELLA Плацинда Печеная С Творогом",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/fea1edd105d60ba170516216dba88c25.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7480,8 +7481,8 @@
       "slug": "linella-1906",
       "title": "LINELLA Котлеты из куриного мяса, домашние, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/4faab94fa7e4b226bd5ce720306fdd6b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7535,8 +7536,8 @@
       "slug": "linella-130271",
       "title": "LINELLA Филе Из Пангасиуса, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/63c9c4bc202eec6ecd30c7cea0d39532.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7643,8 +7644,8 @@
       "slug": "linella-24534",
       "title": "LINELLA Картофель с Грибами запеченный, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/3b4845d9ef802a269368f36cc06d5c24.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7724,8 +7725,8 @@
       "slug": "linella-424963",
       "title": "7 SPICE Вертута с творогом и зеленью из вытяжного теста, кг",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/714d732d1078692bc2094ed87327e35d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7751,8 +7752,8 @@
       "slug": "linella-401732",
       "title": "ZideZi Сырники 230г",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/8a197f0d459b8c0721a496bb0efaaf49.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7778,8 +7779,8 @@
       "slug": "linella-401748",
       "title": "ZideZi Токана из свинины с мамалыгой 300г",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/ea72e27e2e364a6c219dbed17610bf36.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7832,8 +7833,8 @@
       "slug": "linella-401734",
       "title": "ZideZi Блинчики с ветчиной и сыром 250г",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/a93b1bf2dac82697061c8d91e188a72b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7859,8 +7860,8 @@
       "slug": "linella-401739",
       "title": "ZideZi Салат Оливье с мясом 300г",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/bf45b8568cf1b8f03f80aaeaa88d2649.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7913,8 +7914,8 @@
       "slug": "linella-130571",
       "title": "LINELLA Драники из картофеля с куриным филе, кг",
       "brand": null,
-      "categorySlug": "produce",
-      "categoryName": "Овощи и фрукты",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/5959248226bb632abcf12f862b667faf.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7940,8 +7941,8 @@
       "slug": "linella-74787",
       "title": "LINELLA Блинчики с Куриным Мясом и Грибами, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/49eeebfce8966427b62dddad3a238a20.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -7967,8 +7968,8 @@
       "slug": "linella-289836",
       "title": "LINELLA Торт Сметанник с Вишней, кг",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "sweets",
+      "categoryName": "Сладости",
       "imageUrl": "https://linella.md/public/products/ff6b60cf46d429f32431d6dd6cfb2cc0.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8021,8 +8022,8 @@
       "slug": "linella-117816",
       "title": "LINELLA Кекс Домашний с Вишней, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "sweets",
+      "categoryName": "Сладости",
       "imageUrl": "https://linella.md/public/products/721e1cd235a93b42cdd046213d014846.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8048,8 +8049,8 @@
       "slug": "linella-368289",
       "title": "LINELLA Плов С Курицей, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/dedb18d71342a692d3b23b79c6c97866.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8075,8 +8076,8 @@
       "slug": "linella-368290",
       "title": "LINELLA Плов Со Свининой, кг",
       "brand": null,
-      "categorySlug": "meat-fish",
-      "categoryName": "Мясо и рыба",
+      "categorySlug": "groceries",
+      "categoryName": "Продукты",
       "imageUrl": "https://linella.md/public/products/61f165bbc3913d1ccb75d7261d999444.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8129,8 +8130,8 @@
       "slug": "linella-496086",
       "title": "CASA MODENA Spianata Romana 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/b952c50001a8ee41a8fdf7ab19f980cd.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8183,8 +8184,8 @@
       "slug": "linella-487563",
       "title": "CASA MODENA Prosciutto Crudo 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/6f5d0a0ceaa6f584f7c17b81e6b39bf6.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8237,8 +8238,8 @@
       "slug": "linella-496084",
       "title": "SENFTER Спек Альто-Адидже 80г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/810226227bdbbb4a8baed9670a09567e.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8264,8 +8265,8 @@
       "slug": "linella-496080",
       "title": "CASA MODENA Прошутто Котто 125г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/a1c68d323d1b1cc7fd656adef16c395a.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8292,8 +8293,8 @@
       "slug": "linella-487562",
       "title": "CASA MODENA Прошутто Парма 70г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/fb60e44f99e844b1b9d468113bb9d7e4.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8431,8 +8432,8 @@
       "slug": "linella-453872",
       "title": "VERONNI Сардельки Докторские, маленькая упаковка, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/a2e25f30c5829466939ee121fd18ca44.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8515,8 +8516,8 @@
       "slug": "linella-453873",
       "title": "VERONNI Сардельки с сыром, большой пакет, кг",
       "brand": null,
-      "categorySlug": "dairy",
-      "categoryName": "Молочные продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/e59e77352b9a0bbde4118ed7cbf4bf5b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8599,8 +8600,8 @@
       "slug": "linella-440757",
       "title": "ELPOZO Салями Fuetec Mediterraneo 150г",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/a39774269329bb7f3b15ba6c3b49d519.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8653,8 +8654,8 @@
       "slug": "linella-130729",
       "title": "FILLETTI Салями Говяжье в\\к",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/9eeb16d3915add1ee6b6fc54443ddafe.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8734,8 +8735,8 @@
       "slug": "linella-416502",
       "title": "FILLETTI Салями Сервелат Деревенская",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/0828e6d58ce673258e50039f7c37d05d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8789,8 +8790,8 @@
       "slug": "linella-396614",
       "title": "ELPOZO Салями испанская, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/15ca2f9f9050ac6126f4160bd172b8a8.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8816,8 +8817,8 @@
       "slug": "linella-199968",
       "title": "GURMAN Паризер Молочная (фиброз)",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/93efc67851c24d2650ec9f29d714f84b.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8844,8 +8845,8 @@
       "slug": "linella-419818",
       "title": "CARMEZ Салями Салями классическая в/к",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/598cddcac482e0b94ba0961519c2d0fb.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8926,8 +8927,8 @@
       "slug": "linella-415202",
       "title": "GELD-PROGRES Пастрома свиная, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/b4e17eb3616b77fecef28c97dddd9420.webp",
       "source": "LINELLA_DIRECT",
       "offers": [
@@ -8953,8 +8954,8 @@
       "slug": "linella-330913",
       "title": "GURMAN Сервелат варёно-копчёный, кг",
       "brand": null,
-      "categorySlug": "groceries",
-      "categoryName": "Продукты",
+      "categorySlug": "meat-fish",
+      "categoryName": "Мясо и рыба",
       "imageUrl": "https://linella.md/public/products/4ad39d115d2929bdb28f30be328d754d.webp",
       "source": "LINELLA_DIRECT",
       "offers": [

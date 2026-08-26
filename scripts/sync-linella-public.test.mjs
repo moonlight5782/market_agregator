@@ -34,3 +34,12 @@ test("extracts discounted Linella prices", () => {
   assert.equal(product.offers[0].oldPrice, 31.9);
   assert.equal(product.categorySlug, "baby");
 });
+
+test("uses the official Linella category path when the title is ambiguous", () => {
+  const html = `<div class="products-catalog-content__item" data-SKU="777">
+    <a href="/ru/catalog/uhod_za_telom/pena" class="head-products-catalog-content__image"><img src="/public/products/foam.webp"></a>
+    <a href="/ru/catalog/uhod_za_telom/pena" class="products-catalog-content__name">COSMEPLANT Пена Blooming Citrus 500мл</a>
+    <span class="price-products-catalog-content__static">54.90</span>
+  </div>`;
+  assert.equal(extractLinellaProducts(html)[0].categorySlug, "beauty");
+});
