@@ -10,7 +10,16 @@ export type DemoStore = {
   latitude?: number;
   longitude?: number;
   address?: string;
+  websiteUrl?: string;
 };
+
+const officialStoreUrls: Record<string, string> = {
+  "cip-market": "https://www.cipmarket.md/ru/",
+};
+
+export function getOfficialStoreUrl(store: Pick<DemoStore, "slug" | "websiteUrl">) {
+  return store.websiteUrl ?? officialStoreUrls[store.slug] ?? null;
+}
 
 export type DemoOffer = {
   id: string;

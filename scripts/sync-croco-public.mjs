@@ -5,6 +5,9 @@ const BASE_URL = "https://croco.md";
 const SITEMAP_URL = `${BASE_URL}/sitemap.xml/product`;
 const OUTPUT_URL = new URL("../data/croco-products.json", import.meta.url);
 const USER_AGENT = "BunPretCatalogIndexer/1.0 (+https://market-agregator-md.moonlight-5782.chatgpt.site)";
+const OFFICIAL_STORE_URLS = {
+  "cip-market": "https://www.cipmarket.md/ru/",
+};
 
 function absoluteUrl(value) {
   return value ? new URL(value.replaceAll("\\/", "/"), BASE_URL).toString() : null;
@@ -92,7 +95,7 @@ function normalizeCatalogProduct(item, metadata, catalogUrl) {
     source: "CROCO_BROCHURE",
     offers: [{
       id: `croco-offer-${externalId}`,
-      store: { id: `croco-store-${storeSlug}`, name: storeName, slug: storeSlug, city: "Moldova", openingHours: null },
+      store: { id: `croco-store-${storeSlug}`, name: storeName, slug: storeSlug, city: "Moldova", openingHours: null, websiteUrl: OFFICIAL_STORE_URLS[storeSlug] || null },
       price,
       oldPrice: Number.isFinite(oldPrice) && oldPrice > price ? oldPrice : undefined,
       currency: "MDL",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import StoreHours from "../../../components/StoreHours";
+import { getOfficialStoreUrl } from "../../../lib/demo-data";
 import { getLocale } from "../../../lib/get-locale";
 import { demoCategoryName, formatMessage, getDictionary, numberLocale, stockLabel } from "../../../lib/i18n";
 import { getProductBySlug } from "../../../lib/product-data";
@@ -112,6 +113,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
             const status = selectedBranch?.stockStatus ?? offer.stockStatus;
             const quantity = selectedBranch?.quantity ?? offer.quantity;
             const branchAvailableCount = branches.filter((item: any) => isAvailable(item.stockStatus)).length;
+            const isBrochureOffer = Boolean(offer.sourceName || offer.sourceUrl);
+            const storeUrl = getOfficialStoreUrl(offer.store) || (!isBrochureOffer ? offer.externalUrl : null);
+            const sourceUrl = isBrochureOffer ? (offer.sourceUrl || offer.externalUrl) : null;
             return (
               <div key={offer.id} className="offer-row">
                 <div>
@@ -124,7 +128,10 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
                 </div>
                 <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString(numberLocale(locale))} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString(numberLocale(locale))} {offer.currency}</div></div>
                 <div className="stock-stack" style={{ color: status === "OUT_OF_STOCK" ? "#888" : "#333" }}><span>{stockLabel(status, quantity, locale)}</span>{quantity == null && <small className="availability-note">{locale === "ro" ? "verificați în magazin" : "уточняйте в магазине"}</small>}</div>
-                <a href={offer.externalUrl} target="_blank" rel="noreferrer" className="offer-row__cta touch-target">{t.toStore}</a>
+                <div className="offer-row__actions">
+                  {storeUrl && <a href={storeUrl} target="_blank" rel="noreferrer" className="offer-row__cta touch-target">{t.toStore}</a>}
+                  {sourceUrl && <a href={sourceUrl} target="_blank" rel="noreferrer" className="offer-row__cta offer-row__cta--secondary touch-target">{t.priceSource}</a>}
+                </div>
               </div>
             );
           })}

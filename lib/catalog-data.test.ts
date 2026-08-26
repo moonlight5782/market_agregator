@@ -40,3 +40,8 @@ test("product pages resolve URL-encoded Cyrillic slugs", async () => {
   const result = await getProductBySlug(encodeURIComponent(product.slug));
   assert.equal(result?.product.id, product.id);
 });
+
+test("CIP Market brochure offers resolve to the official store website", async () => {
+  const { getOfficialStoreUrl } = await import("./demo-data");
+  assert.equal(getOfficialStoreUrl({ slug: "cip-market" }), "https://www.cipmarket.md/ru/");
+});
