@@ -114,7 +114,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
             const quantity = selectedBranch?.quantity ?? offer.quantity;
             const branchAvailableCount = branches.filter((item: any) => isAvailable(item.stockStatus)).length;
             const isBrochureOffer = Boolean(offer.sourceName || offer.sourceUrl);
-            const storeUrl = getOfficialStoreUrl(offer.store) || (!isBrochureOffer ? offer.externalUrl : null);
+            const storeUrl = !isBrochureOffer ? offer.externalUrl : getOfficialStoreUrl(offer.store);
             const sourceUrl = isBrochureOffer ? (offer.sourceUrl || offer.externalUrl) : null;
             return (
               <div key={offer.id} className="offer-row">

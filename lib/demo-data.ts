@@ -1,4 +1,5 @@
 import crocoSnapshot from "../data/croco-products.json";
+import linellaSnapshot from "../data/linella-products.json";
 import { WEEKDAYS, type OpeningHours, type StoreHours } from "./opening-hours";
 
 export type DemoStore = {
@@ -78,8 +79,19 @@ export function consolidateDemoProducts(products: DemoProduct[]) {
       groups.set(key, { ...product, offers: [...product.offers], aliases: [...(product.aliases ?? [])] });
       continue;
     }
-    const knownOfferIds = new Set(current.offers.map((offer) => offer.id));
-    current.offers.push(...product.offers.filter((offer) => !knownOfferIds.has(offer.id)));
+    for (const offer of product.offers) {
+      const existingIndex = current.offers.findIndex((candidate) => candidate.store.slug === offer.store.slug);
+      if (existingIndex < 0) {
+        current.offers.push(offer);
+        continue;
+      }
+      const existing = current.offers[existingIndex];
+      const existingIsDirect = !existing.sourceName && !existing.sourceUrl;
+      const offerIsDirect = !offer.sourceName && !offer.sourceUrl;
+      if ((offerIsDirect && !existingIsDirect) || (offerIsDirect === existingIsDirect && offer.price < existing.price)) {
+        current.offers[existingIndex] = offer;
+      }
+    }
     current.aliases = [...new Set([...(current.aliases ?? []), product.slug, ...(product.aliases ?? [])])];
   }
   return [...groups.values()];
@@ -127,6 +139,12 @@ export const demoCategories = [
   { slug: "drinks", nameRu: "Напитки" },
   { slug: "alcohol", nameRu: "Алкоголь" },
   { slug: "sweets", nameRu: "Сладости" },
+  { slug: "kids", nameRu: "Игрушки" },
+  { slug: "sport", nameRu: "Спорт" },
+  { slug: "auto", nameRu: "Автотовары" },
+  { slug: "garden", nameRu: "Сад и огород" },
+  { slug: "fashion", nameRu: "Одежда и обувь" },
+  { slug: "books-hobby", nameRu: "Книги и хобби" },
 ];
 
 export const demoProducts: DemoProduct[] = [
@@ -210,7 +228,10 @@ export const demoProducts: DemoProduct[] = [
   },
 ];
 
-demoProducts.push(...consolidateDemoProducts(crocoSnapshot.products as unknown as DemoProduct[]));
+demoProducts.push(...consolidateDemoProducts([
+  ...(linellaSnapshot.products as unknown as DemoProduct[]),
+  ...(crocoSnapshot.products as unknown as DemoProduct[]),
+]));
 
 export const allDemoStores = [...new Map(
   demoProducts.flatMap((product) => product.offers.map((offer) => offer.store)).map((store) => [store.slug, store]),
