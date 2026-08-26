@@ -29,3 +29,14 @@ test("catalog ranks nearby demo offers and respects radius", async () => {
   assert.deepEqual(distances, [...distances].sort((a, b) => a - b));
   assert.ok(distances.every((distance) => distance <= 10));
 });
+
+test("product pages resolve URL-encoded Cyrillic slugs", async () => {
+  const [{ demoProducts }, { getProductBySlug }] = await Promise.all([
+    import("./demo-data"),
+    import("./product-data"),
+  ]);
+  const product = demoProducts.find((item) => /[^\x00-\x7F]/.test(item.slug));
+  assert.ok(product, "expected a product with a Cyrillic slug in the brochure snapshot");
+  const result = await getProductBySlug(encodeURIComponent(product.slug));
+  assert.equal(result?.product.id, product.id);
+});

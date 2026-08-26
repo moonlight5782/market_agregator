@@ -15,7 +15,16 @@ export type ProductLocationOptions = {
   radius?: string;
 };
 
+export function decodeRouteSlug(slug: string) {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 export async function getProductBySlug(slug: string, options: ProductLocationOptions | string = {}) {
+  const routeSlug = decodeRouteSlug(slug);
   const params = typeof options === "string" ? { city: options } : options;
   const selectedCity = params.city?.trim() || undefined;
   const latitude = parseCoordinate(params.lat);
@@ -24,7 +33,7 @@ export async function getProductBySlug(slug: string, options: ProductLocationOpt
   const radiusKm = parseRadiusKm(params.radius, 10);
 
   if (isDemoMode) {
-    const product = demoProducts.find((item) => item.slug === slug);
+    const product = demoProducts.find((item) => item.slug === routeSlug);
     if (!product) return null;
     const cityOffers = selectedCity
       ? product.offers.filter((offer) => offer.store.city.toLocaleLowerCase() === selectedCity.toLocaleLowerCase())
@@ -47,7 +56,7 @@ export async function getProductBySlug(slug: string, options: ProductLocationOpt
   const { prisma } = await import("./prisma");
   const cutoff = freshSince();
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug: routeSlug },
     include: {
       category: true,
       brand: true,
