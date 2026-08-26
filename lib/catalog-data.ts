@@ -1,4 +1,4 @@
-import { demoCategories, demoProducts, demoStores, getBestOffer } from "./demo-data";
+import { allDemoStores, demoCategories, demoProducts, demoStores, getBestOffer } from "./demo-data";
 import { freshSince } from "./freshness";
 import { haversineKm, parseCoordinate, parseRadiusKm, validCoordinates } from "./geo";
 
@@ -38,7 +38,7 @@ export async function getAvailableCities() {
 
 export async function getAvailableStores() {
   if (isDemoMode) {
-    return [...demoStores].sort((a, b) => a.name.localeCompare(b.name, "ro")).map(({ slug, name }) => ({ slug, name }));
+    return [...allDemoStores].sort((a, b) => a.name.localeCompare(b.name, "ro")).map(({ slug, name }) => ({ slug, name }));
   }
   const { prisma } = await import("./prisma");
   return prisma.store.findMany({
@@ -86,10 +86,10 @@ export async function getHomeData() {
     return {
       mode: "demo" as const,
       categories: demoCategories,
-      storeCount: demoStores.length,
+      storeCount: allDemoStores.length,
       productCount: demoProducts.length,
       offerCount: demoProducts.reduce((sum, product) => sum + product.offers.length, 0),
-      latestProducts: demoProducts,
+      latestProducts: demoProducts.slice(0, 12),
     };
   }
 

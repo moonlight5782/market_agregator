@@ -1,11 +1,12 @@
-import { WEEKDAYS, type OpeningHours } from "./opening-hours";
+import crocoSnapshot from "../data/croco-products.json";
+import { WEEKDAYS, type OpeningHours, type StoreHours } from "./opening-hours";
 
 export type DemoStore = {
   id: string;
   name: string;
   slug: string;
   city: string;
-  openingHours: OpeningHours;
+  openingHours?: StoreHours | null;
   latitude?: number;
   longitude?: number;
   address?: string;
@@ -20,6 +21,11 @@ export type DemoOffer = {
   stockStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "UNKNOWN";
   quantity?: number;
   externalUrl: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  catalogPage?: number | null;
 };
 
 export type DemoProduct = {
@@ -66,6 +72,8 @@ export const demoCategories = [
   { slug: "groceries", nameRu: "Продукты" },
   { slug: "home", nameRu: "Дом и быт" },
   { slug: "construction", nameRu: "Строительство" },
+  { slug: "beauty", nameRu: "Красота и уход" },
+  { slug: "pets", nameRu: "Зоотовары" },
 ];
 
 export const demoProducts: DemoProduct[] = [
@@ -148,6 +156,12 @@ export const demoProducts: DemoProduct[] = [
     ],
   },
 ];
+
+demoProducts.push(...(crocoSnapshot.products as unknown as DemoProduct[]));
+
+export const allDemoStores = [...new Map(
+  demoProducts.flatMap((product) => product.offers.map((offer) => offer.store)).map((store) => [store.slug, store]),
+).values()];
 
 export function getBestOffer(product: DemoProduct) {
   return [...product.offers].sort((a, b) => a.price - b.price)[0];

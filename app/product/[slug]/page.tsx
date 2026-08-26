@@ -26,6 +26,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+function validUntilLabel(value: string | null | undefined, locale: "ru" | "ro") {
+  if (!value) return null;
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  const formatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-MD" : "ru-MD", { day: "numeric", month: "long" }).format(date);
+  return locale === "ro" ? `Preț din broșură până la ${formatted}` : `Цена из брошюры до ${formatted}`;
+}
+
 function backHref(query: ProductQuery) {
   const params = new URLSearchParams();
   if (query.city) params.set("city", query.city);
@@ -63,7 +71,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       <Link href={backHref(query)} style={{ color: "#111", textDecoration: "none" }}>← {city ? formatMessage(t.goodsInCity, { city }) : t.search}</Link>
       <div className="product-hero">
         <div className="product-hero__image">
-          {imageUrl ? <img src={imageUrl} alt={product.title} style={{ objectFit: result.mode === "demo" ? "cover" : "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
+          {imageUrl ? <img src={imageUrl} alt={product.title} style={{ objectFit: "contain" }} /> : <span style={{ color: "#888" }}>{t.noImage}</span>}
         </div>
         <section>
           <div style={{ color: "#777", fontSize: 14 }}>{categoryName ?? t.noCategory}{brandName ? ` · ${brandName}` : ""}{city ? ` · ${city}` : ""}</div>
@@ -111,6 +119,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
                   {location && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{location.city}{location.address ? ` · ${location.address}` : ""}</div>}
                   <StoreHours openingHours={location?.openingHours ?? (result.mode === "demo" ? offer.store.openingHours : null)} locale={locale} t={t} />
                   {offer.distanceKm != null && <div style={{ color: "#555", fontSize: 13, marginTop: 3 }}>{t.nearestStore}: {formatMessage(t.distanceAway, { distance: Number(offer.distanceKm).toFixed(1) })}</div>}
+                  {validUntilLabel(offer.validUntil, locale) && <div className="flyer-validity">{validUntilLabel(offer.validUntil, locale)}{offer.sourceName ? ` · ${offer.sourceName}` : ""}</div>}
                   {!city && !result.hasGeo && branches.length > 1 && <div style={{ color: "#777", fontSize: 13, marginTop: 3 }}>{formatMessage(t.availableInBranches, { available: branchAvailableCount, total: branches.length })}</div>}
                 </div>
                 <div>{offer.oldPrice && Number(offer.oldPrice) > Number(offer.price) && <div style={{ color: "#999", textDecoration: "line-through", fontSize: 13 }}>{Number(offer.oldPrice).toLocaleString(numberLocale(locale))} {offer.currency}</div>}<div className="offer-row__price">{Number(offer.price).toLocaleString(numberLocale(locale))} {offer.currency}</div></div>
